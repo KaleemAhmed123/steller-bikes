@@ -955,6 +955,140 @@ h3 {
   font-weight: 700;
 }
 
+/* --- Product editor + settings form (step 5) ------------------------------ */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  border-color: var(--primary);
+}
+.admin-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.admin-row-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.admin-form {
+  max-width: 820px;
+}
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.field > span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.field input,
+.field select,
+.field textarea,
+.admin-img-url,
+.admin-variant-row input,
+.admin-spec-row input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+}
+.admin-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.admin-check input {
+  width: 16px;
+  height: 16px;
+}
+.admin-img {
+  margin-bottom: 10px;
+}
+.admin-img-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.admin-img-upload {
+  white-space: nowrap;
+}
+.admin-img-preview {
+  margin-top: 8px;
+  max-width: 120px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.admin-gallery-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.admin-gallery-row .admin-img {
+  flex: 1;
+}
+.admin-variants {
+  overflow-x: auto;
+}
+.admin-variant-head,
+.admin-variant-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 0.9fr 0.9fr 0.8fr 0.8fr 32px;
+  gap: 8px;
+  align-items: center;
+  min-width: 720px;
+}
+.admin-variant-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #777);
+  margin-bottom: 6px;
+}
+.admin-variant-row {
+  margin-bottom: 8px;
+}
+.admin-spec-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+  max-width: 600px;
+}
+@media (max-width: 720px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Admin login */
 .admin-login {
   min-height: 100vh;

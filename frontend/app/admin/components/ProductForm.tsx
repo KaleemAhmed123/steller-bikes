@@ -1,0 +1,295 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { adminApi, uploadImage, uploadConfigured } from '@/lib/api';
+import type { Product, ProductInput } from '@/lib/types';
+
+// Row shapes while editing (strings so inputs stay controlled); converted to the
+// real ProductInput (paise, numbers) on submit.
+type VariantRow = {
+  _id?: string; // present for existing variants; preserved so ids are stable
+  sku: string;
+  size: string;
+  color: string;
+  price: string; // rupees
+  compareAt: string; // rupees
+  stock: string;
+  lowStock: string;
+};
+type SpecRow = { key: string; value: string };
+
+const blankVariant = (): VariantRow => ({ sku: '', size: '', color: '', price: '', compareAt: '', stock: '', lowStock: '3' });
+
+const toRupees = (paise: number) => (paise ? String(paise / 100) : '');
+
+function fromProduct(p: Product): State {
+  return {
+    slug: p.slug,
+    name: p.name,
+    category: p.category,
+    description: p.description,
+    image: p.image,
+    images: p.images ?? [],
+    featured: p.featured ?? false,
+    status: (p.status as State['status']) ?? 'draft',
+    specs: Object.entries(p.specs ?? {}).map(([key, value]) => ({ key, value })),
+    variants: p.variants.map((v) => ({
+      _id: v._id,
+      sku: v.sku,
+      size: v.size,
+      color: v.color,
+      price: toRupees(v.price),
+      compareAt: toRupees(v.compareAt),
+      stock: String(v.stock),
+      lowStock: String(v.lowStock),
+    })),
+  };
+}
+
+type State = {
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  image: string;
+  images: string[];
+  featured: boolean;
+  status: 'draft' | 'published' | 'archived';
+  specs: SpecRow[];
+  variants: VariantRow[];
+};
+
+const empty: State = {
+  slug: '',
+  name: '',
+  category: '',
+  description: '',
+  image: '',
+  images: [],
+  featured: false,
+  status: 'draft',
+  specs: [],
+  variants: [blankVariant()],
+};
+
+// A single image field: a URL/path input plus (when Cloudinary is set up) an
+// Upload button. Preview thumbnail when a value is present.
+function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true);
+    setErr('');
+    try {
+      onChange(await uploadImage(file));
+    } catch (ex) {
+      setErr(ex instanceof Error ? ex.message : 'Upload failed.');
+    } finally {
+      setBusy(false);
+      e.target.value = '';
+    }
+  }
+
+  return (
+    <div className="admin-img">
+      <div className="admin-img-row">
+        <input
+          className="admin-img-url"
+          placeholder="/images/bike.jpg or https://…"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {uploadConfigured() && (
+          <label className="btn-secondary admin-img-upload">
+            {busy ? 'Uploading…' : 'Upload'}
+            <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
+          </label>
+        )}
+      </div>
+      {err && <div className="notice error">{err}</div>}
+      {value && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="admin-img-preview" src={value} alt="" />
+      )}
+    </div>
+  );
+}
+
+export function ProductForm({ product }: { product?: Product }) {
+  const router = useRouter();
+  const [s, setS] = useState<State>(product ? fromProduct(product) : empty);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const set = <K extends keyof State>(key: K, value: State[K]) => setS((prev) => ({ ...prev, [key]: value }));
+
+  // Variant helpers
+  const setVariant = (i: number, patch: Partial<VariantRow>) =>
+    set('variants', s.variants.map((v, j) => (j === i ? { ...v, ...patch } : v)));
+  const addVariant = () => set('variants', [...s.variants, blankVariant()]);
+  const removeVariant = (i: number) => set('variants', s.variants.filter((_, j) => j !== i));
+
+  // Spec helpers
+  const setSpec = (i: number, patch: Partial<SpecRow>) =>
+    set('specs', s.specs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const addSpec = () => set('specs', [...s.specs, { key: '', value: '' }]);
+  const removeSpec = (i: number) => set('specs', s.specs.filter((_, j) => j !== i));
+
+  // Gallery helpers
+  const setGallery = (i: number, v: string) => set('images', s.images.map((x, j) => (j === i ? v : x)));
+  const addGallery = () => set('images', [...s.images, '']);
+  const removeGallery = (i: number) => set('images', s.images.filter((_, j) => j !== i));
+
+  function build(): ProductInput {
+    const rupeesToPaise = (r: string) => Math.round(Number(r || 0) * 100);
+    return {
+      slug: s.slug.trim(),
+      name: s.name.trim(),
+      category: s.category.trim(),
+      description: s.description.trim(),
+      image: s.image.trim(),
+      images: s.images.map((x) => x.trim()).filter(Boolean),
+      featured: s.featured,
+      status: s.status,
+      specs: Object.fromEntries(s.specs.filter((r) => r.key.trim()).map((r) => [r.key.trim(), r.value.trim()])),
+      variants: s.variants.map((v) => ({
+        ...(v._id ? { _id: v._id } : {}),
+        sku: v.sku.trim(),
+        size: v.size.trim(),
+        color: v.color.trim(),
+        price: rupeesToPaise(v.price),
+        compareAt: rupeesToPaise(v.compareAt),
+        stock: Math.round(Number(v.stock || 0)),
+        lowStock: Math.round(Number(v.lowStock || 0)),
+      })),
+    };
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    try {
+      const payload = build();
+      if (product) await adminApi.products.update(product._id, payload);
+      else await adminApi.products.create(payload);
+      router.push('/admin/products');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="admin-form" onSubmit={submit}>
+      <div className="admin-form-grid">
+        <label className="field">
+          <span>Name</span>
+          <input required value={s.name} onChange={(e) => set('name', e.target.value)} />
+        </label>
+        <label className="field">
+          <span>Slug (URL id, lowercase-with-hyphens)</span>
+          <input required value={s.slug} onChange={(e) => set('slug', e.target.value)} placeholder="metro-one" />
+        </label>
+        <label className="field">
+          <span>Category</span>
+          <input required value={s.category} onChange={(e) => set('category', e.target.value)} placeholder="City" />
+        </label>
+        <label className="field">
+          <span>Status</span>
+          <select value={s.status} onChange={(e) => set('status', e.target.value as State['status'])}>
+            <option value="draft">Draft (hidden)</option>
+            <option value="published">Published (live)</option>
+            <option value="archived">Archived (hidden)</option>
+          </select>
+        </label>
+      </div>
+
+      <label className="field">
+        <span>Description</span>
+        <textarea required rows={3} value={s.description} onChange={(e) => set('description', e.target.value)} />
+      </label>
+
+      <label className="admin-check">
+        <input type="checkbox" checked={s.featured} onChange={(e) => set('featured', e.target.checked)} />
+        <span>Featured (shows in Staff picks)</span>
+      </label>
+
+      <h2 className="admin-h2">Main photo</h2>
+      <ImageField value={s.image} onChange={(v) => set('image', v)} />
+
+      <h2 className="admin-h2">Gallery photos (optional)</h2>
+      {s.images.map((img, i) => (
+        <div className="admin-gallery-row" key={i}>
+          <ImageField value={img} onChange={(v) => setGallery(i, v)} />
+          <button type="button" className="link-btn danger" onClick={() => removeGallery(i)}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button" className="btn-secondary" onClick={addGallery}>
+        + Add gallery photo
+      </button>
+
+      <h2 className="admin-h2">Variants</h2>
+      <p className="muted">At least one. Price in ₹. “Was” is the crossed-out compare-at price (0 = none).</p>
+      <div className="admin-variants">
+        <div className="admin-variant-head">
+          <span>SKU</span><span>Size</span><span>Colour</span><span>Price ₹</span><span>Was ₹</span><span>Stock</span><span>Low at</span><span />
+        </div>
+        {s.variants.map((v, i) => (
+          <div className="admin-variant-row" key={i}>
+            <input required placeholder="SKU" value={v.sku} onChange={(e) => setVariant(i, { sku: e.target.value })} />
+            <input required placeholder="Size" value={v.size} onChange={(e) => setVariant(i, { size: e.target.value })} />
+            <input required placeholder="Colour" value={v.color} onChange={(e) => setVariant(i, { color: e.target.value })} />
+            <input required type="number" min={0} value={v.price} onChange={(e) => setVariant(i, { price: e.target.value })} />
+            <input type="number" min={0} value={v.compareAt} onChange={(e) => setVariant(i, { compareAt: e.target.value })} />
+            <input required type="number" min={0} value={v.stock} onChange={(e) => setVariant(i, { stock: e.target.value })} />
+            <input required type="number" min={0} value={v.lowStock} onChange={(e) => setVariant(i, { lowStock: e.target.value })} />
+            <button
+              type="button"
+              className="link-btn danger"
+              disabled={s.variants.length === 1}
+              onClick={() => removeVariant(i)}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+      <button type="button" className="btn-secondary" onClick={addVariant}>
+        + Add variant
+      </button>
+
+      <h2 className="admin-h2">Specs (optional)</h2>
+      {s.specs.map((r, i) => (
+        <div className="admin-spec-row" key={i}>
+          <input placeholder="e.g. Wheel size" value={r.key} onChange={(e) => setSpec(i, { key: e.target.value })} />
+          <input placeholder="e.g. 29 inch" value={r.value} onChange={(e) => setSpec(i, { value: e.target.value })} />
+          <button type="button" className="link-btn danger" onClick={() => removeSpec(i)}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <button type="button" className="btn-secondary" onClick={addSpec}>
+        + Add spec
+      </button>
+
+      {error && <div className="notice error" style={{ marginTop: 16 }}>{error}</div>}
+
+      <div className="admin-actions" style={{ marginTop: 20 }}>
+        <button type="submit" className="btn-primary" disabled={busy}>
+          {busy ? 'Saving…' : product ? 'Save changes' : 'Create product'}
+        </button>
+        <button type="button" className="link-btn" onClick={() => router.push('/admin/products')}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
