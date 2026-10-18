@@ -52,7 +52,7 @@ export default function Brand3D() {
     <section className="rc-section rc-section--dark rc-brand3d" data-reveal>
       <div className="container rc-brand3d-grid">
         <div className="rc-brand3d-copy">
-          <span className="rc-eyebrow" style={{ ['--rc-accent' as string]: '#6b8cff' }}>
+          <span className="rc-eyebrow" style={{ ['--rc-accent' as string]: '#ffffff' }}>
             The Raju Cycles look
           </span>
           <h2 className="rc-sec-title">Engineered to look as good as it rides.</h2>
@@ -60,7 +60,7 @@ export default function Brand3D() {
             Clean lines, honest value. Spin it, then go find the real thing — every bike in the
             catalogue is a working, buyable listing.
           </p>
-          <Link href="/shop" className="rc-btn rc-btn--gold">
+          <Link href="/shop" className="rc-btn rc-btn--light">
             Shop the range
           </Link>
         </div>

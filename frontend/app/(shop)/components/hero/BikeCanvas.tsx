@@ -128,7 +128,7 @@ export default function BikeCanvas({
       {/* In-code studio lighting → real reflections, zero network downloads. */}
       <Environment resolution={256} frames={1}>
         <color attach="background" args={['#0a0b0d']} />
-        <Lightformer form="rect" intensity={3} color="#ffe6b0" position={[5, 6, 4]} scale={[6, 6, 1]} />
+        <Lightformer form="rect" intensity={3} color="#6aa8ff" position={[5, 6, 4]} scale={[6, 6, 1]} />
         <Lightformer form="rect" intensity={2.4} color="#6b8cff" position={[-6, 3, -4]} scale={[8, 6, 1]} />
         <Lightformer form="circle" intensity={1.4} color="#ffffff" position={[0, 8, 2]} scale={4} />
         {/* A long thin strip overhead — a bright moving streak across the clearcoat. */}
@@ -136,7 +136,7 @@ export default function BikeCanvas({
       </Environment>
 
       <ambientLight intensity={0.3} />
-      <directionalLight position={[5, 7, 5]} intensity={1.6} color="#ffe6b0" castShadow shadow-mapSize={[1024, 1024]} />
+      <directionalLight position={[5, 7, 5]} intensity={1.6} color="#6aa8ff" castShadow shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[-6, 3, -4]} intensity={1.3} color="#5b8cff" />
 
       <Bike />

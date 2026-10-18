@@ -67,11 +67,11 @@ export default function BrandCanvas() {
     >
       <PerspectiveCamera makeDefault position={[0.4, 0.5, 5.6]} fov={34} />
       <Environment resolution={256} frames={1}>
-        <Lightformer form="rect" intensity={3} color="#ffe6b0" position={[5, 5, 4]} scale={[6, 6, 1]} />
+        <Lightformer form="rect" intensity={3} color="#6aa8ff" position={[5, 5, 4]} scale={[6, 6, 1]} />
         <Lightformer form="rect" intensity={2.4} color="#6b8cff" position={[-5, 3, -3]} scale={[7, 6, 1]} />
       </Environment>
       <ambientLight intensity={0.35} />
-      <directionalLight position={[5, 6, 5]} intensity={1.5} color="#ffe6b0" />
+      <directionalLight position={[5, 6, 5]} intensity={1.5} color="#6aa8ff" />
       <TurntableBike />
       <ContactShadows position={[0, -1.6, 0]} opacity={0.5} scale={8} blur={2.5} far={4} color="#000000" />
       <EffectComposer>
