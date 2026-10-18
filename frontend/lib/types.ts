@@ -24,6 +24,33 @@ export interface Product {
   variants: Variant[];
 }
 
+// --- Admin product editing --------------------------------------------------
+// What the admin form sends to create/update a product. Money is in paise
+// (the form collects rupees and converts before sending).
+export interface VariantInput {
+  _id?: string; // kept on edit so the variant keeps its id (carts/orders/inventory)
+  sku: string;
+  size: string;
+  color: string;
+  price: number; // paise
+  compareAt: number; // paise, 0 = none
+  stock: number;
+  lowStock: number;
+}
+
+export interface ProductInput {
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  image: string;
+  images: string[];
+  featured: boolean;
+  status: 'draft' | 'published' | 'archived';
+  specs: Record<string, string>;
+  variants: VariantInput[];
+}
+
 // Public shop details shown in the storefront footer/showroom. Every field can
 // be '' — the UI falls back to an honest "coming soon" when blank.
 export interface StoreSettings {

@@ -7,6 +7,7 @@ import type {
   Order,
   OrderDetail,
   Product,
+  ProductInput,
   SavedAddress,
   StaffMe,
   StoreSettings,
@@ -180,7 +181,55 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ variantId, delta, reason }),
     }),
+  // Products — full CRUD (owner + manager).
+  products: {
+    list: () => apiFetch<Product[]>('/api/admin/products'),
+    get: (id: string) => apiFetch<Product>(`/api/admin/products/${id}`),
+    create: (body: ProductInput) =>
+      apiFetch<Product>('/api/admin/products', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: Partial<ProductInput>) =>
+      apiFetch<Product>(`/api/admin/products/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+    remove: (id: string) =>
+      apiFetch<{ ok: boolean }>(`/api/admin/products/${id}`, { method: 'DELETE' }),
+  },
+  // Store settings (owner only).
+  settings: {
+    get: () => apiFetch<Partial<StoreSettings>>('/api/admin/settings'),
+    update: (body: Partial<StoreSettings>) =>
+      apiFetch<StoreSettings>('/api/admin/settings', { method: 'PATCH', body: JSON.stringify(body) }),
+  },
 };
+
+// Upload an image straight to Cloudinary (a free image host/CDN) with an
+// unsigned preset, and return its hosted URL to store on a product. No file
+// passes through our own server. Throws a clear error if Cloudinary isn't set
+// up — in that case the admin can still paste a URL/path by hand.
+export async function uploadImage(file: File): Promise<string> {
+  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  if (!cloud || !preset) {
+    throw new Error('Image upload isn’t set up yet. Paste an image URL/path instead, or add Cloudinary keys.');
+  }
+  const body = new FormData();
+  body.append('file', file);
+  body.append('upload_preset', preset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, {
+    method: 'POST',
+    body,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.secure_url) {
+    throw new Error(json?.error?.message ?? 'Upload failed. Try again, or paste a URL.');
+  }
+  return json.secure_url as string;
+}
+
+// True when Cloudinary upload is configured (controls the Upload button UI).
+export function uploadConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+  );
+}
 
 // --- Customer accounts (browser-only, session-cookie) -----------------------
 
