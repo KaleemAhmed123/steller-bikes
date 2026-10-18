@@ -6,10 +6,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api';
 import type { StaffMe } from '@/lib/types';
 
-const NAV: [string, string][] = [
+// [href, label, ownerOnly?]
+const NAV: [string, string, boolean?][] = [
   ['/admin', 'Dashboard'],
   ['/admin/orders', 'Orders'],
+  ['/admin/products', 'Products'],
   ['/admin/inventory', 'Inventory'],
+  ['/admin/settings', 'Settings', true],
 ];
 
 // Guards the authenticated admin pages: checks the session, bounces to /login if
@@ -53,7 +56,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           Raju Cycles <span>admin</span>
         </div>
         <nav className="admin-nav">
-          {NAV.map(([href, label]) => (
+          {NAV.filter(([, , ownerOnly]) => !ownerOnly || me.role === 'owner').map(([href, label]) => (
             <Link key={href} href={href} className={`admin-navlink ${isActive(href) ? 'active' : ''}`}>
               {label}
             </Link>
