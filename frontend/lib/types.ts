@@ -1,0 +1,150 @@
+export interface Variant {
+  _id: string;
+  sku: string;
+  size: string;
+  color: string;
+  price: number; // paise
+  compareAt: number;
+  stock: number;
+  lowStock: number;
+}
+
+export interface Product {
+  _id: string;
+  slug: string;
+  name: string;
+  category: string;
+  description: string;
+  image: string;
+  specs: Record<string, string>;
+  status: string;
+  variants: Variant[];
+}
+
+// One line in the server-computed cart view. Fields past `available` are present
+// only when the variant still exists and is published.
+export interface CartLine {
+  variantId: string;
+  quantity: number;
+  available: boolean;
+  name?: string;
+  slug?: string;
+  sku?: string;
+  size?: string;
+  color?: string;
+  image?: string;
+  price?: number; // live paise
+  stock?: number;
+  lineTotal?: number;
+  inStock?: boolean;
+}
+
+export interface CartView {
+  items: CartLine[];
+  subtotal: number; // paise
+  itemCount: number;
+}
+
+export interface OrderItem {
+  variantId: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  price: number; // paise, snapshotted at purchase
+}
+
+export interface Address {
+  name: string;
+  phone: string;
+  line1: string;
+  city: string;
+  state: string;
+  pin: string;
+}
+
+// A saved address in a customer's address book (an Address plus id/label/default).
+export interface SavedAddress extends Address {
+  id: string;
+  label: string;
+  isDefault: boolean;
+}
+
+// The logged-in storefront customer (never includes the password hash).
+export interface Customer {
+  id: string;
+  email: string;
+  name: string;
+  emailVerified: boolean;
+  addresses: SavedAddress[];
+}
+
+export interface Order {
+  _id: string;
+  email: string;
+  address: Address;
+  items: OrderItem[];
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  method: string;
+  paymentStatus: string;
+  fulfillmentStatus: string;
+  tracking: string;
+  createdAt: string;
+}
+
+// --- Admin ---
+export interface StaffMe {
+  email: string;
+  role: string;
+}
+
+export interface LowStockRow {
+  productName: string;
+  sku: string;
+  size: string;
+  color: string;
+  stock: number;
+  lowStock: number;
+}
+
+export interface DashboardData {
+  orderCount: number;
+  revenue: number;
+  lowStock: LowStockRow[];
+  recent: Order[];
+}
+
+export interface InvVariant {
+  variantId: string;
+  productName: string;
+  slug: string;
+  sku: string;
+  size: string;
+  color: string;
+  price: number;
+  stock: number;
+  lowStock: number;
+}
+
+export interface Movement {
+  _id: string;
+  variantId: string;
+  actor: string;
+  reason: string;
+  before: number;
+  after: number;
+  createdAt: string;
+}
+
+export interface InventoryData {
+  variants: InvVariant[];
+  movements: Movement[];
+}
+
+export interface OrderDetail {
+  order: Order;
+  nextStates: string[];
+}
