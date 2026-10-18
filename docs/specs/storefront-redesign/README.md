@@ -19,6 +19,8 @@ catalogue / product-detail / cards system — built on the existing Next.js + Ex
 | [`build-step-2.md`](build-step-2.md) | Walkthrough of the cinematic 3D upgrade (hero v2 + second 3D moment) and the 3D-forward homepage with dedicated collection pages. |
 | [`build-step-3.md`](build-step-3.md) | Walkthrough of the bike polish (clearcoat + filmic grade) and the product carousels (arrows + dots) restored to the homepage. |
 | [`build-step-4.md`](build-step-4.md) | **Built** (typecheck + tests green; `next build` pending dev stop) — backend data fields so the frontend stops faking: `featured` flag, image gallery, honest popularity (read from orders), store settings. |
+| [`build-step-5.md`](build-step-5.md) | **Built** (typecheck + tests + live E2E green; `next build` pending dev stop) — admin config: full product CRUD (variants, featured, photo upload, status) + a store-settings editor, with new `products.manage`/`settings.manage` permissions. |
+| [`build-step-6.md`](build-step-6.md) | **Phase 1 built** (typecheck clean, live-verified; `next build` pending dev stop) — editorial "ElevenLabs" revamp: EB Garamond serif + off-white tokens + bigger 3-up Rapha/Aesop product card + editorial product-detail page. |
 | [`THIRD-PARTY-ASSETS.md`](THIRD-PARTY-ASSETS.md) | Licence + attribution register for any 3D model / imagery brought in. |
 
 ## Relationship to the rebuild
