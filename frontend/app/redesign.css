@@ -8,26 +8,33 @@
    ============================================================================ */
 
 :root {
-  --rc-ink: #14161a;
-  --rc-ink-2: #1e2228;
-  --rc-paper: #f6f5f1;
-  /* "Fresh" palette — light, lively pastels, one per section. Each has real hue
-     so it's catchy, but all share the same lightness/softness so the page stays
-     composed. The dark 3D moments give the contrast. Accent stays gold. */
-  --rc-cream: #f6f3ec; /* soft neutral (category explorer) */
-  --rc-mint: #d7efe5; /* new arrivals */
-  --rc-lilac: #e7e1f4; /* staff picks */
-  --rc-peach: #fbe0d2; /* on offer */
-  --rc-sky: #dde9f7; /* kids */
-  --rc-line: #e7e3d9;
-  --rc-gold: #c0974a;
-  --rc-gold-bright: #d8b465;
-  --rc-blue: #2b4cff;
-  --rc-volt: #c6f24e;
-  --rc-coral: #ff5633;
-  --rc-teal: #17b0a0;
-  --rc-accent: var(--rc-gold); /* per-section override via inline style */
-  --rc-maxw: 1380px;
+  /* Editorial "ElevenLabs" system: off-white canvas, warm near-black ink, no
+     saturated accent. Colour appears only as soft pastel orbs (atmosphere). */
+  --rc-ink: #0c0a09; /* display + primary text, ink pills */
+  --rc-ink-2: #1c1917; /* elevated dark surface */
+  --rc-canvas: #f5f5f5; /* page floor */
+  --rc-canvas-soft: #fafafa; /* subtle alternating band */
+  --rc-surface: #ffffff; /* cards */
+  --rc-surface-strong: #f0efed; /* badges, plates */
+  --rc-body: #4e4e4e; /* running text */
+  --rc-muted: #777169; /* sub-titles */
+  --rc-hairline: #e7e5e4; /* 1px dividers / card outlines */
+  --rc-hairline-strong: #d6d3d1;
+  --rc-line: var(--rc-hairline); /* legacy alias */
+  /* Atmospheric pastel orbs — decoration only, never fills or text. */
+  --rc-orb-mint: #a7e5d3;
+  --rc-orb-peach: #f4c5a8;
+  --rc-orb-lavender: #c8b8e0;
+  --rc-orb-sky: #a8c8e8;
+  --rc-orb-rose: #e8b8c4;
+  /* Hero accent — electric neon blue glowing over a dark-navy hero. */
+  --rc-hero: #3d82ff;
+  --rc-hero-soft: #6da3ff;
+  --rc-accent: var(--rc-ink); /* editorial accent = ink */
+  --rc-maxw: 1200px;
+  /* Override base tokens so legacy surfaces inherit the editorial canvas. */
+  --background: var(--rc-canvas);
+  --muted-foreground: var(--rc-muted);
 }
 
 .rc-sr-only {
@@ -50,30 +57,49 @@
   gap: 8px;
   border: none;
   border-radius: 999px;
-  padding: 14px 28px;
+  padding: 13px 26px;
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-weight: 500; /* editorial: lighter than the old 700 */
+  letter-spacing: 0;
   cursor: pointer;
-  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 .rc-btn:hover {
   transform: translateY(-2px);
 }
+/* Hero CTA (dark 3D hero only): electric-blue pill, ink text. */
 .rc-btn--gold {
-  background: var(--rc-gold);
-  color: #1b1403;
+  background: var(--rc-hero);
+  color: #06143a;
 }
 .rc-btn--gold:hover {
-  background: var(--rc-gold-bright);
+  background: var(--rc-hero-soft);
 }
+/* Editorial primary: near-black ink pill. */
 .rc-btn--ink {
   background: var(--rc-ink);
   color: #fff;
 }
 .rc-btn--ink:hover {
   background: #000;
+}
+/* Editorial secondary: transparent pill, 1px ink hairline. */
+.rc-btn--outline {
+  background: transparent;
+  color: var(--rc-ink);
+  box-shadow: inset 0 0 0 1px var(--rc-hairline-strong);
+}
+.rc-btn--outline:hover {
+  box-shadow: inset 0 0 0 1px var(--rc-ink);
+}
+/* Inverted primary for CTAs sitting on a dark band (white pill, ink text). */
+.rc-btn--light {
+  background: #fff;
+  color: var(--rc-ink);
+}
+.rc-btn--light:hover {
+  background: var(--rc-canvas-soft);
 }
 .rc-btn--ghost-light {
   background: transparent;
@@ -119,7 +145,7 @@
   transition: color 0.15s ease;
 }
 .rc-nav-link:hover {
-  color: var(--rc-gold);
+  color: var(--rc-muted);
 }
 .rc-nav-badge,
 .cart-count {
@@ -131,9 +157,9 @@
   padding: 0 6px;
   border-radius: 999px;
   background: var(--rc-ink);
-  color: var(--rc-gold-bright);
+  color: #fff;
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 650;
 }
 
 /* ---- Wordmark -------------------------------------------------------------*/
@@ -152,33 +178,27 @@
   fill: var(--rc-ink);
 }
 .rc-mark-bike {
-  stroke: var(--rc-gold-bright);
+  stroke: #fff; /* white bike inside the ink ring — monochrome editorial mark */
   stroke-width: 2;
 }
 .rc-wordmark-text {
   display: inline-flex;
   gap: 6px;
   font-family: var(--font-display);
-  font-size: 21px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-size: 23px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 .rc-wordmark-2 {
-  color: var(--rc-gold);
+  color: var(--rc-muted);
 }
 .rc-wordmark.is-compact .rc-wordmark-text {
   display: none;
 }
-/* Footer sits on dark — recolour the wordmark there. */
+/* Footer is light editorial — wordmark uses the default ink mark. */
 .rc-footer .rc-wordmark,
 .rc-footer .rc-wordmark-text {
-  color: #fff;
-}
-.rc-footer .rc-mark-ring {
-  fill: #fff;
-}
-.rc-footer .rc-mark-bike {
-  stroke: var(--rc-ink);
+  color: var(--rc-ink);
 }
 
 /* ---- Hero -----------------------------------------------------------------*/
@@ -187,7 +207,7 @@
   height: 100vh;
   min-height: 560px;
   overflow: hidden;
-  background: var(--rc-ink);
+  background: #080b14; /* dark navy base for the neon-blue hero */
 }
 .rc-hero-stage {
   position: absolute;
@@ -197,9 +217,9 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(8, 9, 11, 0.92) 0%, rgba(8, 9, 11, 0.55) 34%, rgba(8, 9, 11, 0) 62%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%),
-    radial-gradient(130% 90% at 72% 32%, #262b33 0%, #141619 56%, #0a0b0d 100%);
+    linear-gradient(90deg, rgba(6, 10, 22, 0.92) 0%, rgba(6, 10, 22, 0.55) 34%, rgba(6, 10, 22, 0) 62%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(2, 4, 12, 0.6) 100%),
+    radial-gradient(130% 90% at 72% 32%, #1b2747 0%, #0f1628 56%, #080b14 100%);
 }
 /* Keep the lede readable even where the bike sits behind it. */
 .rc-hero-lede,
@@ -235,7 +255,7 @@
 }
 .rc-hero-eyebrow {
   display: inline-block;
-  color: var(--rc-gold-bright);
+  color: var(--rc-hero);
   text-transform: uppercase;
   letter-spacing: 0.22em;
   font-size: 12px;
@@ -257,7 +277,7 @@
   display: flex;
   flex-direction: column;
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-hero); /* cinematic grotesk; the rest of the site is serif */
   color: #fff;
   font-weight: 700;
   text-transform: uppercase;
@@ -271,7 +291,7 @@
 }
 .rc-hero-title-accent {
   color: transparent;
-  -webkit-text-stroke: 2px var(--rc-gold-bright);
+  -webkit-text-stroke: 2px var(--rc-hero);
 }
 .rc-hero-copy {
   position: absolute;
@@ -309,7 +329,7 @@
 .rc-hero-scroll i {
   width: 1px;
   height: 34px;
-  background: linear-gradient(var(--rc-gold-bright), transparent);
+  background: linear-gradient(var(--rc-hero), transparent);
   animation: rc-scrollpulse 1.8s ease-in-out infinite;
 }
 @keyframes rc-scrollpulse {
@@ -320,32 +340,71 @@
 /* ---- Sections -------------------------------------------------------------*/
 .rc-section {
   padding: clamp(56px, 8vw, 110px) 0;
+  position: relative;
+  overflow: hidden;
+}
+.rc-section > .container {
+  position: relative;
+  z-index: 1; /* sits above the atmospheric orb */
+}
+/* Atmospheric pastel orb — the ElevenLabs signature. Pure decoration: a soft
+   radial bloom, one colour per section via --rc-orb (unset = invisible). */
+.rc-section::before {
+  content: '';
+  position: absolute;
+  width: 46vw;
+  max-width: 640px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  top: -16%;
+  right: -6%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(closest-side, var(--rc-orb, transparent), transparent 72%);
+  filter: blur(34px);
+  opacity: 0.6;
+}
+/* Alternate a couple to the left so the blooms don't all sit in one corner. */
+.rc-section--lilac::before,
+.rc-section--kids::before {
+  right: auto;
+  left: -8%;
 }
 .rc-section--light {
-  background: var(--rc-cream);
+  --rc-orb: var(--rc-orb-lavender);
 }
-.rc-section--paper {
-  background: #fff;
-}
-.rc-section--dark {
-  background: var(--rc-ink);
-  color: #fff;
-}
-/* The four product bands — light, lively pastels, dark text on each. */
 .rc-section--mint {
-  background: var(--rc-mint);
-  color: var(--rc-ink);
+  --rc-orb: var(--rc-orb-mint);
 }
 .rc-section--lilac {
-  background: var(--rc-lilac);
-  color: var(--rc-ink);
+  --rc-orb: var(--rc-orb-lavender);
 }
 .rc-section--offer {
-  background: var(--rc-peach);
-  color: var(--rc-ink);
+  --rc-orb: var(--rc-orb-peach);
 }
 .rc-section--kids {
-  background: var(--rc-sky);
+  --rc-orb: var(--rc-orb-sky);
+}
+/* Editorial: off-white canvas everywhere. A barely-there canvas/soft alternation
+   gives rhythm; colour comes only from product photos and (Phase 2) orbs. */
+.rc-section--light {
+  background: var(--rc-canvas-soft);
+}
+.rc-section--paper {
+  background: var(--rc-canvas);
+}
+.rc-section--dark {
+  background: #201d1c; /* warm charcoal — a touch lighter than the near-black hero */
+  color: #fff;
+}
+.rc-section--mint,
+.rc-section--offer {
+  background: var(--rc-canvas);
+  color: var(--rc-ink);
+}
+.rc-section--lilac,
+.rc-section--kids {
+  background: var(--rc-canvas-soft);
   color: var(--rc-ink);
 }
 
@@ -381,10 +440,10 @@
 }
 .rc-sec-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-size: clamp(32px, 4.6vw, 62px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+  font-size: clamp(34px, 4.8vw, 60px);
   margin: 0;
 }
 .rc-sec-blurb {
@@ -418,11 +477,15 @@
   gap: 22px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: 14px;
+  padding-bottom: 6px;
   margin: 0 -4px;
   padding-left: 4px;
   padding-right: 4px;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.rc-rail::-webkit-scrollbar {
+  display: none;
 }
 .rc-rail-item {
   scroll-snap-align: start;
@@ -455,9 +518,13 @@
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  padding: 4px 4px 14px;
+  padding: 4px 4px 6px;
   margin: 0 -4px;
-  scrollbar-width: thin;
+  scrollbar-width: none; /* hide the native scrollbar — arrows + dots drive it */
+  -ms-overflow-style: none;
+}
+.rc-carousel-track::-webkit-scrollbar {
+  display: none;
 }
 .rc-carousel-item {
   flex: 0 0 auto;
@@ -472,36 +539,36 @@
 }
 @media (min-width: 1100px) {
   .rc-carousel-item {
-    width: calc((100% - 3 * 22px) / 4);
+    width: calc((100% - 2 * 22px) / 3); /* bigger editorial cards: 3 across */
   }
 }
 
 /* Arrow buttons — float over the viewport edges, out of the way on mobile. */
 .rc-carousel-arrow {
   position: absolute;
-  top: calc(50% - 14px);
+  top: var(--rc-arrow-top, 42%); /* centred on the card IMAGE, set by JS per layout */
   transform: translateY(-50%);
   z-index: 3;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
-  border: 1px solid rgba(20, 22, 26, 0.12);
+  border: 1px solid var(--rc-hairline-strong);
   background: #fff;
-  color: var(--rc-ink, #14161a);
+  color: var(--rc-ink);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(20, 22, 26, 0.14);
+  box-shadow: 0 8px 24px rgba(12, 10, 9, 0.18);
   display: none;
   align-items: center;
   justify-content: center;
   transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
 }
 .rc-carousel-arrow--prev {
-  left: -10px;
+  left: 12px;
 }
 .rc-carousel-arrow--next {
-  right: -10px;
+  right: 12px;
 }
 .rc-carousel-arrow:hover {
   transform: translateY(-50%) scale(1.06);
@@ -557,18 +624,18 @@
 /* ---- Grid (catalogue, related, saved) -------------------------------------*/
 .rc-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* bigger, editorial 3-up */
+  gap: 28px;
 }
-@media (max-width: 1100px) {
-  .rc-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   .rc-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 20px;
+  }
+}
+@media (max-width: 560px) {
+  .rc-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -581,10 +648,11 @@
 }
 .rc-card-media {
   position: relative;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  background: #ece9e0;
-  aspect-ratio: 1.12;
+  background: var(--rc-surface-strong);
+  border: 1px solid var(--rc-hairline);
+  aspect-ratio: 1; /* bigger, squarer product shot — more editorial presence */
 }
 .rc-card--dark .rc-card-media {
   background: #24282f;
@@ -614,12 +682,14 @@
   position: absolute;
   right: 12px;
   top: 12px;
-  background: var(--rc-coral);
-  color: #fff;
+  background: var(--rc-surface);
+  color: var(--rc-ink);
+  border: 1px solid var(--rc-hairline);
   padding: 4px 10px;
   border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 .rc-chip-offer--inline {
   position: static;
@@ -671,25 +741,27 @@
   font-size: 14px;
 }
 .rc-card-body {
-  padding: 15px 2px 2px;
+  padding: 16px 2px 2px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   flex: 1;
 }
 .rc-card-cat {
-  font-size: 11.5px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--muted-foreground);
+  color: var(--rc-muted);
 }
 .rc-card--dark .rc-card-cat {
   color: rgba(255, 255, 255, 0.55);
 }
 .rc-card-name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display); /* editorial serif product name */
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.15;
   margin: 0;
 }
 .rc-swatches {
@@ -734,8 +806,8 @@
   font-size: 14px;
 }
 .rc-price-now {
-  font-weight: 800;
-  font-size: 19px;
+  font-weight: 600;
+  font-size: 17px;
 }
 .rc-price--lg .rc-price-now {
   font-size: 30px;
@@ -748,16 +820,15 @@
   background: var(--rc-ink);
   color: #fff;
   border-radius: 999px;
-  padding: 9px 16px;
+  padding: 9px 17px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 500;
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .rc-card-add:hover:not(:disabled) {
-  background: var(--rc-gold);
-  color: #1b1403;
+  background: #000;
 }
 .rc-card-add:disabled {
   opacity: 0.6;
@@ -765,15 +836,18 @@
 }
 .rc-card--dark .rc-card-add {
   background: #fff;
-  color: #14161a;
+  color: var(--rc-ink);
 }
 .rc-card-action {
   font-size: 13px;
-  font-weight: 700;
-  color: var(--rc-gold);
+  font-weight: 500;
+  color: var(--rc-ink);
+  border-bottom: 1px solid var(--rc-ink);
+  padding-bottom: 2px;
 }
 .rc-card--dark .rc-card-action {
-  color: var(--rc-gold-bright);
+  color: #fff;
+  border-bottom-color: #fff;
 }
 .rc-card-action.is-disabled {
   color: var(--muted-foreground);
@@ -828,10 +902,10 @@
 }
 .rc-cat-body h3 {
   font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 500;
   margin: 4px 0 6px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
 }
 .rc-cat-go {
   font-size: 13px;
@@ -864,10 +938,10 @@
 }
 .rc-feature-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
-  font-size: clamp(40px, 6vw, 86px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.0;
+  font-size: clamp(40px, 6vw, 82px);
   margin: 6px 0 4px;
 }
 .rc-feature-copy .rc-price {
@@ -942,7 +1016,7 @@
   margin-top: 12px;
 }
 .rc-collection-links a {
-  color: var(--rc-gold);
+  color: var(--rc-ink);
   font-weight: 650;
 }
 
@@ -956,10 +1030,10 @@
 }
 .rc-shop-title {
   font-family: var(--font-display);
-  font-size: clamp(38px, 6vw, 72px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1;
+  font-size: clamp(40px, 6vw, 70px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.03;
   margin: 0 0 10px;
 }
 .rc-filters {
@@ -995,7 +1069,7 @@
 .rc-chip.is-active {
   background: var(--rc-ink);
   border-color: var(--rc-ink);
-  color: var(--rc-gold-bright);
+  color: #fff;
 }
 .rc-filter-controls {
   display: flex;
@@ -1021,7 +1095,7 @@
 }
 .rc-input:focus,
 .rc-sort select:focus {
-  outline: 2px solid var(--rc-gold);
+  outline: 2px solid var(--rc-ink);
   outline-offset: 1px;
 }
 .rc-filter-meta {
@@ -1038,7 +1112,7 @@
   padding: 0;
   font: inherit;
   font-weight: 700;
-  color: var(--rc-gold);
+  color: var(--rc-ink);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -1058,12 +1132,12 @@
   margin-bottom: 22px;
 }
 .rc-crumbs a:hover {
-  color: var(--rc-gold);
+  color: var(--rc-ink);
 }
 .rc-detail {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
-  gap: 48px;
+  gap: 60px;
   align-items: start;
 }
 .rc-detail-media {
@@ -1120,16 +1194,19 @@
 }
 .rc-detail-title {
   font-family: var(--font-display);
-  font-size: clamp(36px, 5vw, 64px);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 0.98;
-  margin: 8px 0 14px;
+  font-size: clamp(40px, 5.2vw, 68px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+  margin: 10px 0 16px;
 }
 .rc-detail-desc {
-  color: var(--muted-foreground);
-  font-size: 16px;
+  color: var(--rc-body);
+  font-size: 17px;
+  line-height: 1.6;
+  letter-spacing: 0.1px;
   margin-bottom: 8px;
+  max-width: 48ch;
 }
 .rc-detail-note {
   font-size: 13px;
@@ -1285,8 +1362,9 @@
 
 /* ---- Footer ---------------------------------------------------------------*/
 .rc-footer {
-  background: var(--rc-ink);
-  color: #fff;
+  background: var(--rc-canvas-soft);
+  color: var(--rc-body);
+  border-top: 1px solid var(--rc-hairline);
   margin-top: 0;
 }
 .rc-footer-inner {
@@ -1297,7 +1375,7 @@
   padding-bottom: 48px;
 }
 .rc-footer-tag {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--rc-muted);
   font-size: 14px;
   max-width: 320px;
   margin: 16px 0 0;
@@ -1313,18 +1391,18 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-size: 12px;
-  color: var(--rc-gold-bright);
+  color: var(--rc-muted);
   margin: 0 0 4px;
 }
 .rc-footer-col a,
 .rc-footer-col span {
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--rc-body);
 }
 .rc-footer-col a:hover {
-  color: #fff;
+  color: var(--rc-ink);
 }
 .rc-footer-muted {
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: var(--rc-muted) !important;
   font-style: italic;
 }
 .rc-footer-base {
@@ -1334,12 +1412,12 @@
   justify-content: space-between;
   padding-top: 22px;
   padding-bottom: 36px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--rc-hairline);
   font-size: 12.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--rc-muted);
 }
 .rc-footer-credit a {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--rc-body);
   text-decoration: underline;
 }
 
