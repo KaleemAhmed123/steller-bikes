@@ -46,6 +46,11 @@ export function RailCarousel({
     setPage(Math.round(el.scrollLeft / w));
     setAtStart(el.scrollLeft <= 2);
     setAtEnd(el.scrollLeft + w >= el.scrollWidth - 2);
+    // Centre the arrows on the card IMAGE (not the whole card incl. name/price).
+    const media = el.querySelector<HTMLElement>('.rc-card-media');
+    if (media && el.parentElement) {
+      el.parentElement.style.setProperty('--rc-arrow-top', `${media.offsetHeight / 2 + 4}px`);
+    }
   }, []);
 
   useEffect(() => {

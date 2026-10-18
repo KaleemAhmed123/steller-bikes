@@ -12,10 +12,9 @@ import { RailCarousel } from './RailCarousel';
 // (arrows + dots). Placed below the two 3D moments so 3D stays the star.
 // Offers/Kids self-guard on empty inside RailCarousel.
 
-// "Fresh" theme: one light, lively pastel per section (mint / lilac / peach /
-// sky) — catchy and distinct, but all the same softness so the page stays
-// composed. One gold accent ties them; the dark 3D moments give the contrast.
-const GOLD = '#c0974a';
+// Editorial direction: off-white bands, one ink accent (no saturated colour).
+// Section backgrounds are set by the rc-section--* classes in redesign.css.
+const GOLD = '#0c0a09'; // ink accent (kept the name to avoid churn across call-sites)
 
 export function HomeCarousels({ data }: { data: HomeData }) {
   return (
@@ -65,11 +64,11 @@ export function HomeCarousels({ data }: { data: HomeData }) {
 // own accent so the page doesn't read as one repeated template.
 
 const CAT_ACCENT: Record<string, string> = {
-  Mountain: '#2b4cff',
-  City: '#c0974a',
-  Road: '#14161a',
-  Kids: '#17b0a0',
-  Accessories: '#ff5633',
+  Mountain: '#0c0a09',
+  City: '#0c0a09',
+  Road: '#0c0a09',
+  Kids: '#0c0a09',
+  Accessories: '#0c0a09',
 };
 
 export function CategoryExplorer({ tiles }: { tiles: CatTile[] }) {
@@ -216,7 +215,7 @@ export function Showroom({ settings }: { settings?: StoreSettings }) {
       <div className="container">
         <div className="rc-showroom">
           <div>
-            <span className="rc-eyebrow" style={{ '--rc-accent': '#c0974a' } as CSSProperties}>
+            <span className="rc-eyebrow" style={{ '--rc-accent': '#ffffff' } as CSSProperties}>
               Visit · order · ride
             </span>
             <h2 className="rc-sec-title">A real shop in Kanpur.</h2>
@@ -224,7 +223,7 @@ export function Showroom({ settings }: { settings?: StoreSettings }) {
               Raju Cycles is a bicycle shop in Kanpur, Uttar Pradesh. Order online with cash on
               delivery, or come and see the range in person.
             </p>
-            <Link href="/shop" className="rc-btn rc-btn--gold">
+            <Link href="/shop" className="rc-btn rc-btn--light">
               Browse all cycles
             </Link>
           </div>
