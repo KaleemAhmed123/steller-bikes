@@ -13,7 +13,8 @@ import type { Product } from './types';
 //   - Budget Picks  → cheapest variant price, ascending.
 //   - Offers        → variants whose compareAt actually exceeds price.
 //   - By category   → the product's real category.
-//   - Featured      → a curated slug list (an editorial pick, NOT a sales claim).
+//   - Featured      → the product's real `featured` flag (an editorial pick).
+//   - Popular       → real units sold (soldCount), from orders — shown only when > 0.
 
 // A card-ready view of a product. Decoupled from the raw Product shape.
 export interface CardProduct {
@@ -30,19 +31,9 @@ export interface CardProduct {
   variantCount: number;
   soleVariantId: string | null; // set only when there's exactly one variant (direct add-to-cart)
   inStock: boolean;
+  featured: boolean; // editorial "Staff picks" flag (from the backend)
+  soldCount: number; // real units sold (0 when none)
 }
-
-// Editorial "Staff Picks" — a curated spread across categories. Honestly a
-// hand-picked selection, not a popularity ranking. A later backend `featured`
-// flag can replace this constant.
-export const FEATURED_SLUGS = [
-  'metro-one',
-  'velocity-r',
-  'trail-29',
-  'cafe-roadster',
-  'lil-explorer-20',
-  'guardian-helmet',
-];
 
 export function toCard(p: Product): CardProduct {
   const prices = p.variants.map((v) => v.price);
@@ -71,14 +62,17 @@ export function toCard(p: Product): CardProduct {
     variantCount: p.variants.length,
     soleVariantId: p.variants.length === 1 ? p.variants[0]._id : null,
     inStock: p.variants.some((v) => v.stock > 0),
+    featured: p.featured ?? false,
+    soldCount: p.soldCount ?? 0,
   };
 }
 
-export type SortKey = 'newest' | 'price-asc' | 'price-desc';
+export type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'popular';
 
 export function sortCards(cards: CardProduct[], sort: SortKey): CardProduct[] {
   if (sort === 'price-asc') return [...cards].sort((a, b) => a.fromPrice - b.fromPrice);
   if (sort === 'price-desc') return [...cards].sort((a, b) => b.fromPrice - a.fromPrice);
+  if (sort === 'popular') return [...cards].sort((a, b) => b.soldCount - a.soldCount);
   return cards; // 'newest' — already newest-first from the API
 }
 
@@ -141,6 +135,11 @@ export const COLLECTIONS = {
     title: 'On offer',
     blurb: 'Only real sample discounts — the crossed-out price is the variant’s own compareAt.',
   },
+  popular: {
+    eyebrow: 'Most ordered',
+    title: 'Popular right now',
+    blurb: 'Ranked by units actually ordered — real sales, not an editorial pick. Empty until orders exist.',
+  },
 } as const;
 
 export type CollectionSlug = keyof typeof COLLECTIONS;
@@ -155,7 +154,6 @@ export interface CollectionData {
 export async function loadCollection(slug: CollectionSlug): Promise<CollectionData> {
   const { products } = await getProducts({});
   const cards = products.map(toCard); // newest-first
-  const bySlug = new Map(cards.map((c) => [c.slug, c]));
 
   let list: CardProduct[];
   switch (slug) {
@@ -163,13 +161,16 @@ export async function loadCollection(slug: CollectionSlug): Promise<CollectionDa
       list = cards;
       break;
     case 'staff-picks':
-      list = FEATURED_SLUGS.map((s) => bySlug.get(s)).filter((c): c is CardProduct => Boolean(c));
+      list = cards.filter((c) => c.featured);
       break;
     case 'budget':
       list = sortCards(cards, 'price-asc');
       break;
     case 'offers':
       list = cards.filter((c) => c.hasOffer);
+      break;
+    case 'popular':
+      list = sortCards(cards.filter((c) => c.soldCount > 0), 'popular');
       break;
   }
   return { ...COLLECTIONS[slug], cards: list };
@@ -180,7 +181,6 @@ export async function loadHomeData(): Promise<HomeData> {
   const cards = products.map(toCard); // API order = newest-first
 
   const byCat = (cat: string) => cards.filter((c) => c.category.toLowerCase() === cat.toLowerCase());
-  const bySlug = new Map(cards.map((c) => [c.slug, c]));
 
   return {
     categories,
@@ -188,7 +188,7 @@ export async function loadHomeData(): Promise<HomeData> {
     tiles: catTiles(cards),
     newArrivals: cards.slice(0, 8),
     heroNew: cards[0] ?? null,
-    featured: FEATURED_SLUGS.map((s) => bySlug.get(s)).filter((c): c is CardProduct => Boolean(c)),
+    featured: cards.filter((c) => c.featured),
     budget: sortCards(cards, 'price-asc').slice(0, 8),
     offers: cards.filter((c) => c.hasOffer),
     kids: byCat('Kids'),

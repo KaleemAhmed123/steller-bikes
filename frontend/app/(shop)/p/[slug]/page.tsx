@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { getProduct, getProducts } from '@/lib/api';
 import { toCard } from '@/lib/catalogue';
 import { AddToCart } from '../../components/AddToCart';
-import { ZoomImage } from '../../components/ZoomImage';
+import { ProductGallery } from '../../components/ProductGallery';
 import { WishlistButton } from '../../components/WishlistButton';
 import { ProductCard } from '../../components/ProductCard';
 
@@ -49,7 +49,7 @@ export default async function ProductPage({ params }: Params) {
 
       <article className="rc-detail">
         <div className="rc-detail-media">
-          <ZoomImage src={product.image} alt={`${product.name} — illustrative sample photo`} />
+          <ProductGallery image={product.image} images={product.images} name={product.name} />
         </div>
 
         <div className="rc-detail-info">
@@ -73,8 +73,7 @@ export default async function ProductPage({ params }: Params) {
           />
 
           <p className="rc-detail-note">
-            Stock and price are tracked per option above. Photos are illustrative sample images
-            (one per product for now).
+            Stock and price are tracked per option above. Photos are illustrative sample images.
           </p>
 
           {specs.length > 0 && (

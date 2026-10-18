@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Browse the full range of sample bicycles and accessories from Raju Cycles, Kanpur.',
 };
 
-const SORTS: SortKey[] = ['newest', 'price-asc', 'price-desc'];
+const SORTS: SortKey[] = ['newest', 'price-asc', 'price-desc', 'popular'];
 
 // The catalogue. Server component: reads filters from the URL, fetches the
 // matching products from the API, and renders them. Sort is applied here

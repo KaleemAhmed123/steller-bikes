@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { loadHomeData, type HomeData } from '@/lib/catalogue';
+import { getSettings } from '@/lib/api';
+import type { StoreSettings } from '@/lib/types';
 import BikeHero from './components/hero/BikeHero';
 import Brand3D from './components/hero/Brand3D';
-import { CategoryExplorer, CollectionsStrip, HomeCarousels, Showroom } from './components/home/HomeSections';
+import { CategoryExplorer, HomeCarousels, Showroom } from './components/home/HomeSections';
 
 // The homepage: a cinematic, 3D-forward experience. Two 3D moments (the hero
 // sequence + a brand turntable), then lean shopping entry points — category
@@ -15,6 +17,7 @@ export default async function HomePage() {
   } catch {
     data = null;
   }
+  const settings: StoreSettings = await getSettings();
 
   return (
     <>
@@ -36,9 +39,7 @@ export default async function HomePage() {
       {/* 3D stays the star (both moments above); the product carousels sit below. */}
       {data && <HomeCarousels data={data} />}
 
-      <CollectionsStrip />
-
-      <Showroom />
+      <Showroom settings={settings} />
     </>
   );
 }

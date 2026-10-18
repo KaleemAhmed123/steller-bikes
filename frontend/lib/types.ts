@@ -15,10 +15,27 @@ export interface Product {
   name: string;
   category: string;
   description: string;
-  image: string;
+  image: string; // primary / card thumbnail
+  images?: string[]; // extra gallery shots (absent/empty = single image)
+  featured?: boolean; // editorial "Staff picks" flag
+  soldCount?: number; // units sold, derived from real orders (0 when none)
   specs: Record<string, string>;
   status: string;
   variants: Variant[];
+}
+
+// Public shop details shown in the storefront footer/showroom. Every field can
+// be '' — the UI falls back to an honest "coming soon" when blank.
+export interface StoreSettings {
+  addressLine1: string;
+  city: string;
+  state: string;
+  pin: string;
+  phone: string;
+  whatsapp: string;
+  hours: string;
+  deliveryPolicy: string;
+  email: string;
 }
 
 // One line in the server-computed cart view. Fields past `available` are present

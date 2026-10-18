@@ -112,6 +112,7 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
           <span className="rc-sr-only">Sort by</span>
           <select value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products">
             <option value="newest">Newest</option>
+            <option value="popular">Most popular</option>
             <option value="price-asc">Price: low to high</option>
             <option value="price-desc">Price: high to low</option>
           </select>

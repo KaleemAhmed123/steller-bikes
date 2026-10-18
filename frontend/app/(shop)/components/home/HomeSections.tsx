@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import { money } from '@/lib/api';
+import type { StoreSettings } from '@/lib/types';
 import type { CardProduct, CatTile, HomeData } from '@/lib/catalogue';
 import { ProductCard } from '../ProductCard';
 import { SectionHead } from './HomeRail';
@@ -11,36 +12,40 @@ import { RailCarousel } from './RailCarousel';
 // (arrows + dots). Placed below the two 3D moments so 3D stays the star.
 // Offers/Kids self-guard on empty inside RailCarousel.
 
+// "Fresh" theme: one light, lively pastel per section (mint / lilac / peach /
+// sky) — catchy and distinct, but all the same softness so the page stays
+// composed. One gold accent ties them; the dark 3D moments give the contrast.
+const GOLD = '#c0974a';
+
 export function HomeCarousels({ data }: { data: HomeData }) {
   return (
     <>
       <RailCarousel
-        section="rc-section--light"
+        section="rc-section--mint"
         eyebrow="Fresh off the stand"
         title="New arrivals"
         blurb="The newest sample bikes, newest first."
         cards={data.newArrivals}
         href="/collections/new-arrivals"
-        accent="#8bbf2e"
+        accent={GOLD}
       />
       <RailCarousel
-        section="rc-section--paper"
+        section="rc-section--lilac"
         eyebrow="Hand-picked by us"
         title="Staff picks"
         blurb="An editorial selection across the range — not a popularity ranking."
         cards={data.featured}
         href="/collections/staff-picks"
-        accent="#2b4cff"
+        accent={GOLD}
       />
       <RailCarousel
         section="rc-section--offer"
-        tone="dark"
         eyebrow="Genuine markdowns"
         title="On offer now"
         blurb="Only real sample discounts — the crossed-out price is the variant's own compareAt."
         cards={data.offers}
         href="/collections/offers"
-        accent="#ffffff"
+        accent={GOLD}
       />
       <RailCarousel
         section="rc-section--kids"
@@ -49,7 +54,7 @@ export function HomeCarousels({ data }: { data: HomeData }) {
         blurb="Smaller frames, lighter builds, first-ride friendly."
         cards={data.kids}
         href="/shop?category=Kids"
-        accent="#0c6b60"
+        accent={GOLD}
       />
     </>
   );
@@ -92,47 +97,6 @@ export function CategoryExplorer({ tiles }: { tiles: CatTile[] }) {
                 <h3>{t.name}</h3>
                 <span className="rc-cat-go" aria-hidden="true">Explore →</span>
               </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// --- Collections strip -------------------------------------------------------
-// Entry points to the curated collection pages (the rails that moved off the
-// 3D-forward homepage) plus the two category landing pages.
-
-const COLLECTION_LINKS: { href: string; eyebrow: string; title: string; accent: string }[] = [
-  { href: '/collections/new-arrivals', eyebrow: 'Fresh in', title: 'New arrivals', accent: '#8bbf2e' },
-  { href: '/collections/staff-picks', eyebrow: 'Our pick', title: 'Staff picks', accent: '#2b4cff' },
-  { href: '/collections/budget', eyebrow: 'Value', title: 'Budget picks', accent: '#c0974a' },
-  { href: '/collections/offers', eyebrow: 'Save', title: 'On offer', accent: '#ff5633' },
-  { href: '/shop?category=Kids', eyebrow: 'Family', title: 'Kids & family', accent: '#17b0a0' },
-  { href: '/shop?category=Accessories', eyebrow: 'Add-ons', title: 'Accessories', accent: '#9a6bff' },
-];
-
-export function CollectionsStrip() {
-  return (
-    <section className="rc-section rc-section--paper" data-reveal>
-      <div className="container">
-        <SectionHead
-          eyebrow="Shop the range"
-          title="Collections"
-          blurb="Jump straight to a curated set — each on its own page, built from real catalogue data."
-        />
-        <div className="rc-collink-grid">
-          {COLLECTION_LINKS.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className="rc-collink"
-              style={{ ['--rc-accent' as string]: c.accent }}
-            >
-              <span className="rc-collink-eyebrow">{c.eyebrow}</span>
-              <span className="rc-collink-title">{c.title}</span>
-              <span className="rc-collink-go" aria-hidden="true">→</span>
             </Link>
           ))}
         </div>
@@ -233,10 +197,20 @@ export function KidsBlock({ cards }: { cards: CardProduct[] }) {
 }
 
 // --- Showroom / honest store info --------------------------------------------
-// No invented address, phone, hours, or delivery promise — only what the real
-// checkout already supports (COD) and the known city (Kanpur).
+// Reads real shop details from store settings when present; any blank field
+// keeps its honest "coming soon" placeholder. No invented data.
 
-export function Showroom() {
+// Build the address line from whatever parts are filled (blank parts dropped).
+function addressLine(s?: StoreSettings): string {
+  if (!s) return '';
+  return [s.addressLine1, s.city, s.state, s.pin].filter(Boolean).join(', ');
+}
+
+export function Showroom({ settings }: { settings?: StoreSettings }) {
+  const address = addressLine(settings);
+  const location = address || 'Kanpur, Uttar Pradesh';
+  const contact = settings?.phone || settings?.whatsapp || 'Phone & showroom address coming soon';
+
   return (
     <section className="rc-section rc-section--dark" data-reveal>
       <div className="container">
@@ -257,7 +231,7 @@ export function Showroom() {
           <ul className="rc-facts">
             <li>
               <span className="rc-fact-k">Location</span>
-              <span className="rc-fact-v">Kanpur, Uttar Pradesh</span>
+              <span className="rc-fact-v">{location}</span>
             </li>
             <li>
               <span className="rc-fact-k">Payment</span>
@@ -265,8 +239,20 @@ export function Showroom() {
             </li>
             <li>
               <span className="rc-fact-k">Contact</span>
-              <span className="rc-fact-v">Phone &amp; showroom address coming soon</span>
+              <span className="rc-fact-v">{contact}</span>
             </li>
+            {settings?.hours && (
+              <li>
+                <span className="rc-fact-k">Hours</span>
+                <span className="rc-fact-v">{settings.hours}</span>
+              </li>
+            )}
+            {settings?.deliveryPolicy && (
+              <li>
+                <span className="rc-fact-k">Delivery</span>
+                <span className="rc-fact-v">{settings.deliveryPolicy}</span>
+              </li>
+            )}
           </ul>
         </div>
       </div>

@@ -9,6 +9,7 @@ import type {
   Product,
   SavedAddress,
   StaffMe,
+  StoreSettings,
 } from './types';
 
 // The Express API base URL. Public (not a secret) so it works in both the
@@ -51,6 +52,31 @@ export async function getProduct(slug: string): Promise<Product | null> {
 
   const json = await res.json();
   return json.data as Product;
+}
+
+const EMPTY_SETTINGS: StoreSettings = {
+  addressLine1: '',
+  city: '',
+  state: '',
+  pin: '',
+  phone: '',
+  whatsapp: '',
+  hours: '',
+  deliveryPolicy: '',
+  email: '',
+};
+
+// Public shop details for the footer/showroom. Never throws — falls back to the
+// empty store (honest "coming soon" placeholders) if the API is unreachable.
+export async function getSettings(): Promise<StoreSettings> {
+  try {
+    const res = await fetch(`${BASE}/api/settings`, { cache: 'no-store' });
+    if (!res.ok) return EMPTY_SETTINGS;
+    const json = await res.json();
+    return { ...EMPTY_SETTINGS, ...(json.data ?? {}) } as StoreSettings;
+  } catch {
+    return EMPTY_SETTINGS;
+  }
 }
 
 // --- Cart (browser-only calls) ---------------------------------------------
