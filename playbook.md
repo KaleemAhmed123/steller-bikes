@@ -41,8 +41,13 @@ cd ../frontend && npm install                         # frontend .env.local is o
 
 Backend `.env` keys: `MONGODB_URI` (required), `PORT` (default 3001), `FRONTEND_ORIGIN` (default
 `http://localhost:3000` — set to your Vercel URL in production).
-Frontend `.env.local` key (optional in dev): `NEXT_PUBLIC_API_URL` (default `http://localhost:3001`
-— set to your Render backend URL in production).
+Frontend `.env.local` keys (all optional in dev):
+- `NEXT_PUBLIC_API_URL` (default `http://localhost:3001` — set to your Render backend URL in production).
+- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` + `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — to enable
+  **upload-from-computer** for product photos in the admin. Without them, the admin still works:
+  paste an image URL or `/path`. Setup: make a free Cloudinary account → Settings → Upload → add an
+  **unsigned** upload preset → put the cloud name + preset name here. (Unsigned = the browser uploads
+  directly; safe to expose. Tighten later with a signed preset + size/type limits if needed.)
 
 ### 1c. Seed the sample cycles
 
@@ -87,7 +92,9 @@ cd backend && npm run dev        # http://localhost:3001
                                  #   /api/account/* (signup, login, logout, me, verify,
                                  #                 password/forgot, password/reset, addresses CRUD) — CUSTOMER
                                  #   /api/admin/* (dashboard, orders, orders/:id/transition,
-                                 #                 inventory, inventory/adjust) — auth + permission
+                                 #                 inventory, inventory/adjust,
+                                 #                 products CRUD [list/:id/create/patch/delete],
+                                 #                 settings [get/patch]) — auth + permission
 # Terminal 2 — the storefront
 cd frontend && npm run dev       # http://localhost:3000
                                  #   shop + /p/<slug> + /cart + /checkout + /order/<id>
@@ -150,6 +157,14 @@ and a public **store-settings** doc + `GET /api/settings` (Showroom reads it; bl
 Backend typecheck + 30 tests green; frontend typecheck clean. **`next build` not yet run** (dev was
 live on :3000 — stop dev, then build). **Re-run `npm run seed`** so existing products get `featured`.
 Still deferred: admin product-edit UI (to toggle `featured`), account-synced wishlist, settings admin UI.
+
+**Admin config added — 2026-10-18** (`docs/specs/storefront-redesign/build-step-5.md`): the admin now
+has **Products** (full create/edit/delete, variants, featured toggle, photo upload or paste, status)
+and **Settings** (shop address/phone/WhatsApp/hours/delivery). New permissions: `products.manage`
+(owner + manager), `settings.manage` (owner only — the Settings nav shows for owners). Photo upload
+uses Cloudinary (see frontend env above); paste-a-URL works without it. Backend typecheck + 37 tests
+green; live authenticated create→edit→delete E2E verified (variant ids stay stable across edits).
+**`next build` not yet run** (dev was live on :3000 — stop dev, then build).
 
 Next later phases (unchanged): payments (Razorpay), returns, coupons, real email.
 
