@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Sample kids' bicycle illustration">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1d22"/>
+      <stop offset="1" stop-color="#2a2d35"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#g)"/>
+  <g fill="none" stroke="#e7b84b" stroke-width="10" stroke-linecap="round" transform="translate(190 300)">
+    <circle cx="70" cy="120" r="95"/>
+    <circle cx="350" cy="120" r="95"/>
+    <path d="M70 120 L190 120 L270 10 L120 10 M190 120 L250 10 M350 120 L285 20 M285 20 L255 20 M270 10 L300 10"/>
+  </g>
+  <text x="400" y="80" fill="#8a8f98" font-family="system-ui, sans-serif" font-size="26" font-weight="700" letter-spacing="3" text-anchor="middle">SAMPLE · KIDS</text>
+  <text x="400" y="560" fill="#5a5f68" font-family="system-ui, sans-serif" font-size="18" letter-spacing="2" text-anchor="middle">RAJU CYCLES · ILLUSTRATIVE</text>
+</svg>
