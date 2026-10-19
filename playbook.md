@@ -46,6 +46,13 @@ Backend `.env` keys: `MONGODB_URI` (required), `PORT` (default 3001), `FRONTEND_
   account → Settings → API Keys → **Test mode** → generate test keys → paste both here. The secret
   stays server-side only. (Confirm **auto-capture** is ON in the dashboard so approved payments are
   actually collected.)
+- `RESEND_API_KEY` + `MAIL_FROM` — to send **real email** (account verify, password reset, order
+  receipts). Blank key → emails print to the server console (dev mock); nothing breaks. Setup: make a
+  free account at [resend.com](https://resend.com) → **API Keys** → create one (`re_…`) → paste as
+  `RESEND_API_KEY`. Set `MAIL_FROM` to an address on a **domain you verified** in Resend (Domains →
+  add → add the DNS records), e.g. `Raju Cycles <orders@yourdomain.com>`. For a quick test before you
+  own a domain, `Raju Cycles <onboarding@resend.dev>` works but only delivers to your own Resend
+  account's email. A send failure never breaks a request — it's logged (`[mail]`) and skipped.
 
 Frontend `.env.local` keys (all optional in dev):
 - `NEXT_PUBLIC_API_URL` (default `http://localhost:3001` — set to your Render backend URL in production).
