@@ -10,9 +10,31 @@ export const productQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
   minPrice: z.coerce.number().int().nonnegative().optional(),
   maxPrice: z.coerce.number().int().nonnegative().optional(),
+  // Lenient like pagination: an unknown/garbage sort falls back to 'newest' rather
+  // than 400ing a plain read.
+  sort: z.enum(['newest', 'price-asc', 'price-desc', 'popular']).catch('newest'),
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;
+export type ProductSort = ProductQuery['sort'];
+
+// The MongoDB sort spec for each catalogue sort. `_id` is the last tiebreaker so
+// paging is STABLE — without it, equal keys (same price / same soldCount) could
+// reorder between page requests and drop or duplicate a product across pages.
+// `fromPrice` and `soldCount` are fields the products aggregation adds (see
+// routes/products.ts); they are not stored on the document.
+export function productSortSpec(sort: ProductSort): Record<string, 1 | -1> {
+  switch (sort) {
+    case 'price-asc':
+      return { fromPrice: 1, _id: 1 };
+    case 'price-desc':
+      return { fromPrice: -1, _id: 1 };
+    case 'popular':
+      return { soldCount: -1, createdAt: -1, _id: 1 };
+    default:
+      return { createdAt: -1, _id: 1 };
+  }
+}
 
 // Turn validated filters into a MongoDB query. Always scoped to published products.
 export function buildProductFilter(q: ProductQuery): FilterQuery<unknown> {
