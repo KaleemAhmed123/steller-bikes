@@ -7,6 +7,7 @@ status.
 |------|--------|--------|--------------|
 | **Storefront rebuild** — rebuild the Raju Cycles store + admin on React + Node/Express + MongoDB, porting the proven design from the v1 prototype | [`storefront-rebuild/`](storefront-rebuild/) | In progress | 2026-10-16 |
 | **Storefront redesign** — cinematic 3D hero (R3F + GSAP + reflections/bloom) + 3D-forward homepage, redesigned cards/catalogue/detail, dedicated collection pages; storefront-first, no backend change | [`storefront-redesign/`](storefront-redesign/) | Shipped | 2026-10-18 |
+| **Razorpay payments** — online pay (UPI/card/netbanking) alongside COD; server-authoritative amount, signature-verified, stock decremented only after payment. Webhook deferred to deployment | [`razorpay-payments/`](razorpay-payments/) | In progress | 2026-10-18 |
 
 ## What "status" means
 

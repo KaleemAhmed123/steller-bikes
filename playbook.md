@@ -41,8 +41,17 @@ cd ../frontend && npm install                         # frontend .env.local is o
 
 Backend `.env` keys: `MONGODB_URI` (required), `PORT` (default 3001), `FRONTEND_ORIGIN` (default
 `http://localhost:3000` — set to your Vercel URL in production).
+- `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` — to enable **online payment** (UPI/card/netbanking)
+  alongside Cash-on-Delivery. Both blank → online pay is off, COD still works. Setup: make a Razorpay
+  account → Settings → API Keys → **Test mode** → generate test keys → paste both here. The secret
+  stays server-side only. (Confirm **auto-capture** is ON in the dashboard so approved payments are
+  actually collected.)
+
 Frontend `.env.local` keys (all optional in dev):
 - `NEXT_PUBLIC_API_URL` (default `http://localhost:3001` — set to your Render backend URL in production).
+- `NEXT_PUBLIC_RAZORPAY_KEY_ID` — the **same test key id** as the backend. Presence of this flag is
+  what shows the "Pay online" option at checkout. (UI flag only; the real key the popup uses comes
+  back from the server.)
 - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` + `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — to enable
   **upload-from-computer** for product photos in the admin. Without them, the admin still works:
   paste an image URL or `/path`. Setup: make a free Cloudinary account → Settings → Upload → add an
