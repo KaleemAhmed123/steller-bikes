@@ -9,6 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": false,
     "types": ["node"],
+    "rootDir": "src",
     "outDir": "dist"
   },
   "include": ["src"]
