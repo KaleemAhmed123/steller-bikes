@@ -752,6 +752,133 @@ h3 {
   margin-bottom: 22px;
 }
 
+/* Order status timeline — a horizontal stepper on the happy path. */
+.order-timeline {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 18px 0 22px;
+  padding: 0;
+  position: relative;
+}
+
+/* The connecting line behind the dots. */
+.order-timeline::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 7%;
+  right: 7%;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.order-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.order-step-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #fff;
+}
+
+.order-step-label {
+  font-size: 12px;
+  color: var(--muted, #6b7079);
+}
+
+.order-step.is-done .order-step-dot {
+  background: var(--rc-ink, #15171c);
+  border-color: var(--rc-ink, #15171c);
+}
+
+.order-step.is-active .order-step-dot {
+  border-color: var(--rc-ink, #15171c);
+  box-shadow: 0 0 0 4px rgba(21, 23, 28, 0.12);
+}
+
+.order-step.is-done .order-step-label,
+.order-step.is-active .order-step-label {
+  color: var(--rc-ink, #15171c);
+  font-weight: 650;
+}
+
+.order-status-note {
+  margin: 18px 0 22px;
+}
+
+.order-tracking {
+  margin: -6px 0 18px;
+  font-size: 14px;
+}
+
+/* Money breakdown under the items. */
+.order-totals {
+  margin-top: 6px;
+}
+
+.order-total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  font-size: 14px;
+  color: var(--muted, #6b7079);
+}
+
+.order-grand-total {
+  margin-top: 4px;
+}
+
+/* Delivery address + payment, side by side. */
+.order-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 22px 0;
+}
+
+.order-fact {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.order-fact h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #6b7079);
+  margin: 0 0 8px;
+}
+
+.order-fact p {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+@media (max-width: 560px) {
+  .order-facts {
+    grid-template-columns: 1fr;
+  }
+  .order-step-label {
+    font-size: 11px;
+  }
+}
+
 /* ============ Admin (functional operator UI) ============ */
 .admin {
   display: flex;
@@ -1013,6 +1140,25 @@ h3 {
 
 .notes-add .btn-primary {
   align-self: flex-start;
+}
+
+.notes-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.notes-add-row select,
+.notes-add-row input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+
+.notes-add-row input {
+  flex: 1;
+  min-width: 180px;
 }
 
 .notes-filters {
@@ -1622,11 +1768,53 @@ h3 {
   margin-bottom: 10px;
 }
 
+/* Root 404 / error fallbacks — no shop chrome, so centre them on the page. */
+.page-fallback {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.page-fallback h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 0;
+}
+
 .empty a {
   color: var(--rc-ink);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Richer empty state: a heading + a real CTA button (used on the cart). */
+.empty-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  color: var(--rc-ink);
+  margin: 4px 0 2px;
+}
+
+.empty .muted {
+  max-width: 34ch;
+  margin: 0 auto;
+}
+
+/* Override .empty a (dark + underline) so the button keeps its button look. */
+.empty .empty-cta {
+  margin-top: 18px;
+  color: var(--rc-surface);
+  text-decoration: none;
 }
 
 @media (max-width: 800px) {
