@@ -55,7 +55,7 @@ const orderSchema = new Schema(
     method: { type: String, enum: ['cod', 'razorpay'], default: 'cod' },
     paymentStatus: {
       type: String,
-      enum: ['unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'],
+      enum: ['unpaid', 'paid', 'refund_required', 'refunded'],
       default: 'unpaid',
     },
     payment: { type: paymentSchema, required: false },
@@ -65,12 +65,25 @@ const orderSchema = new Schema(
       default: 'confirmed',
     },
     tracking: { type: String, default: '' },
-    // One-time id from the browser; the unique index stops a double-submit from
-    // creating two orders.
-    idempotencyKey: { type: String, required: true, unique: true },
+    // One-time id from the browser; the compound unique index below stops a
+    // double-submit from creating two orders FOR THE SAME OWNER.
+    idempotencyKey: { type: String, required: true },
   },
   { timestamps: true },
 );
+
+// Idempotency is scoped to the owner: a key only has to be unique per owner, so
+// two different shoppers reusing the same client-chosen key can't collide (one
+// would otherwise be handed the other's order). A buyer's own double-submit is
+// still blocked. ponytail: if a DB already carried the old single-field unique
+// index on idempotencyKey, drop it once — Mongoose won't remove it for you.
+orderSchema.index({ owner: 1, idempotencyKey: 1 }, { unique: true });
+
+// Indexes for the hot queries.
+orderSchema.index({ owner: 1, createdAt: -1 }); // customer/guest order history
+orderSchema.index({ createdAt: -1 }); // admin tables + dashboard "recent"
+orderSchema.index({ fulfillmentStatus: 1, createdAt: -1 }); // order-queue filter
+orderSchema.index({ paymentStatus: 1, createdAt: -1 }); // payments-tab filter
 
 export type Order = InferSchemaType<typeof orderSchema>;
 export const OrderModel = model('Order', orderSchema);
