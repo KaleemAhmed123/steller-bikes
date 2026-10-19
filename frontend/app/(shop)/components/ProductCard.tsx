@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { money } from '@/lib/api';
 import type { CardProduct } from '@/lib/catalogue';
 import { useCart } from './CartProvider';
@@ -44,8 +45,12 @@ export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?
   return (
     <Link href={`/p/${card.slug}`} className={`rc-card rc-card--${tone}`}>
       <div className="rc-card-media">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={card.image} alt={`${card.name} — illustrative sample photo`} loading="lazy" />
+        <Image
+          src={card.image}
+          alt={`${card.name} — illustrative sample photo`}
+          fill
+          sizes="(max-width: 700px) 50vw, (max-width: 1100px) 33vw, 320px"
+        />
         <span className="rc-chip-sample">SAMPLE</span>
         {card.hasOffer && card.offerPct > 0 && <span className="rc-chip-offer">-{card.offerPct}%</span>}
         {soldOut && <span className="rc-card-soldout">Out of stock</span>}

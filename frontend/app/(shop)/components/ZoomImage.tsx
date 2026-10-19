@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 
 // Cursor-follow zoom for the product image — a simple image-inspection aid.
 // Pointer devices only; it degrades to a plain image on touch/no-hover, and the
@@ -27,8 +28,14 @@ export function ZoomImage({ src, alt }: { src: string; alt: string }) {
       onMouseLeave={() => setZoom(false)}
       onMouseMove={onMove}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} style={{ transformOrigin: origin }} />
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        priority
+        sizes="(max-width: 900px) 100vw, 560px"
+        style={{ transformOrigin: origin }}
+      />
       <span className="rc-chip-sample">SAMPLE</span>
     </div>
   );
