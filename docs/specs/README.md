@@ -12,6 +12,8 @@ status.
 | **Admin notes** — free-text notes taggable to an order / product / inventory variant / general; `notes.manage` (owner + manager), reusable widget on those screens + a `/admin/notes` tab | [`admin-notes/`](admin-notes/) | In progress | 2026-10-19 |
 | **Admin payments** — richer payment capture on the order (Razorpay id/method/amount/paid-at) + an owner-only `/admin/payments` tab (table + detail popup) with cash-collected / refunded actions | [`admin-payments/`](admin-payments/) | In progress | 2026-10-19 |
 | **Admin dashboard** — range-filtered (Today/7d/15d/30d/All, IST) operator dashboard: KPI cards + Recharts charts (revenue, orders, method split, status, top products) + tables | [`admin-dashboard/`](admin-dashboard/) | In progress | 2026-10-19 |
+| **Storefront audit + fixes** — pre-launch buyer-facing audit; fix order tracking/status for buyers, branded 404/error pages, `next/image`, price breakdown + polish | [`storefront-audit/`](storefront-audit/) | In progress | 2026-10-19 |
+| **Backend production hardening** — fixes from the pre-production backend audit: enforce SESSION_SECRET in prod, compile-then-run build, zero-dep rate limiting, Order indexes, graceful shutdown + crash handlers, login-timing fix, owner-scoped idempotency, dead-code cleanup | [`backend-prod-hardening/`](backend-prod-hardening/) | Shipped | 2026-10-19 |
 
 ## What "status" means
 
