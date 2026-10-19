@@ -8,6 +8,7 @@ import type {
   NoteType,
   Order,
   OrderDetail,
+  PaymentDetail,
   Product,
   ProductInput,
   SavedAddress,
@@ -252,6 +253,20 @@ export const adminApi = {
     create: (body: { type: NoteType; refId?: string; body: string }) =>
       apiFetch<Note>('/api/admin/notes', { method: 'POST', body: JSON.stringify(body) }),
     remove: (id: string) => apiFetch<{ ok: boolean }>(`/api/admin/notes/${id}`, { method: 'DELETE' }),
+  },
+  // Payments (owner only): list, one payment's detail, and the owner's manual
+  // status actions (mark cash collected / mark refunded).
+  payments: {
+    list: (status = '', method = '', q = '') =>
+      apiFetch<Order[]>(
+        `/api/admin/payments?status=${encodeURIComponent(status)}&method=${encodeURIComponent(method)}&q=${encodeURIComponent(q)}`,
+      ),
+    get: (id: string) => apiFetch<PaymentDetail>(`/api/admin/payments/${id}`),
+    setStatus: (id: string, status: string) =>
+      apiFetch<PaymentDetail>(`/api/admin/payments/${id}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ status }),
+      }),
   },
 };
 

@@ -13,6 +13,7 @@ const NAV: [string, string, boolean?][] = [
   ['/admin/products', 'Products'],
   ['/admin/inventory', 'Inventory'],
   ['/admin/notes', 'Notes'],
+  ['/admin/payments', 'Payments', true],
   ['/admin/settings', 'Settings', true],
 ];
 

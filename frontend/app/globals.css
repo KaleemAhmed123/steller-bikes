@@ -1057,6 +1057,91 @@ h3 {
   color: var(--rc-ink);
 }
 
+/* --- Payments (admin) ----------------------------------------------------- */
+.payment-row {
+  cursor: pointer;
+}
+
+.payment-row:hover {
+  background: #faf8f2;
+}
+
+.pay-status {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: #efece3;
+  color: #4a463d;
+}
+
+.pay-paid,
+.pay-refunded {
+  background: #e3f2e6;
+  color: #1f7a3a;
+}
+
+.pay-unpaid,
+.pay-pending {
+  background: #fbf0d8;
+  color: #8a6400;
+}
+
+.pay-failed,
+.pay-refund_required {
+  background: #fbe3e3;
+  color: #a12626;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 14, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pay-detail {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 8px 14px;
+  margin: 0 0 18px;
+  font-size: 14px;
+}
+
+.pay-detail dt {
+  color: #6b6658;
+}
+
+.pay-detail dd {
+  margin: 0;
+  word-break: break-all;
+}
+
 /* --- Product editor + settings form (step 5) ------------------------------ */
 .btn-secondary {
   display: inline-flex;

@@ -122,6 +122,15 @@ export interface Customer {
   addresses: SavedAddress[];
 }
 
+export interface Payment {
+  provider?: string;
+  razorpayOrderId?: string;
+  paymentId?: string;
+  method?: string; // upi / card / netbanking / wallet
+  amount?: number; // paise captured
+  paidAt?: string;
+}
+
 export interface Order {
   _id: string;
   email: string;
@@ -136,7 +145,14 @@ export interface Order {
   paymentStatus: string;
   fulfillmentStatus: string;
   tracking: string;
+  payment?: Payment;
   createdAt: string;
+}
+
+// A payment's full detail + the statuses the owner may move it to.
+export interface PaymentDetail {
+  order: Order;
+  nextStatuses: string[];
 }
 
 // --- Admin ---
