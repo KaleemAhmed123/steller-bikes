@@ -9,6 +9,7 @@ import { requirePermission, type ActorStaff } from '../lib/auth.js';
 import { transitionOrder, TransitionError, TRANSITIONS } from '../lib/fulfillment.js';
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
+import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 
 export const adminRouter = Router();
 
@@ -37,24 +38,12 @@ async function loadInventory() {
   return { variants, movements };
 }
 
-// GET /api/admin/dashboard — small operator landing.
-adminRouter.get('/dashboard', requirePermission('dashboard.read'), async (_req, res, next) => {
+// GET /api/admin/dashboard?range=today|7d|15d|30d|all — the operator dashboard,
+// every figure scoped to the chosen range (default 30d).
+adminRouter.get('/dashboard', requirePermission('dashboard.read'), async (req, res, next) => {
   try {
-    const [orderCount, recent, products, revenueAgg] = await Promise.all([
-      OrderModel.countDocuments({}),
-      OrderModel.find({}).sort({ createdAt: -1 }).limit(8).lean(),
-      ProductModel.find({}).lean(),
-      OrderModel.aggregate([{ $group: { _id: null, total: { $sum: '$total' } } }]),
-    ]);
-    const lowStock = [];
-    for (const p of products) {
-      for (const v of p.variants) {
-        if (v.stock <= v.lowStock) {
-          lowStock.push({ productName: p.name, sku: v.sku, size: v.size, color: v.color, stock: v.stock, lowStock: v.lowStock });
-        }
-      }
-    }
-    res.json({ data: { orderCount, revenue: revenueAgg[0]?.total ?? 0, lowStock, recent } });
+    const range = typeof req.query.range === 'string' ? req.query.range : '30d';
+    res.json({ data: await buildDashboard(rangeStart(range)) });
   } catch (err) {
     next(err);
   }
