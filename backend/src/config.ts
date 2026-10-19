@@ -24,6 +24,11 @@ const schema = z.object({
   // Signs the staff session cookie. MUST be set to a long random value in
   // production; a dev default keeps local setup frictionless.
   SESSION_SECRET: z.string().min(1).default('dev-insecure-session-secret-change-me'),
+  // Razorpay online payments. BOTH optional: when unset, online pay is simply
+  // off and the shop runs on Cash-on-Delivery alone (like the Cloudinary keys).
+  // The key id is public (the browser needs it); the secret must stay server-side.
+  RAZORPAY_KEY_ID: z.string().default(''),
+  RAZORPAY_KEY_SECRET: z.string().default(''),
 });
 
 const parsed = schema.safeParse(process.env);
