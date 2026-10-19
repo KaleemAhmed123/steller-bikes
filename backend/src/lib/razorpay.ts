@@ -18,6 +18,8 @@ export interface RazorpayPayment {
   amount: number; // paise actually paid
   status: string; // 'created' | 'authorized' | 'captured' | 'failed' | 'refunded'
   captured: boolean; // money actually collected
+  method: string; // 'upi' | 'card' | 'netbanking' | 'wallet' | …
+  createdAt: number; // unix seconds the payment was made
 }
 
 // Basic auth header for Razorpay's REST API (key_id:key_secret, base64).
@@ -69,6 +71,8 @@ export async function fetchPayment(paymentId: string): Promise<RazorpayPayment> 
     amount?: number;
     status?: string;
     captured?: boolean;
+    method?: string;
+    created_at?: number;
     error?: { description?: string };
   };
   if (!res.ok || !json.id) {
@@ -80,6 +84,8 @@ export async function fetchPayment(paymentId: string): Promise<RazorpayPayment> 
     amount: json.amount ?? 0,
     status: json.status ?? '',
     captured: Boolean(json.captured),
+    method: json.method ?? '',
+    createdAt: json.created_at ?? 0,
   };
 }
 

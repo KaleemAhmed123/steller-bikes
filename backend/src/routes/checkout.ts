@@ -155,7 +155,14 @@ checkoutRouter.post('/razorpay/verify', async (req, res, next) => {
     });
     const { orderId, refundRequired } = await finalizePaidOrder(
       { owner, email, address, idempotencyKey: razorpayOrderId },
-      payment.amount,
+      {
+        provider: 'razorpay',
+        razorpayOrderId,
+        paymentId: razorpayPaymentId,
+        method: payment.method,
+        amount: payment.amount,
+        paidAt: payment.createdAt ? new Date(payment.createdAt * 1000) : new Date(),
+      },
     );
     if (refundRequired) {
       log.error('verify: order needs refund (paid, not fulfilled)', {

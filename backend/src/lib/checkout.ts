@@ -91,6 +91,17 @@ export async function computeCartTotal(owner: string): Promise<number> {
   return totals.total;
 }
 
+// The online-payment record captured from Razorpay, stored on the order so the
+// Payments tab can show it and the owner can reconcile/refund.
+export interface PaymentRecord {
+  provider: 'razorpay';
+  razorpayOrderId: string;
+  paymentId: string;
+  method: string; // upi / card / netbanking / wallet
+  amount: number; // paise captured
+  paidAt: Date;
+}
+
 // The ONE place stock is reduced + a fulfillable order row is written, for both
 // COD and a verified online payment.
 //
@@ -112,8 +123,9 @@ async function runOrderTransaction(args: {
   paymentStatus: 'unpaid' | 'paid';
   totals: Totals;
   orderItems: OrderItem[];
+  payment?: PaymentRecord;
 }): Promise<string> {
-  const { owner, email, address, idempotencyKey, method, paymentStatus, totals, orderItems } = args;
+  const { owner, email, address, idempotencyKey, method, paymentStatus, totals, orderItems, payment } = args;
   const cart = await CartModel.findOne({ owner });
 
   const session = await mongoose.startSession();
@@ -155,6 +167,7 @@ async function runOrderTransaction(args: {
             paymentStatus,
             fulfillmentStatus: 'confirmed',
             idempotencyKey,
+            payment,
           },
         ],
         { session },
@@ -194,8 +207,9 @@ async function recordRefundRequired(args: {
   idempotencyKey: string;
   totals: Totals;
   orderItems: OrderItem[];
+  payment?: PaymentRecord;
 }): Promise<{ orderId: string; refundRequired: true }> {
-  const { owner, email, address, idempotencyKey, totals, orderItems } = args;
+  const { owner, email, address, idempotencyKey, totals, orderItems, payment } = args;
   try {
     const [order] = await OrderModel.create([
       {
@@ -212,6 +226,7 @@ async function recordRefundRequired(args: {
         paymentStatus: 'refund_required',
         fulfillmentStatus: 'cancelled',
         idempotencyKey,
+        payment,
       },
     ]);
     return { orderId: String(order._id), refundRequired: true };
@@ -256,9 +271,10 @@ export async function placeOrder(input: CheckoutInput): Promise<string> {
 // Stock is reduced only here, never at pay-start, so abandoned payments hold none.
 export async function finalizePaidOrder(
   input: CheckoutInput,
-  paidAmount: number,
+  payment: PaymentRecord,
 ): Promise<{ orderId: string; refundRequired: boolean }> {
   const { owner, idempotencyKey } = input;
+  const paidAmount = payment.amount;
 
   // Idempotency: the Razorpay order id is the key, so a retried/duplicated verify
   // returns the same order rather than creating or refunding twice.
@@ -275,7 +291,7 @@ export async function finalizePaidOrder(
     if (err instanceof CheckoutError) {
       log.warn('paid but cart unusable at verify → refund', { code: err.code, idempotencyKey, paidAmount });
       const refundTotals: Totals = { subtotal: paidAmount, discount: 0, shipping: 0, tax: 0, total: paidAmount };
-      return recordRefundRequired({ ...input, totals: refundTotals, orderItems: [] });
+      return recordRefundRequired({ ...input, totals: refundTotals, orderItems: [], payment });
     }
     throw err;
   }
@@ -284,7 +300,7 @@ export async function finalizePaidOrder(
   // cart moved after Razorpay locked the amount → don't fulfill, refund instead.
   if (paidAmount !== totals.total) {
     log.warn('paid amount != cart total → refund', { idempotencyKey, paidAmount, cartTotal: totals.total });
-    return recordRefundRequired({ ...input, totals, orderItems });
+    return recordRefundRequired({ ...input, totals, orderItems, payment });
   }
 
   try {
@@ -294,6 +310,7 @@ export async function finalizePaidOrder(
       paymentStatus: 'paid',
       totals,
       orderItems,
+      payment,
     });
     notifyOrder(input.email, orderId, orderItems, totals, 'razorpay');
     return { orderId, refundRequired: false };
@@ -306,7 +323,7 @@ export async function finalizePaidOrder(
     // back (no stock moved), so record the refund from the snapshot.
     if (err instanceof CheckoutError && err.code === 'OUT_OF_STOCK') {
       log.warn('paid but out of stock → refund', { idempotencyKey, paidAmount });
-      return recordRefundRequired({ ...input, totals, orderItems });
+      return recordRefundRequired({ ...input, totals, orderItems, payment });
     }
     throw err;
   }

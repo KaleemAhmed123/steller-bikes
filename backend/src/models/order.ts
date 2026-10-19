@@ -25,6 +25,21 @@ const addressSchema = new Schema(
   { _id: false },
 );
 
+// The online-payment record, captured from Razorpay at verify time. Empty for
+// COD orders. `amount` is the paise actually captured (the source of truth for a
+// refund), which should equal the order total.
+const paymentSchema = new Schema(
+  {
+    provider: { type: String }, // 'razorpay'
+    razorpayOrderId: { type: String }, // 'order_…'
+    paymentId: { type: String }, // 'pay_…'
+    method: { type: String }, // 'upi' | 'card' | 'netbanking' | 'wallet'
+    amount: { type: Number }, // paise captured
+    paidAt: { type: Date },
+  },
+  { _id: false },
+);
+
 const orderSchema = new Schema(
   {
     owner: { type: String, required: true },
@@ -40,9 +55,10 @@ const orderSchema = new Schema(
     method: { type: String, enum: ['cod', 'razorpay'], default: 'cod' },
     paymentStatus: {
       type: String,
-      enum: ['unpaid', 'pending', 'paid', 'failed', 'refund_required'],
+      enum: ['unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'],
       default: 'unpaid',
     },
+    payment: { type: paymentSchema, required: false },
     fulfillmentStatus: {
       type: String,
       enum: ['confirmed', 'processing', 'packed', 'shipped', 'delivered', 'delivery_failed', 'cancelled'],
