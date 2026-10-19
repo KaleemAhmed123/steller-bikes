@@ -85,7 +85,7 @@ export function orderConfirmationMessage(r: OrderReceipt): EmailMessage {
     : 'Pay cash when your order is delivered.';
   return {
     to: r.to,
-    subject: `Your Raju Cycles order ${ref}`,
+    subject: `Your Stellar Bikes order ${ref}`,
     text: [
       'Thank you for your order!',
       '',
@@ -98,9 +98,14 @@ export function orderConfirmationMessage(r: OrderReceipt): EmailMessage {
       '',
       payNote,
       '',
+      // Deep-linking the specific order would 404 on a cold click (the order page
+      // is cookie/session-scoped). Point to the account instead: it lists orders
+      // for signed-in customers, and verifying the same email links guest orders.
+      `Track your order anytime — sign in at ${config.FRONTEND_ORIGIN}/account`,
+      '',
       "We'll be in touch to arrange delivery.",
       '',
-      '— Raju Cycles',
+      '— Stellar Bikes',
     ].join('\n'),
   };
 }
