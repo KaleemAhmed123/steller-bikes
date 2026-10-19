@@ -145,6 +145,17 @@ export interface StaffMe {
   role: string;
 }
 
+export type NoteType = 'order' | 'product' | 'inventory' | 'general';
+
+export interface Note {
+  _id: string;
+  author: string;
+  body: string;
+  targetType: NoteType;
+  targetId?: string;
+  createdAt: string;
+}
+
 export interface LowStockRow {
   productName: string;
   sku: string;

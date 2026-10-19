@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { adminApi, money } from '@/lib/api';
 import type { InventoryData } from '@/lib/types';
+import { Notes } from '../components/Notes';
 
 export default function AdminInventory() {
   const [data, setData] = useState<InventoryData | null>(null);
@@ -10,6 +11,7 @@ export default function AdminInventory() {
   const [form, setForm] = useState({ variantId: '', delta: '', reason: '' });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [openNotes, setOpenNotes] = useState<string | null>(null); // variantId whose notes are open
 
   useEffect(() => {
     adminApi.inventory().then(setData).catch((e: Error) => setError(e.message));
@@ -81,19 +83,38 @@ export default function AdminInventory() {
             <th>Price</th>
             <th>Stock</th>
             <th>Low at</th>
+            <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           {data.variants.map((v) => (
-            <tr key={v.variantId} className={v.stock <= v.lowStock ? 'row-low' : ''}>
-              <td>
-                {v.productName} ({v.size}/{v.color})
-              </td>
-              <td>{v.sku}</td>
-              <td>{money(v.price)}</td>
-              <td>{v.stock}</td>
-              <td>{v.lowStock}</td>
-            </tr>
+            <Fragment key={v.variantId}>
+              <tr className={v.stock <= v.lowStock ? 'row-low' : ''}>
+                <td>
+                  {v.productName} ({v.size}/{v.color})
+                </td>
+                <td>{v.sku}</td>
+                <td>{money(v.price)}</td>
+                <td>{v.stock}</td>
+                <td>{v.lowStock}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => setOpenNotes((cur) => (cur === v.variantId ? null : v.variantId))}
+                  >
+                    {openNotes === v.variantId ? 'Hide' : 'Notes'}
+                  </button>
+                </td>
+              </tr>
+              {openNotes === v.variantId && (
+                <tr>
+                  <td colSpan={6}>
+                    <Notes type="inventory" refId={v.variantId} />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

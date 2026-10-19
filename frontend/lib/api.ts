@@ -4,6 +4,8 @@ import type {
   Customer,
   DashboardData,
   InventoryData,
+  Note,
+  NoteType,
   Order,
   OrderDetail,
   Product,
@@ -242,6 +244,14 @@ export const adminApi = {
     get: () => apiFetch<Partial<StoreSettings>>('/api/admin/settings'),
     update: (body: Partial<StoreSettings>) =>
       apiFetch<StoreSettings>('/api/admin/settings', { method: 'PATCH', body: JSON.stringify(body) }),
+  },
+  // Operator notes (owner + manager). refId omitted → by type or all.
+  notes: {
+    list: (type?: NoteType | '', refId?: string) =>
+      apiFetch<Note[]>(`/api/admin/notes?type=${encodeURIComponent(type ?? '')}&refId=${encodeURIComponent(refId ?? '')}`),
+    create: (body: { type: NoteType; refId?: string; body: string }) =>
+      apiFetch<Note>('/api/admin/notes', { method: 'POST', body: JSON.stringify(body) }),
+    remove: (id: string) => apiFetch<{ ok: boolean }>(`/api/admin/notes/${id}`, { method: 'DELETE' }),
   },
 };
 

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
 import type { OrderDetail } from '@/lib/types';
+import { Notes } from '../../components/Notes';
 
 export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -108,6 +109,8 @@ export default function AdminOrderDetail() {
           </button>
         ))}
       </div>
+
+      <Notes type="order" refId={o._id} />
     </div>
   );
 }

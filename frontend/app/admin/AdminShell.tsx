@@ -12,6 +12,7 @@ const NAV: [string, string, boolean?][] = [
   ['/admin/orders', 'Orders'],
   ['/admin/products', 'Products'],
   ['/admin/inventory', 'Inventory'],
+  ['/admin/notes', 'Notes'],
   ['/admin/settings', 'Settings', true],
 ];
 
@@ -53,7 +54,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     <div className="admin">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          Raju Cycles <span>admin</span>
+          Stellar Bikes <span>admin</span>
         </div>
         <nav className="admin-nav">
           {NAV.filter(([, , ownerOnly]) => !ownerOnly || me.role === 'owner').map(([href, label]) => (

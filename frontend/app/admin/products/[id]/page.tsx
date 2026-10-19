@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
 import { ProductForm } from '../../components/ProductForm';
+import { Notes } from '../../components/Notes';
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -24,6 +25,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     <div>
       <h1 className="admin-h1">Edit: {product.name}</h1>
       <ProductForm product={product} />
+      <Notes type="product" refId={product._id} />
     </div>
   );
 }
