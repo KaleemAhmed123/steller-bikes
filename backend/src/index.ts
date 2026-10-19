@@ -12,6 +12,7 @@ import { ordersRouter } from './routes/orders.js';
 import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { accountRouter } from './routes/account.js';
+import { notesRouter } from './routes/notes.js';
 import { guestCart } from './lib/guest.js';
 import { requireAuth } from './lib/auth.js';
 
@@ -57,6 +58,8 @@ app.use('/api/orders', guestCart, ordersRouter);
 app.use('/api/account', guestCart, accountRouter);
 // Staff auth + the permission-gated admin.
 app.use('/api/auth', authRouter);
+// Notes mount before the general admin mount so /api/admin/notes resolves here.
+app.use('/api/admin/notes', requireAuth, notesRouter);
 app.use('/api/admin', requireAuth, adminRouter);
 
 // Last-resort error handler: log the real error, return a safe generic message.
@@ -69,9 +72,16 @@ app.use(
 
 async function start(): Promise<void> {
   await connectDb();
-  app.listen(config.PORT, () => {
+  const server = app.listen(config.PORT, () => {
     console.log(`API listening on http://localhost:${config.PORT}`);
   });
+  // Hold idle keep-alive sockets longer than any browser would, so the server
+  // never closes a connection the browser is about to reuse. Without this, Node
+  // drops idle sockets after 5s and Chrome's pre-opened connection gets reset on
+  // the first request → net::ERR_CONNECTION_RESET (then the retry succeeds).
+  // headersTimeout must stay > keepAliveTimeout or Node warns.
+  server.keepAliveTimeout = 65_000;
+  server.headersTimeout = 66_000;
 }
 
 start().catch((err) => {

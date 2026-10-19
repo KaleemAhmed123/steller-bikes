@@ -11,6 +11,7 @@ export type Permission =
   | 'inventory.read'
   | 'inventory.adjust'
   | 'products.manage'
+  | 'notes.manage'
   | 'settings.manage';
 
 const MANAGER_PERMISSIONS: Permission[] = [
@@ -20,6 +21,7 @@ const MANAGER_PERMISSIONS: Permission[] = [
   'inventory.read',
   'inventory.adjust',
   'products.manage', // managers run the catalogue day-to-day
+  'notes.manage', // operator notes — both roles write them
 ];
 
 // Owner can do everything a manager can, plus owner-only concerns (the shop's
