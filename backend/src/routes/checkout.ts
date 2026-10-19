@@ -9,6 +9,7 @@ import {
   fetchPayment,
 } from '../lib/razorpay.js';
 import { logger } from '../lib/log.js';
+import { checkoutLimiter } from '../lib/rateLimit.js';
 
 const log = logger('pay');
 
@@ -36,7 +37,7 @@ function checkoutStatus(err: CheckoutError): number {
 }
 
 // POST /api/checkout — place a COD order for the current guest cart.
-checkoutRouter.post('/', async (req, res, next) => {
+checkoutRouter.post('/', checkoutLimiter, async (req, res, next) => {
   try {
     const parsed = checkoutSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -62,7 +63,7 @@ checkoutRouter.post('/', async (req, res, next) => {
 // POST /api/checkout/razorpay/order — create a Razorpay payment order for this
 // cart. The amount is computed server-side from live prices, so the browser
 // can't change what it's charged. No stock is touched yet.
-checkoutRouter.post('/razorpay/order', async (req, res, next) => {
+checkoutRouter.post('/razorpay/order', checkoutLimiter, async (req, res, next) => {
   try {
     if (!razorpayConfigured()) {
       res.status(503).json({ error: { message: 'Online payment is not available right now.' } });
@@ -99,7 +100,7 @@ const verifySchema = z.object({
 // it. We re-compute the signature with our secret: a match proves the payment is
 // real (the browser can't forge it). Only then do we decrement stock + create the
 // PAID order. A paid-but-out-of-stock order comes back flagged for refund.
-checkoutRouter.post('/razorpay/verify', async (req, res, next) => {
+checkoutRouter.post('/razorpay/verify', checkoutLimiter, async (req, res, next) => {
   try {
     if (!razorpayConfigured()) {
       res.status(503).json({ error: { message: 'Online payment is not available right now.' } });
