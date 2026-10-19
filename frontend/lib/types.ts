@@ -1,3 +1,13 @@
+// Mirrors the backend's `pagination` block (see backend/src/lib/pagination.ts).
+// `hasMore` saves the client the arithmetic.
+export interface PageMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export interface Variant {
   _id: string;
   sku: string;

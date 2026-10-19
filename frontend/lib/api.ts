@@ -8,6 +8,7 @@ import type {
   NoteType,
   Order,
   OrderDetail,
+  PageMeta,
   PaymentDetail,
   Product,
   ProductInput,
@@ -20,21 +21,27 @@ import type {
 // server-render and the browser. Falls back to local dev if unset.
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-type ListResult = { products: Product[]; categories: string[] };
+type ListResult = { products: Product[]; categories: string[]; pagination: PageMeta };
 
-// Which URL search params we forward to the API as catalogue filters.
-const FILTER_KEYS = ['category', 'q', 'minPrice', 'maxPrice'] as const;
+// Which URL search params we forward to the API. `sort` is now applied server-side
+// (so paging is globally correct), alongside the catalogue filters.
+const FILTER_KEYS = ['category', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
 
-// Fetch the (optionally filtered) catalogue + the category list.
-// cache:'no-store' = always fresh, so stock/price are never stale.
+// Fetch one page of the (optionally filtered + sorted) catalogue + the category list.
+// cache:'no-store' = always fresh, so stock/price are never stale. `opts.page` is
+// 1-based; omit `limit` to take the server default (24). The returned `pagination`
+// drives infinite scroll.
 export async function getProducts(
   searchParams: Record<string, string | string[] | undefined>,
+  opts?: { page?: number; limit?: number },
 ): Promise<ListResult> {
   const qs = new URLSearchParams();
   for (const key of FILTER_KEYS) {
     const value = searchParams[key];
     if (typeof value === 'string' && value) qs.set(key, value);
   }
+  if (opts?.page) qs.set('page', String(opts.page));
+  if (opts?.limit) qs.set('limit', String(opts.limit));
 
   const res = await fetch(`${BASE}/api/products?${qs.toString()}`, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to load products');
@@ -43,6 +50,7 @@ export async function getProducts(
   return {
     products: (json.data ?? []) as Product[],
     categories: (json.categories ?? []) as string[],
+    pagination: json.pagination as PageMeta,
   };
 }
 
@@ -183,9 +191,9 @@ export async function getOrder(id: string): Promise<Order> {
   return json.data as Order;
 }
 
-// This browser's order history (for a logged-in customer, all their orders).
-export function getOrders(): Promise<Order[]> {
-  return apiFetch<Order[]>('/api/orders');
+// One page of this browser's order history (logged-in customer). 1-based page.
+export function getOrdersPage(page = 1): Promise<Page<Order>> {
+  return apiFetchPage<Order>(`/api/orders?page=${page}&limit=20`);
 }
 
 // True when online payment is offered (controls the "Pay online" option). A pure
@@ -209,14 +217,31 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return json.data as T;
 }
 
+// One page of a cookie-scoped list endpoint: keeps the `data` array AND the
+// `pagination` block (unlike apiFetch, which returns only `data`). Used by the
+// account history + admin tables for infinite scroll / "Load more".
+export type Page<T> = { data: T[]; pagination: PageMeta };
+
+async function apiFetchPage<T>(path: string): Promise<Page<T>> {
+  const res = await fetch(`${BASE}${path}`, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message ?? 'Request failed');
+  return { data: (json.data ?? []) as T[], pagination: json.pagination as PageMeta };
+}
+
 export const adminApi = {
   login: (email: string, password: string) =>
     apiFetch<StaffMe>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => apiFetch<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
   me: () => apiFetch<StaffMe>('/api/auth/me'),
   dashboard: (range = '30d') => apiFetch<DashboardData>(`/api/admin/dashboard?range=${encodeURIComponent(range)}`),
-  orders: (status: string, q: string) =>
-    apiFetch<Order[]>(`/api/admin/orders?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`),
+  orders: (status: string, q: string, page = 1) =>
+    apiFetchPage<Order>(
+      `/api/admin/orders?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}&page=${page}&limit=20`,
+    ),
   order: (id: string) => apiFetch<OrderDetail>(`/api/admin/orders/${id}`),
   transition: (id: string, status: string, tracking: string) =>
     apiFetch<OrderDetail>(`/api/admin/orders/${id}/transition`, {
@@ -231,7 +256,7 @@ export const adminApi = {
     }),
   // Products — full CRUD (owner + manager).
   products: {
-    list: () => apiFetch<Product[]>('/api/admin/products'),
+    list: (page = 1) => apiFetchPage<Product>(`/api/admin/products?page=${page}&limit=20`),
     get: (id: string) => apiFetch<Product>(`/api/admin/products/${id}`),
     create: (body: ProductInput) =>
       apiFetch<Product>('/api/admin/products', { method: 'POST', body: JSON.stringify(body) }),
@@ -248,8 +273,15 @@ export const adminApi = {
   },
   // Operator notes (owner + manager). refId omitted → by type or all.
   notes: {
+    // All notes for ONE entity (the inline Notes panel). limit=100 so a single
+    // order/product shows its whole thread, not just the first page.
     list: (type?: NoteType | '', refId?: string) =>
-      apiFetch<Note[]>(`/api/admin/notes?type=${encodeURIComponent(type ?? '')}&refId=${encodeURIComponent(refId ?? '')}`),
+      apiFetch<Note[]>(
+        `/api/admin/notes?type=${encodeURIComponent(type ?? '')}&refId=${encodeURIComponent(refId ?? '')}&limit=100`,
+      ),
+    // One page of the full notes list (the admin Notes screen's infinite list).
+    listPage: (type: NoteType | '', page = 1) =>
+      apiFetchPage<Note>(`/api/admin/notes?type=${encodeURIComponent(type)}&page=${page}&limit=20`),
     create: (body: { type: NoteType; refId?: string; body: string }) =>
       apiFetch<Note>('/api/admin/notes', { method: 'POST', body: JSON.stringify(body) }),
     remove: (id: string) => apiFetch<{ ok: boolean }>(`/api/admin/notes/${id}`, { method: 'DELETE' }),
@@ -257,9 +289,9 @@ export const adminApi = {
   // Payments (owner only): list, one payment's detail, and the owner's manual
   // status actions (mark cash collected / mark refunded).
   payments: {
-    list: (status = '', method = '', q = '') =>
-      apiFetch<Order[]>(
-        `/api/admin/payments?status=${encodeURIComponent(status)}&method=${encodeURIComponent(method)}&q=${encodeURIComponent(q)}`,
+    list: (status = '', method = '', q = '', page = 1) =>
+      apiFetchPage<Order>(
+        `/api/admin/payments?status=${encodeURIComponent(status)}&method=${encodeURIComponent(method)}&q=${encodeURIComponent(q)}&page=${page}&limit=20`,
       ),
     get: (id: string) => apiFetch<PaymentDetail>(`/api/admin/payments/${id}`),
     setStatus: (id: string, status: string) =>
