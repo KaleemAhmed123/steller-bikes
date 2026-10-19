@@ -30,12 +30,20 @@ export default function OrderPage() {
     );
   }
 
+  const paidOnline = order.method === 'razorpay';
+  const needsRefund = order.paymentStatus === 'refund_required';
+  const payLabel = needsRefund
+    ? 'Paid online — refund due'
+    : paidOnline
+      ? 'Paid online'
+      : 'Cash on delivery';
+
   return (
     <div className="order-page">
       <div className="order-success">
-        <h1>Order confirmed</h1>
+        <h1>{needsRefund ? 'Payment received' : 'Order confirmed'}</h1>
         <p className="muted">
-          Reference <strong>{order._id.slice(-8).toUpperCase()}</strong> · Cash on delivery
+          Reference <strong>{order._id.slice(-8).toUpperCase()}</strong> · {payLabel}
         </p>
       </div>
 
@@ -55,8 +63,17 @@ export default function OrderPage() {
       </div>
 
       <p className="muted order-note">
-        We&apos;ll contact you on {order.address.phone} to arrange delivery to {order.address.city},{' '}
-        {order.address.state} — {order.address.pin}. Pay cash when it arrives.
+        {needsRefund ? (
+          <>
+            We received your payment, but an item just went out of stock, so we couldn&apos;t complete
+            this order. We&apos;ll refund you in full and contact you on {order.address.phone}.
+          </>
+        ) : (
+          <>
+            We&apos;ll contact you on {order.address.phone} to arrange delivery to {order.address.city},{' '}
+            {order.address.state} — {order.address.pin}.{paidOnline ? '' : ' Pay cash when it arrives.'}
+          </>
+        )}
       </p>
 
       <Link href="/shop" className="btn-primary">

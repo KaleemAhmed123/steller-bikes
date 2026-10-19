@@ -5,10 +5,45 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '../components/CartProvider';
 import { useAccount } from '../components/AccountProvider';
-import { checkout, money } from '@/lib/api';
-import type { SavedAddress } from '@/lib/types';
+import {
+  checkout,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  razorpayEnabled,
+  money,
+} from '@/lib/api';
+import type { Address, SavedAddress } from '@/lib/types';
 
 const EMPTY = { email: '', name: '', phone: '', line1: '', city: '', state: '', pin: '' };
+
+// Load Razorpay's hosted checkout.js once, on demand (no npm dependency). The
+// popup it opens is Razorpay's own — card/UPI details never touch our page.
+let razorpayScript: Promise<void> | null = null;
+function loadRazorpay(): Promise<void> {
+  if (typeof window !== 'undefined' && (window as unknown as { Razorpay?: unknown }).Razorpay) {
+    return Promise.resolve();
+  }
+  if (!razorpayScript) {
+    razorpayScript = new Promise<void>((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.onload = () => resolve();
+      s.onerror = () => {
+        razorpayScript = null;
+        reject(new Error('Could not load the payment window. Check your connection.'));
+      };
+      document.body.appendChild(s);
+    });
+  }
+  return razorpayScript;
+}
+
+// The fields Razorpay hands back to the success handler.
+interface RazorpayResult {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
 
 // Copy a saved address into the checkout form shape (keeping the given email).
 function fromSaved(a: SavedAddress, email: string): typeof EMPTY {
@@ -24,9 +59,11 @@ export default function CheckoutPage() {
   const idempotencyKey = useRef(crypto.randomUUID()).current;
 
   const [form, setForm] = useState(EMPTY);
+  const [pay, setPay] = useState<'cod' | 'online'>('cod');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const prefilled = useRef(false);
+  const online = razorpayEnabled();
 
   // When a logged-in customer lands here, prefill their email and default
   // address once (don't clobber anything they start typing).
@@ -46,25 +83,75 @@ export default function CheckoutPage() {
     if (a) setForm(fromSaved(a, customer!.email));
   }
 
+  function address(): Address {
+    return {
+      name: form.name,
+      phone: form.phone,
+      line1: form.line1,
+      city: form.city,
+      state: form.state,
+      pin: form.pin,
+    };
+  }
+
+  async function payCod() {
+    const { orderId } = await checkout({ email: form.email, address: address(), idempotencyKey });
+    await refresh();
+    router.push(`/order/${orderId}`);
+  }
+
+  // Online: create a Razorpay order (server sets the amount), open Razorpay's
+  // popup, then verify what it returns on our server. Stock + the paid order are
+  // created only after verify succeeds.
+  async function payOnline() {
+    const { razorpayOrderId, amount, keyId } = await createRazorpayOrder();
+    await loadRazorpay();
+    const Razorpay = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
+    const rzp = new Razorpay({
+      key: keyId,
+      amount,
+      currency: 'INR',
+      order_id: razorpayOrderId,
+      name: 'Raju Cycles',
+      description: 'Order payment',
+      prefill: { email: form.email, contact: form.phone, name: form.name },
+      theme: { color: '#3d82ff' },
+      modal: {
+        // Customer closed the popup without paying — let them try again.
+        ondismiss: () => setSubmitting(false),
+      },
+      handler: async (result: RazorpayResult) => {
+        try {
+          const { orderId } = await verifyRazorpayPayment({
+            razorpayOrderId: result.razorpay_order_id,
+            razorpayPaymentId: result.razorpay_payment_id,
+            razorpaySignature: result.razorpay_signature,
+            email: form.email,
+            address: address(),
+          });
+          await refresh();
+          router.push(`/order/${orderId}`);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Payment verification failed');
+          setSubmitting(false);
+        }
+      },
+    });
+    rzp.open();
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     try {
-      const { orderId } = await checkout({
-        email: form.email,
-        address: {
-          name: form.name,
-          phone: form.phone,
-          line1: form.line1,
-          city: form.city,
-          state: form.state,
-          pin: form.pin,
-        },
-        idempotencyKey,
-      });
-      await refresh();
-      router.push(`/order/${orderId}`);
+      if (pay === 'online' && online) {
+        await payOnline();
+        // Don't clear `submitting` here — the Razorpay popup is now open; the
+        // handler/ondismiss resets it.
+      } else {
+        await payCod();
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Checkout failed');
       setSubmitting(false);
@@ -132,6 +219,20 @@ export default function CheckoutPage() {
             </label>
           </div>
 
+          {online && (
+            <fieldset className="pay-methods">
+              <legend className="field-label">Payment</legend>
+              <label className="pay-option">
+                <input type="radio" name="pay" checked={pay === 'cod'} onChange={() => setPay('cod')} />
+                <span>Cash on delivery</span>
+              </label>
+              <label className="pay-option">
+                <input type="radio" name="pay" checked={pay === 'online'} onChange={() => setPay('online')} />
+                <span>Pay online (UPI / card / netbanking)</span>
+              </label>
+            </fieldset>
+          )}
+
           {error && (
             <div className="notice error">
               {error} <Link href="/cart">Review cart →</Link>
@@ -139,7 +240,13 @@ export default function CheckoutPage() {
           )}
 
           <button type="submit" className="btn-primary btn-block" disabled={submitting}>
-            {submitting ? 'Placing order…' : 'Place order (Cash on Delivery)'}
+            {submitting
+              ? pay === 'online' && online
+                ? 'Opening payment…'
+                : 'Placing order…'
+              : pay === 'online' && online
+                ? 'Pay online'
+                : 'Place order (Cash on Delivery)'}
           </button>
         </form>
 
@@ -157,7 +264,7 @@ export default function CheckoutPage() {
             <span>Total</span>
             <span>{money(cart?.subtotal ?? 0)}</span>
           </div>
-          <p className="muted">Pay cash on delivery</p>
+          <p className="muted">{pay === 'online' && online ? 'Pay securely online' : 'Pay cash on delivery'}</p>
         </aside>
       </div>
     </div>

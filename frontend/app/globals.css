@@ -698,6 +698,28 @@ h3 {
   width: 100%;
 }
 
+.pay-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+.pay-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.pay-option input {
+  accent-color: var(--ink, #111);
+}
+
 .checkout-summary {
   border: 1px solid var(--border);
   border-radius: 12px;

@@ -135,6 +135,44 @@ export async function checkout(payload: {
   return json.data as { orderId: string };
 }
 
+// --- Razorpay online payment (browser-only, cookie-scoped) ------------------
+// Two steps: create a payment order (server sets the amount), then verify what
+// Razorpay hands back. The server decrements stock + creates the PAID order only
+// after verify succeeds.
+
+export async function createRazorpayOrder(): Promise<{
+  razorpayOrderId: string;
+  amount: number;
+  keyId: string;
+}> {
+  const res = await fetch(`${BASE}/api/checkout/razorpay/order`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message ?? 'Could not start online payment');
+  return json.data as { razorpayOrderId: string; amount: number; keyId: string };
+}
+
+export async function verifyRazorpayPayment(payload: {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+  email: string;
+  address: Address;
+}): Promise<{ orderId: string; refundRequired: boolean }> {
+  const res = await fetch(`${BASE}/api/checkout/razorpay/verify`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(json?.error?.message ?? 'Payment verification failed');
+  return json.data as { orderId: string; refundRequired: boolean };
+}
+
 export async function getOrder(id: string): Promise<Order> {
   const res = await fetch(`${BASE}/api/orders/${id}`, { credentials: 'include' });
   const json = await res.json().catch(() => ({}));
@@ -145,6 +183,13 @@ export async function getOrder(id: string): Promise<Order> {
 // This browser's order history (for a logged-in customer, all their orders).
 export function getOrders(): Promise<Order[]> {
   return apiFetch<Order[]>('/api/orders');
+}
+
+// True when online payment is offered (controls the "Pay online" option). A pure
+// UI flag — the authoritative key id comes back from createRazorpayOrder, and the
+// secret only ever lives on the server. Mirrors uploadConfigured().
+export function razorpayEnabled(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
 }
 
 // --- Authenticated calls (browser-only, session-cookie) ---------------------
