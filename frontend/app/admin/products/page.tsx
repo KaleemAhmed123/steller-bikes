@@ -1,42 +1,49 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
+import { useInfiniteList } from '@/lib/useInfiniteList';
+import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
 
 export default function AdminProducts() {
-  const [products, setProducts] = useState<Product[] | null>(null);
-  const [error, setError] = useState('');
+  const fetchPage = useCallback((page: number) => adminApi.products.list(page), []);
+  const {
+    items: products,
+    setItems: setProducts,
+    loading,
+    error,
+    hasMore,
+    total,
+    loadMore,
+    reset,
+  } = useInfiniteList<Product>(fetchPage, { getId: (p) => p._id });
+  const [deleteError, setDeleteError] = useState('');
   const [busyId, setBusyId] = useState('');
   const [openNotes, setOpenNotes] = useState<string | null>(null);
 
-  function load() {
-    adminApi.products
-      .list()
-      .then(setProducts)
-      .catch((e: Error) => setError(e.message));
-  }
-
-  useEffect(load, []);
+  useEffect(() => {
+    reset();
+  }, [reset]);
 
   async function remove(p: Product) {
     if (!confirm(`Delete “${p.name}”? This cannot be undone. (To just hide it, edit and set status to Archived.)`)) return;
     setBusyId(p._id);
-    setError('');
+    setDeleteError('');
     try {
       await adminApi.products.remove(p._id);
-      setProducts((cur) => (cur ?? []).filter((x) => x._id !== p._id));
+      setProducts((cur) => cur.filter((x) => x._id !== p._id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Delete failed.');
+      setDeleteError(e instanceof Error ? e.message : 'Delete failed.');
     } finally {
       setBusyId('');
     }
   }
 
-  if (error && !products) return <div className="notice error">{error}</div>;
-  if (!products) return <p className="muted">Loading…</p>;
+  if (error && products.length === 0) return <div className="notice error">{error}</div>;
+  if (loading && products.length === 0) return <p className="muted">Loading…</p>;
 
   return (
     <div>
@@ -47,7 +54,7 @@ export default function AdminProducts() {
         </Link>
       </div>
 
-      {error && <div className="notice error">{error}</div>}
+      {deleteError && <div className="notice error">{deleteError}</div>}
 
       <table className="admin-table">
         <thead>
@@ -102,7 +109,20 @@ export default function AdminProducts() {
           ))}
         </tbody>
       </table>
-      {products.length === 0 && <div className="empty">No products yet. Create one to get started.</div>}
+      {products.length === 0 ? (
+        <div className="empty">No products yet. Create one to get started.</div>
+      ) : (
+        <LoadMore
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          loading={loading}
+          error={error}
+          count={products.length}
+          total={total}
+          label="products"
+          auto={false}
+        />
+      )}
     </div>
   );
 }

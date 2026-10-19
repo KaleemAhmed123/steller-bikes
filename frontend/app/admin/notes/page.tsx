@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api';
 import type { Note, NoteType } from '@/lib/types';
+import { useInfiniteList } from '@/lib/useInfiniteList';
+import { LoadMore } from '@/components/LoadMore';
 
 // Filter chips: label + the type to query ('' = all).
 const FILTERS: [string, NoteType | ''][] = [
@@ -32,23 +34,28 @@ const ADD_TYPES: [NoteType, string][] = [
 
 export default function AdminNotes() {
   const [filter, setFilter] = useState<NoteType | ''>('');
-  const [notes, setNotes] = useState<Note[]>([]);
   const [body, setBody] = useState('');
   const [addType, setAddType] = useState<NoteType>('general');
   const [refId, setRefId] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); // add / delete errors (list errors come from the hook)
 
-  const load = useCallback(() => {
-    adminApi.notes
-      .list(filter)
-      .then(setNotes)
-      .catch((e: Error) => setError(e.message));
-  }, [filter]);
+  const fetchPage = useCallback((page: number) => adminApi.notes.listPage(filter, page), [filter]);
+  const {
+    items: notes,
+    setItems: setNotes,
+    loading,
+    error: listError,
+    hasMore,
+    total,
+    loadMore,
+    reset,
+  } = useInfiniteList<Note>(fetchPage, { getId: (n) => n._id });
 
+  // Any filter change re-seeds from page 1.
   useEffect(() => {
-    load();
-  }, [load]);
+    reset();
+  }, [reset]);
 
   async function addNote(e: React.FormEvent) {
     e.preventDefault();
@@ -68,7 +75,7 @@ export default function AdminNotes() {
       });
       setBody('');
       setRefId('');
-      load();
+      reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save the note');
     } finally {
@@ -138,8 +145,9 @@ export default function AdminNotes() {
       {error && <div className="notice error">{error}</div>}
 
       {notes.length === 0 ? (
-        <div className="empty">No notes here yet.</div>
+        !loading && !listError && <div className="empty">No notes here yet.</div>
       ) : (
+        <>
         <ul className="notes-list">
           {notes.map((n) => {
             const href = linkFor(n);
@@ -166,6 +174,17 @@ export default function AdminNotes() {
             );
           })}
         </ul>
+        <LoadMore
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          loading={loading}
+          error={listError}
+          count={notes.length}
+          total={total}
+          label="notes"
+          auto={false}
+        />
+        </>
       )}
     </div>
   );

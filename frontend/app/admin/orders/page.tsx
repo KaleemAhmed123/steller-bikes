@@ -4,29 +4,28 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
 import type { Order } from '@/lib/types';
+import { useInfiniteList } from '@/lib/useInfiniteList';
+import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
 
 const STATUSES = ['', 'confirmed', 'processing', 'packed', 'shipped', 'delivered', 'delivery_failed', 'cancelled'];
 
 export default function AdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [status, setStatus] = useState('');
   const [q, setQ] = useState('');
-  const [error, setError] = useState('');
   const [openNotes, setOpenNotes] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    adminApi
-      .orders(status, q.trim())
-      .then(setOrders)
-      .catch((e: Error) => setError(e.message));
-  }, [status, q]);
+  const fetchPage = useCallback((page: number) => adminApi.orders(status, q.trim(), page), [status, q]);
+  const { items: orders, loading, error, hasMore, total, loadMore, reset } = useInfiniteList<Order>(fetchPage, {
+    getId: (o) => o._id,
+  });
 
-  // Debounce so typing the search isn't a request per keystroke.
+  // Debounce so typing the search isn't a request per keystroke; any filter change
+  // re-seeds from page 1 (reset changes when status/q change).
   useEffect(() => {
-    const t = setTimeout(load, 250);
+    const t = setTimeout(() => reset(), 250);
     return () => clearTimeout(t);
-  }, [load]);
+  }, [reset]);
 
   return (
     <div>
@@ -91,7 +90,20 @@ export default function AdminOrders() {
           ))}
         </tbody>
       </table>
-      {orders.length === 0 && !error && <div className="empty">No orders match.</div>}
+      {orders.length === 0 ? (
+        !loading && !error && <div className="empty">No orders match.</div>
+      ) : (
+        <LoadMore
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          loading={loading}
+          error={error}
+          count={orders.length}
+          total={total}
+          label="orders"
+          auto={false}
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { adminApi, money } from '@/lib/api';
 import type { Order, PaymentDetail } from '@/lib/types';
+import { useInfiniteList } from '@/lib/useInfiniteList';
+import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
 
 const STATUSES = ['', 'unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'];
@@ -16,24 +18,25 @@ function actionLabel(status: string): string {
 }
 
 export default function AdminPayments() {
-  const [rows, setRows] = useState<Order[]>([]);
   const [status, setStatus] = useState('');
   const [method, setMethod] = useState('');
   const [q, setQ] = useState('');
-  const [error, setError] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [openNotes, setOpenNotes] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    adminApi.payments
-      .list(status, method, q.trim())
-      .then(setRows)
-      .catch((e: Error) => setError(e.message));
-  }, [status, method, q]);
+  const fetchPage = useCallback(
+    (page: number) => adminApi.payments.list(status, method, q.trim(), page),
+    [status, method, q],
+  );
+  const { items: rows, loading, error, hasMore, total, loadMore, reset } = useInfiniteList<Order>(fetchPage, {
+    getId: (o) => o._id,
+  });
 
+  // Debounce typing; any filter change re-seeds from page 1.
   useEffect(() => {
-    load();
-  }, [load]);
+    const t = setTimeout(() => reset(), 250);
+    return () => clearTimeout(t);
+  }, [reset]);
 
   return (
     <div>
@@ -112,13 +115,26 @@ export default function AdminPayments() {
           ))}
         </tbody>
       </table>
-      {rows.length === 0 && <div className="empty">No payments match.</div>}
+      {rows.length === 0 ? (
+        !loading && !error && <div className="empty">No payments match.</div>
+      ) : (
+        <LoadMore
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          loading={loading}
+          error={error}
+          count={rows.length}
+          total={total}
+          label="payments"
+          auto={false}
+        />
+      )}
 
       {openId && (
         <PaymentModal
           id={openId}
           onClose={() => setOpenId(null)}
-          onChanged={() => load()}
+          onChanged={() => reset()}
         />
       )}
     </div>
