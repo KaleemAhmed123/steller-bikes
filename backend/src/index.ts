@@ -13,6 +13,7 @@ import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { accountRouter } from './routes/account.js';
 import { notesRouter } from './routes/notes.js';
+import { paymentsRouter } from './routes/payments.js';
 import { guestCart } from './lib/guest.js';
 import { requireAuth } from './lib/auth.js';
 
@@ -58,8 +59,9 @@ app.use('/api/orders', guestCart, ordersRouter);
 app.use('/api/account', guestCart, accountRouter);
 // Staff auth + the permission-gated admin.
 app.use('/api/auth', authRouter);
-// Notes mount before the general admin mount so /api/admin/notes resolves here.
+// Specific admin sub-routers mount before the general admin mount so their paths resolve here.
 app.use('/api/admin/notes', requireAuth, notesRouter);
+app.use('/api/admin/payments', requireAuth, paymentsRouter);
 app.use('/api/admin', requireAuth, adminRouter);
 
 // Last-resort error handler: log the real error, return a safe generic message.

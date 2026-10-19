@@ -12,6 +12,7 @@ export type Permission =
   | 'inventory.adjust'
   | 'products.manage'
   | 'notes.manage'
+  | 'payments.manage'
   | 'settings.manage';
 
 const MANAGER_PERMISSIONS: Permission[] = [
@@ -24,10 +25,10 @@ const MANAGER_PERMISSIONS: Permission[] = [
   'notes.manage', // operator notes — both roles write them
 ];
 
-// Owner can do everything a manager can, plus owner-only concerns (the shop's
-// own identity in settings.manage).
+// Owner can do everything a manager can, plus owner-only concerns: the shop's
+// own identity (settings.manage) and money reconciliation (payments.manage).
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  owner: [...MANAGER_PERMISSIONS, 'settings.manage'],
+  owner: [...MANAGER_PERMISSIONS, 'settings.manage', 'payments.manage'],
   manager: MANAGER_PERMISSIONS,
 };
 
