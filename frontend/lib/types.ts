@@ -181,9 +181,23 @@ export interface LowStockRow {
   lowStock: number;
 }
 
+export interface DashboardKpis {
+  revenue: number; // paise
+  orders: number;
+  avgOrder: number; // paise
+  paidCount: number;
+  codCount: number;
+  onlineCount: number;
+  unfulfilled: number;
+  lowStockCount: number;
+}
+
 export interface DashboardData {
-  orderCount: number;
-  revenue: number;
+  kpis: DashboardKpis;
+  series: { date: string; revenue: number; orders: number }[]; // revenue paise
+  methods: { method: string; count: number; value: number }[];
+  statuses: { status: string; count: number }[];
+  topProducts: { name: string; units: number; revenue: number }[];
   lowStock: LowStockRow[];
   recent: Order[];
 }

@@ -214,7 +214,7 @@ export const adminApi = {
     apiFetch<StaffMe>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: () => apiFetch<{ ok: boolean }>('/api/auth/logout', { method: 'POST' }),
   me: () => apiFetch<StaffMe>('/api/auth/me'),
-  dashboard: () => apiFetch<DashboardData>('/api/admin/dashboard'),
+  dashboard: (range = '30d') => apiFetch<DashboardData>(`/api/admin/dashboard?range=${encodeURIComponent(range)}`),
   orders: (status: string, q: string) =>
     apiFetch<Order[]>(`/api/admin/orders?status=${encodeURIComponent(status)}&q=${encodeURIComponent(q)}`),
   order: (id: string) => apiFetch<OrderDetail>(`/api/admin/orders/${id}`),
