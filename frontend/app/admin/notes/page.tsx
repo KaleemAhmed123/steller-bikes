@@ -22,10 +22,20 @@ function linkFor(n: Note): string | null {
   return null;
 }
 
+// Types you can tag a note to from here (general = not tied to anything).
+const ADD_TYPES: [NoteType, string][] = [
+  ['general', 'General (not tied to anything)'],
+  ['order', 'Order'],
+  ['product', 'Product'],
+  ['inventory', 'Inventory variant'],
+];
+
 export default function AdminNotes() {
   const [filter, setFilter] = useState<NoteType | ''>('');
   const [notes, setNotes] = useState<Note[]>([]);
   const [body, setBody] = useState('');
+  const [addType, setAddType] = useState<NoteType>('general');
+  const [refId, setRefId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,15 +50,24 @@ export default function AdminNotes() {
     load();
   }, [load]);
 
-  async function addGeneral(e: React.FormEvent) {
+  async function addNote(e: React.FormEvent) {
     e.preventDefault();
     const text = body.trim();
     if (!text) return;
+    if (addType !== 'general' && !refId.trim()) {
+      setError('Paste the id of the item this note is about (or choose General).');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
-      await adminApi.notes.create({ type: 'general', body: text });
+      await adminApi.notes.create({
+        type: addType,
+        refId: addType === 'general' ? undefined : refId.trim(),
+        body: text,
+      });
       setBody('');
+      setRefId('');
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save the note');
@@ -71,10 +90,26 @@ export default function AdminNotes() {
     <div>
       <h1 className="admin-h1">Notes</h1>
 
-      <form className="notes-add" onSubmit={addGeneral}>
+      <form className="notes-add" onSubmit={addNote}>
+        <div className="notes-add-row">
+          <select value={addType} onChange={(e) => setAddType(e.target.value as NoteType)}>
+            {ADD_TYPES.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+          {addType !== 'general' && (
+            <input
+              placeholder={`${addType} id`}
+              value={refId}
+              onChange={(e) => setRefId(e.target.value)}
+            />
+          )}
+        </div>
         <textarea
           rows={2}
-          placeholder="Add a general note (not tied to anything)…"
+          placeholder="Write the note…"
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
@@ -82,7 +117,10 @@ export default function AdminNotes() {
           {busy ? 'Saving…' : 'Add note'}
         </button>
       </form>
-      <p className="muted">Tagged notes are added from an order, product, or inventory item.</p>
+      <p className="muted">
+        Tip: the easiest way to tag a note is the <strong>Notes</strong> button on an order, product,
+        payment, or inventory row — it fills in the id for you. Here you can also paste an id directly.
+      </p>
 
       <div className="notes-filters">
         {FILTERS.map(([label, value]) => (

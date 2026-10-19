@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
 import type { Order } from '@/lib/types';
+import { Notes } from '../components/Notes';
 
 const STATUSES = ['', 'confirmed', 'processing', 'packed', 'shipped', 'delivered', 'delivery_failed', 'cancelled'];
 
@@ -12,6 +13,7 @@ export default function AdminOrders() {
   const [status, setStatus] = useState('');
   const [q, setQ] = useState('');
   const [error, setError] = useState('');
+  const [openNotes, setOpenNotes] = useState<string | null>(null);
 
   const load = useCallback(() => {
     adminApi
@@ -51,22 +53,41 @@ export default function AdminOrders() {
             <th>Payment</th>
             <th>Total</th>
             <th>When</th>
+            <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o._id}>
-              <td>
-                <Link href={`/admin/orders/${o._id}`}>{o._id.slice(-8).toUpperCase()}</Link>
-              </td>
-              <td>
-                {o.address?.name} · {o.address?.phone}
-              </td>
-              <td>{o.fulfillmentStatus}</td>
-              <td>{o.paymentStatus}</td>
-              <td>{money(o.total)}</td>
-              <td>{new Date(o.createdAt).toLocaleDateString()}</td>
-            </tr>
+            <Fragment key={o._id}>
+              <tr>
+                <td>
+                  <Link href={`/admin/orders/${o._id}`}>{o._id.slice(-8).toUpperCase()}</Link>
+                </td>
+                <td>
+                  {o.address?.name} · {o.address?.phone}
+                </td>
+                <td>{o.fulfillmentStatus}</td>
+                <td>{o.paymentStatus}</td>
+                <td>{money(o.total)}</td>
+                <td>{new Date(o.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => setOpenNotes((cur) => (cur === o._id ? null : o._id))}
+                  >
+                    {openNotes === o._id ? 'Hide' : 'Notes'}
+                  </button>
+                </td>
+              </tr>
+              {openNotes === o._id && (
+                <tr>
+                  <td colSpan={7}>
+                    <Notes type="order" refId={o._id} />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

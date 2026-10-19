@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
+import { Notes } from '../components/Notes';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState('');
+  const [openNotes, setOpenNotes] = useState<string | null>(null);
 
   function load() {
     adminApi.products
@@ -60,27 +62,43 @@ export default function AdminProducts() {
         </thead>
         <tbody>
           {products.map((p) => (
-            <tr key={p._id}>
-              <td>
-                <Link href={`/admin/products/${p._id}`}>{p.name}</Link>
-                <span className="muted"> /{p.slug}</span>
-              </td>
-              <td>{p.category}</td>
-              <td>{p.status}</td>
-              <td>{p.featured ? '★' : '—'}</td>
-              <td>{p.variants.length}</td>
-              <td className="admin-row-actions">
-                <Link href={`/admin/products/${p._id}`}>Edit</Link>
-                <button
-                  type="button"
-                  className="link-btn danger"
-                  disabled={busyId === p._id}
-                  onClick={() => remove(p)}
-                >
-                  {busyId === p._id ? 'Deleting…' : 'Delete'}
-                </button>
-              </td>
-            </tr>
+            <Fragment key={p._id}>
+              <tr>
+                <td>
+                  <Link href={`/admin/products/${p._id}`}>{p.name}</Link>
+                  <span className="muted"> /{p.slug}</span>
+                </td>
+                <td>{p.category}</td>
+                <td>{p.status}</td>
+                <td>{p.featured ? '★' : '—'}</td>
+                <td>{p.variants.length}</td>
+                <td className="admin-row-actions">
+                  <Link href={`/admin/products/${p._id}`}>Edit</Link>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={() => setOpenNotes((cur) => (cur === p._id ? null : p._id))}
+                  >
+                    {openNotes === p._id ? 'Hide' : 'Notes'}
+                  </button>
+                  <button
+                    type="button"
+                    className="link-btn danger"
+                    disabled={busyId === p._id}
+                    onClick={() => remove(p)}
+                  >
+                    {busyId === p._id ? 'Deleting…' : 'Delete'}
+                  </button>
+                </td>
+              </tr>
+              {openNotes === p._id && (
+                <tr>
+                  <td colSpan={6}>
+                    <Notes type="product" refId={p._id} />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>

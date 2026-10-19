@@ -1,8 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { adminApi, money } from '@/lib/api';
 import type { Order, PaymentDetail } from '@/lib/types';
+import { Notes } from '../components/Notes';
 
 const STATUSES = ['', 'unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'];
 const METHODS = ['', 'cod', 'razorpay'];
@@ -21,6 +22,7 @@ export default function AdminPayments() {
   const [q, setQ] = useState('');
   const [error, setError] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  const [openNotes, setOpenNotes] = useState<string | null>(null);
 
   const load = useCallback(() => {
     adminApi.payments
@@ -66,24 +68,47 @@ export default function AdminPayments() {
             <th>Amount</th>
             <th>Method</th>
             <th>Status</th>
+            <th>Notes</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((o) => (
-            <tr key={o._id} className="payment-row" onClick={() => setOpenId(o._id)}>
-              <td>{o._id.slice(-8).toUpperCase()}</td>
-              <td>{new Date(o.createdAt).toLocaleDateString()}</td>
-              <td>
-                {o.email}
-                <br />
-                <span className="muted">{o.address.phone}</span>
-              </td>
-              <td>{money(o.total)}</td>
-              <td>{o.method.toUpperCase()}</td>
-              <td>
-                <span className={`pay-status pay-${o.paymentStatus}`}>{o.paymentStatus.replace('_', ' ')}</span>
-              </td>
-            </tr>
+            <Fragment key={o._id}>
+              <tr className="payment-row" onClick={() => setOpenId(o._id)}>
+                <td>{o._id.slice(-8).toUpperCase()}</td>
+                <td>{new Date(o.createdAt).toLocaleDateString()}</td>
+                <td>
+                  {o.email}
+                  <br />
+                  <span className="muted">{o.address.phone}</span>
+                </td>
+                <td>{money(o.total)}</td>
+                <td>{o.method.toUpperCase()}</td>
+                <td>
+                  <span className={`pay-status pay-${o.paymentStatus}`}>{o.paymentStatus.replace('_', ' ')}</span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    onClick={(e) => {
+                      e.stopPropagation(); // don't also open the detail popup
+                      setOpenNotes((cur) => (cur === o._id ? null : o._id));
+                    }}
+                  >
+                    {openNotes === o._id ? 'Hide' : 'Notes'}
+                  </button>
+                </td>
+              </tr>
+              {openNotes === o._id && (
+                <tr>
+                  <td colSpan={7}>
+                    {/* A payment is an order → same note thread as the order. */}
+                    <Notes type="order" refId={o._id} />
+                  </td>
+                </tr>
+              )}
+            </Fragment>
           ))}
         </tbody>
       </table>
