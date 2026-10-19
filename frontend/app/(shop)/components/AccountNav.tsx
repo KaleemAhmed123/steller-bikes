@@ -7,5 +7,9 @@ import { useAccount } from './AccountProvider';
 export function AccountNav() {
   const { customer, loading } = useAccount();
   if (loading) return null;
-  return customer ? <Link href="/account">Account</Link> : <Link href="/login">Sign in</Link>;
+  return customer ? (
+    <Link href="/account" className="rc-nav-link">Account</Link>
+  ) : (
+    <Link href="/login" className="rc-nav-link">Sign in</Link>
+  );
 }

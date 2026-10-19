@@ -6,6 +6,7 @@ import { AccountNav } from './components/AccountNav';
 import { WishlistProvider } from './components/WishlistProvider';
 import { SavedNav } from './components/SavedNav';
 import { RevealOnScroll } from './components/RevealOnScroll';
+import { HeaderHeroWatch } from './components/HeaderHeroWatch';
 import { Wordmark } from './components/Wordmark';
 
 // Storefront shell: sticky header + shared cart/account/wishlist state +
@@ -17,9 +18,19 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
       <CartProvider>
         <WishlistProvider>
           <RevealOnScroll />
+          <HeaderHeroWatch />
+          {/* Set the dark over-hero header before first paint on the homepage,
+              so the light header never flashes at the top. The observer takes
+              over for scroll updates. */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "if(location.pathname==='/'){document.body.setAttribute('data-over-hero','true')}",
+            }}
+          />
           <header className="rc-header">
             <div className="rc-header-inner container">
-              <Link href="/" className="rc-brand" aria-label="Raju Cycles — home">
+              <Link href="/" className="rc-brand" aria-label="Stellar Bikes — home">
                 <Wordmark />
               </Link>
               <nav className="rc-nav" aria-label="Primary">
@@ -53,18 +64,14 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
                 <h4>Store</h4>
                 <span>Kanpur, Uttar Pradesh</span>
                 <span>Cash on delivery</span>
-                <span className="rc-footer-muted">Phone &amp; address coming soon</span>
+                <span>Saleem</span>
+                <a href="tel:+918090109621">+91 80901 09621</a>
                 <Link href="/account">Your account</Link>
               </div>
             </div>
 
             <div className="container rc-footer-base">
-              <span>© {year} Raju Cycles</span>
-              <span className="rc-footer-credit">
-                Hero 3D model “Bicycle” by Poly&nbsp;by&nbsp;Google, licensed{' '}
-                <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC-BY&nbsp;3.0</a>,
-                via <a href="https://poly.pizza/m/19VoUuA2pcN" target="_blank" rel="noreferrer">Poly&nbsp;Pizza</a>.
-              </span>
+              <span>© {year} Stellar Bikes · stellarbikes.in</span>
             </div>
           </footer>
         </WishlistProvider>
