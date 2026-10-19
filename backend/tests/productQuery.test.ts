@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { productQuerySchema, buildProductFilter } from '../src/lib/productQuery.js';
+import { productQuerySchema, buildProductFilter, productSortSpec } from '../src/lib/productQuery.js';
 
 // The catalogue filter is the only branching logic in step 2. This checks it
 // parses + builds the right MongoDB query, and rejects garbage. Run: npm test.
@@ -47,4 +47,17 @@ test('a single price bound works on its own', () => {
 
 test('garbage price is rejected at the boundary', () => {
   assert.equal(productQuerySchema.safeParse({ minPrice: 'abc' }).success, false);
+});
+
+test('sort defaults to newest and falls back on garbage (never 400s)', () => {
+  assert.equal(productQuerySchema.parse({}).sort, 'newest');
+  assert.equal(productQuerySchema.parse({ sort: 'nonsense' }).sort, 'newest');
+  assert.equal(productQuerySchema.parse({ sort: 'price-asc' }).sort, 'price-asc');
+});
+
+test('productSortSpec maps each sort to a stable, _id-tiebroken spec', () => {
+  assert.deepEqual(productSortSpec('newest'), { createdAt: -1, _id: 1 });
+  assert.deepEqual(productSortSpec('price-asc'), { fromPrice: 1, _id: 1 });
+  assert.deepEqual(productSortSpec('price-desc'), { fromPrice: -1, _id: 1 });
+  assert.deepEqual(productSortSpec('popular'), { soldCount: -1, createdAt: -1, _id: 1 });
 });
