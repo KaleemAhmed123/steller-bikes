@@ -23,6 +23,16 @@ const uri = process.env.MONGODB_URI;
 const address = { name: 'Test', phone: '9999999999', line1: '1 St', city: 'Kanpur', state: 'UP', pin: '208001' };
 const PRICE = 100000; // paise per unit
 
+// A verified Razorpay payment record for `amount` paise.
+const pay = (amount: number) => ({
+  provider: 'razorpay' as const,
+  razorpayOrderId: 'order_test',
+  paymentId: 'pay_test',
+  method: 'upi',
+  amount,
+  paidAt: new Date(),
+});
+
 async function seedProduct(stock: number): Promise<string> {
   const product = await ProductModel.create({
     slug: 'test-item',
@@ -69,7 +79,7 @@ if (!uri) {
 
     const r = await finalizePaidOrder(
       { owner: 'guest:ok', email: 'ok@x.com', address, idempotencyKey: 'order_ok' },
-      PRICE,
+      pay(PRICE),
     );
 
     assert.equal(r.refundRequired, false);
@@ -77,6 +87,8 @@ if (!uri) {
     assert.equal(order!.paymentStatus, 'paid');
     assert.equal(order!.method, 'razorpay');
     assert.equal(order!.total, PRICE);
+    assert.equal(order!.payment?.paymentId, 'pay_test', 'payment record is stored');
+    assert.equal(order!.payment?.method, 'upi');
     const product = await ProductModel.findOne({ slug: 'test-item' }).lean();
     assert.equal(product!.variants[0].stock, 4, 'stock decremented 5 - 1');
     assert.equal((await CartModel.findOne({ owner: 'guest:ok' }))!.items.length, 0, 'cart cleared');
@@ -89,7 +101,7 @@ if (!uri) {
     // Customer somehow paid less than the live cart total (e.g. cart changed).
     const r = await finalizePaidOrder(
       { owner: 'guest:mismatch', email: 'm@x.com', address, idempotencyKey: 'order_mismatch' },
-      PRICE - 1,
+      pay(PRICE - 1),
     );
 
     assert.equal(r.refundRequired, true);
@@ -105,7 +117,7 @@ if (!uri) {
 
     const r = await finalizePaidOrder(
       { owner: 'guest:gone', email: 'g@x.com', address, idempotencyKey: 'order_gone' },
-      PRICE,
+      pay(PRICE),
     );
 
     assert.equal(r.refundRequired, true);
@@ -121,11 +133,11 @@ if (!uri) {
 
     const first = await finalizePaidOrder(
       { owner: 'guest:idem', email: 'i@x.com', address, idempotencyKey: 'order_idem' },
-      PRICE,
+      pay(PRICE),
     );
     const second = await finalizePaidOrder(
       { owner: 'guest:idem', email: 'i@x.com', address, idempotencyKey: 'order_idem' },
-      PRICE,
+      pay(PRICE),
     );
 
     assert.equal(first.orderId, second.orderId, 'same order id');
