@@ -112,7 +112,7 @@ export default function CheckoutPage() {
       amount,
       currency: 'INR',
       order_id: razorpayOrderId,
-      name: 'Raju Cycles',
+      name: 'Stellar Bikes',
       description: 'Order payment',
       prefill: { email: form.email, contact: form.phone, name: form.name },
       theme: { color: '#3d82ff' },

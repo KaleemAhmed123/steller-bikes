@@ -208,7 +208,7 @@ function addressLine(s?: StoreSettings): string {
 export function Showroom({ settings }: { settings?: StoreSettings }) {
   const address = addressLine(settings);
   const location = address || 'Kanpur, Uttar Pradesh';
-  const contact = settings?.phone || settings?.whatsapp || 'Phone & showroom address coming soon';
+  const contact = settings?.phone || settings?.whatsapp || 'Saleem · +91 80901 09621';
 
   return (
     <section className="rc-section rc-section--dark" data-reveal>
@@ -220,7 +220,7 @@ export function Showroom({ settings }: { settings?: StoreSettings }) {
             </span>
             <h2 className="rc-sec-title">A real shop in Kanpur.</h2>
             <p className="rc-sec-blurb rc-sec-blurb--light">
-              Raju Cycles is a bicycle shop in Kanpur, Uttar Pradesh. Order online with cash on
+              Stellar Bikes is a bicycle shop in Kanpur, Uttar Pradesh. Order online with cash on
               delivery, or come and see the range in person.
             </p>
             <Link href="/shop" className="rc-btn rc-btn--light">

@@ -13,8 +13,8 @@ type Params = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
-  if (!product) return { title: 'Not found — Raju Cycles' };
-  return { title: `${product.name} — Raju Cycles`, description: product.description };
+  if (!product) return { title: 'Not found — Stellar Bikes' };
+  return { title: `${product.name} — Stellar Bikes`, description: product.description };
 }
 
 // Product detail: a bold editorial intro over a practical purchasing panel.

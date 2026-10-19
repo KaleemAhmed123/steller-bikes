@@ -24,7 +24,7 @@ const FIELDS: [keyof StoreSettings, string, string][] = [
   ['phone', 'Phone', '+91 90000 00000'],
   ['whatsapp', 'WhatsApp', '+91 90000 00000'],
   ['hours', 'Opening hours', 'Mon–Sat, 10am–8pm'],
-  ['email', 'Email', 'shop@rajucycles.in'],
+  ['email', 'Email', 'hello@stellarbikes.in'],
 ];
 
 export default function AdminSettings() {

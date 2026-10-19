@@ -12,8 +12,8 @@ function isSlug(s: string): s is CollectionSlug {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  if (!isSlug(slug)) return { title: 'Not found — Raju Cycles' };
-  return { title: `${COLLECTIONS[slug].title} — Raju Cycles`, description: COLLECTIONS[slug].blurb };
+  if (!isSlug(slug)) return { title: 'Not found — Stellar Bikes' };
+  return { title: `${COLLECTIONS[slug].title} — Stellar Bikes`, description: COLLECTIONS[slug].blurb };
 }
 
 // A dedicated landing page for one curated collection (new-arrivals / staff-picks

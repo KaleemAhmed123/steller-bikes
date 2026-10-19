@@ -11,8 +11,9 @@ const hero = Space_Grotesk({ subsets: ['latin'], weight: ['500', '700'], variabl
 const body = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-body' });
 
 export const metadata: Metadata = {
-  title: 'Raju Cycles — Bicycles in Kanpur',
-  description: 'Browse cycles from Raju Cycles, a bicycle shop in Kanpur, UP.',
+  title: 'Stellar Bikes — Quality Bicycles & Expert Service in Kanpur',
+  description:
+    'Stellar Bikes is a trusted bicycle shop in Kanpur, Uttar Pradesh — quality cycles for every rider, honest prices, and dependable after-sales service. Order online with cash on delivery.',
 };
 
 // Root layout: just the HTML shell + global styles + the font variables. The

@@ -27,7 +27,7 @@ export default function AdminLogin() {
   return (
     <div className="admin-login">
       <form className="admin-login-card" onSubmit={onSubmit}>
-        <h1>Raju Cycles admin</h1>
+        <h1>Stellar Bikes admin</h1>
         <label className="field">
           <span className="field-label">Email</span>
           <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

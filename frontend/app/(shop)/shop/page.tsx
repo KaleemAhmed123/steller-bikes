@@ -6,8 +6,8 @@ import { ProductCard } from '../components/ProductCard';
 import { FilterBar } from '../components/FilterBar';
 
 export const metadata: Metadata = {
-  title: 'All bicycles — Raju Cycles',
-  description: 'Browse the full range of sample bicycles and accessories from Raju Cycles, Kanpur.',
+  title: 'All bicycles — Stellar Bikes',
+  description: 'Browse the full range of sample bicycles and accessories from Stellar Bikes, Kanpur.',
 };
 
 const SORTS: SortKey[] = ['newest', 'price-asc', 'price-desc', 'popular'];
