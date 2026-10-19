@@ -8,6 +8,7 @@ import { computeCartView } from './cartView.js';
 import { computeTotals, type Totals } from './pricing.js';
 import { logger } from './log.js';
 import { sendOrderConfirmation } from './email.js';
+import { isDuplicateKeyError } from './mongo.js';
 
 const log = logger('pay');
 
@@ -48,10 +49,6 @@ type OrderItem = {
   quantity: number;
   price: number;
 };
-
-function isDuplicateKey(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000;
-}
 
 // Recompute the cart from LIVE product data — never trust the cart/client for
 // price or stock. Throws EMPTY (nothing to buy) or CHANGED (an item vanished or
@@ -231,8 +228,8 @@ async function recordRefundRequired(args: {
     ]);
     return { orderId: String(order._id), refundRequired: true };
   } catch (err) {
-    if (isDuplicateKey(err)) {
-      const winner = await OrderModel.findOne({ idempotencyKey }).lean();
+    if (isDuplicateKeyError(err)) {
+      const winner = await OrderModel.findOne({ owner, idempotencyKey }).lean();
       if (winner) return { orderId: String(winner._id), refundRequired: true };
     }
     throw err;
@@ -242,7 +239,7 @@ async function recordRefundRequired(args: {
 // Place a COD order for a guest. Returns the order id. (COD never pays up front,
 // so an out-of-stock just throws and the shopper retries — nothing is lost.)
 export async function placeOrder(input: CheckoutInput): Promise<string> {
-  const already = await OrderModel.findOne({ idempotencyKey: input.idempotencyKey }).lean();
+  const already = await OrderModel.findOne({ owner: input.owner, idempotencyKey: input.idempotencyKey }).lean();
   if (already) return String(already._id);
 
   const { totals, orderItems } = await loadCheckoutView(input.owner);
@@ -252,8 +249,8 @@ export async function placeOrder(input: CheckoutInput): Promise<string> {
     return orderId;
   } catch (err) {
     // Two requests with the same key raced: the loser returns the winner's order.
-    if (isDuplicateKey(err)) {
-      const winner = await OrderModel.findOne({ idempotencyKey: input.idempotencyKey }).lean();
+    if (isDuplicateKeyError(err)) {
+      const winner = await OrderModel.findOne({ owner: input.owner, idempotencyKey: input.idempotencyKey }).lean();
       if (winner) return String(winner._id);
     }
     throw err;
@@ -278,7 +275,7 @@ export async function finalizePaidOrder(
 
   // Idempotency: the Razorpay order id is the key, so a retried/duplicated verify
   // returns the same order rather than creating or refunding twice.
-  const already = await OrderModel.findOne({ idempotencyKey }).lean();
+  const already = await OrderModel.findOne({ owner, idempotencyKey }).lean();
   if (already) return { orderId: String(already._id), refundRequired: already.paymentStatus === 'refund_required' };
 
   // Re-read the cart. If it vanished/changed in the pay window we can't fulfill
@@ -315,8 +312,8 @@ export async function finalizePaidOrder(
     notifyOrder(input.email, orderId, orderItems, totals, 'razorpay');
     return { orderId, refundRequired: false };
   } catch (err) {
-    if (isDuplicateKey(err)) {
-      const winner = await OrderModel.findOne({ idempotencyKey }).lean();
+    if (isDuplicateKeyError(err)) {
+      const winner = await OrderModel.findOne({ owner, idempotencyKey }).lean();
       if (winner) return { orderId: String(winner._id), refundRequired: winner.paymentStatus === 'refund_required' };
     }
     // Paid, but the last unit sold out in the race window: transaction rolled
