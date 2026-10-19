@@ -3,6 +3,7 @@ import { ProductModel } from '../models/product.js';
 import { OrderModel } from '../models/order.js';
 import { productQuerySchema, buildProductFilter } from '../lib/productQuery.js';
 import { attachSoldCount } from '../lib/popularity.js';
+import { parsePagination, pageMeta } from '../lib/pagination.js';
 
 export const productsRouter = Router();
 
@@ -19,11 +20,13 @@ productsRouter.get('/', async (req, res, next) => {
     }
 
     const filter = buildProductFilter(parsed.data);
+    const pg = parsePagination(req.query); // default 24/page, max 100
     // ponytail: one aggregation over all orders per catalogue fetch — fine for a
     // small shop. If catalogue traffic grows, cache this map or materialise a
     // stored soldCount per product and $inc it on delivery.
-    const [products, categories, sold] = await Promise.all([
-      ProductModel.find(filter).sort({ createdAt: -1 }).lean(),
+    const [products, total, categories, sold] = await Promise.all([
+      ProductModel.find(filter).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      ProductModel.countDocuments(filter),
       ProductModel.distinct('category', { status: 'published' }),
       OrderModel.aggregate<{ _id: unknown; units: number }>([
         { $match: { fulfillmentStatus: { $ne: 'cancelled' } } },
@@ -33,7 +36,11 @@ productsRouter.get('/', async (req, res, next) => {
     ]);
 
     const unitsByVariant = new Map(sold.map((row) => [String(row._id), row.units]));
-    res.json({ data: attachSoldCount(products, unitsByVariant), categories: categories.sort() });
+    res.json({
+      data: attachSoldCount(products, unitsByVariant),
+      categories: categories.sort(),
+      pagination: pageMeta(total, pg),
+    });
   } catch (err) {
     next(err);
   }
