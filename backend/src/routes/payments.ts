@@ -5,6 +5,7 @@ import { OrderModel } from '../models/order.js';
 import { requirePermission } from '../lib/auth.js';
 import { assertPaymentTransition, nextPaymentStatuses, PaymentError } from '../lib/payments.js';
 import { logger } from '../lib/log.js';
+import { escapeRegex } from '../lib/mongo.js';
 
 const log = logger('pay');
 
@@ -23,7 +24,7 @@ paymentsRouter.get('/', requirePermission('payments.manage'), async (req, res, n
     if (status) filter.paymentStatus = status;
     if (method) filter.method = method;
     if (q) {
-      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(escapeRegex(q), 'i');
       const or: Record<string, unknown>[] = [{ email: rx }, { 'address.phone': rx }, { 'payment.paymentId': rx }];
       if (isValidObjectId(q)) or.push({ _id: q });
       filter.$or = or;

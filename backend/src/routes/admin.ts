@@ -10,6 +10,7 @@ import { transitionOrder, TransitionError, TRANSITIONS } from '../lib/fulfillmen
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
+import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 
 export const adminRouter = Router();
 
@@ -57,7 +58,7 @@ adminRouter.get('/orders', requirePermission('orders.read'), async (req, res, ne
     const filter: Record<string, unknown> = {};
     if (status) filter.fulfillmentStatus = status;
     if (q) {
-      const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(escapeRegex(q), 'i');
       const or: Record<string, unknown>[] = [{ email: rx }, { 'address.phone': rx }];
       if (isValidObjectId(q)) or.push({ _id: q });
       filter.$or = or;
@@ -156,9 +157,7 @@ adminRouter.post('/inventory/adjust', requirePermission('inventory.adjust'), asy
 });
 
 // --- Products (full CRUD) ---------------------------------------------------
-// A duplicate slug (unique index) comes back as Mongo error 11000.
-const isDuplicate = (err: unknown): boolean =>
-  typeof err === 'object' && err !== null && (err as { code?: number }).code === 11000;
+// A duplicate slug trips the unique index → isDuplicateKeyError (Mongo 11000).
 
 // GET /api/admin/products — every product, any status (newest first).
 adminRouter.get('/products', requirePermission('products.manage'), async (_req, res, next) => {
@@ -199,7 +198,7 @@ adminRouter.post('/products', requirePermission('products.manage'), async (req, 
     const product = await ProductModel.create(parsed.data);
     res.status(201).json({ data: product.toObject() });
   } catch (err) {
-    if (isDuplicate(err)) {
+    if (isDuplicateKeyError(err)) {
       res.status(409).json({ error: { message: 'A product with this slug already exists.' } });
       return;
     }
@@ -229,7 +228,7 @@ adminRouter.patch('/products/:id', requirePermission('products.manage'), async (
     }
     res.json({ data: product });
   } catch (err) {
-    if (isDuplicate(err)) {
+    if (isDuplicateKeyError(err)) {
       res.status(409).json({ error: { message: 'A product with this slug already exists.' } });
       return;
     }

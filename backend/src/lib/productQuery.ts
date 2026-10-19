@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
+import { escapeRegex } from './mongo.js';
 
 // Validate the storefront's filter query params at the API boundary.
 // Unknown/garbage values are rejected here so they never reach the database query.
@@ -12,12 +13,6 @@ export const productQuerySchema = z.object({
 });
 
 export type ProductQuery = z.infer<typeof productQuerySchema>;
-
-// Escape regex-special characters so a user's search text is matched literally
-// (e.g. "29." doesn't become a wildcard). Prevents regex errors and injection.
-function escapeRegex(input: string): string {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 // Turn validated filters into a MongoDB query. Always scoped to published products.
 export function buildProductFilter(q: ProductQuery): FilterQuery<unknown> {
