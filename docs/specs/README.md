@@ -14,6 +14,7 @@ status.
 | **Admin dashboard** — range-filtered (Today/7d/15d/30d/All, IST) operator dashboard: KPI cards + Recharts charts (revenue, orders, method split, status, top products) + tables | [`admin-dashboard/`](admin-dashboard/) | In progress | 2026-10-19 |
 | **Storefront audit + fixes** — pre-launch buyer-facing audit; fix order tracking/status for buyers, branded 404/error pages, `next/image`, price breakdown + polish | [`storefront-audit/`](storefront-audit/) | In progress | 2026-10-19 |
 | **Backend production hardening** — fixes from the pre-production backend audit: enforce SESSION_SECRET in prod, compile-then-run build, zero-dep rate limiting, Order indexes, graceful shutdown + crash handlers, login-timing fix, owner-scoped idempotency, dead-code cleanup | [`backend-prod-hardening/`](backend-prod-hardening/) | Shipped | 2026-10-19 |
+| **Frontend pagination** — wire the backend's `?page=&limit=` paging into the storefront + admin as infinite scroll (one hook + one "Load more" trigger) across shop, collections, account and the four admin tables; adds the one allowed backend change, a server-side catalogue `sort` | [`frontend-pagination/`](frontend-pagination/) | Shipped | 2026-10-19 |
 
 ## What "status" means
 
