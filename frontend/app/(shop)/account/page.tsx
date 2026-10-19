@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { accountApi, getOrders, money } from '@/lib/api';
+import { accountApi, getOrdersPage, money } from '@/lib/api';
 import type { Order, SavedAddress } from '@/lib/types';
+import { useInfiniteList } from '@/lib/useInfiniteList';
+import { LoadMore } from '@/components/LoadMore';
 import { useAccount } from '../components/AccountProvider';
 
 const EMPTY_ADDR = { label: '', name: '', phone: '', line1: '', city: '', state: '', pin: '' };
@@ -12,7 +14,16 @@ const EMPTY_ADDR = { label: '', name: '', phone: '', line1: '', city: '', state:
 export default function AccountPage() {
   const router = useRouter();
   const { customer, loading, setCustomer, refresh } = useAccount();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const fetchOrders = useCallback((page: number) => getOrdersPage(page), []);
+  const {
+    items: orders,
+    loading: ordersLoading,
+    error: ordersError,
+    hasMore: ordersHasMore,
+    total: ordersTotal,
+    loadMore: loadMoreOrders,
+    reset: resetOrders,
+  } = useInfiniteList<Order>(fetchOrders, { getId: (o) => o._id });
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [showAddr, setShowAddr] = useState(false);
   const [addr, setAddr] = useState(EMPTY_ADDR);
@@ -28,8 +39,8 @@ export default function AccountPage() {
   useEffect(() => {
     if (!customer) return;
     setAddresses(customer.addresses);
-    getOrders().then(setOrders).catch(() => setOrders([]));
-  }, [customer]);
+    resetOrders();
+  }, [customer, resetOrders]);
 
   if (loading || !customer) {
     return (
@@ -106,23 +117,34 @@ export default function AccountPage() {
 
       <section className="account-section">
         <h2>Your orders</h2>
-        {orders.length === 0 ? (
+        {orders.length === 0 && !ordersLoading && !ordersError ? (
           <p className="muted">No orders yet. <Link href="/shop">Browse cycles →</Link></p>
         ) : (
-          <div className="order-history">
-            {orders.map((o) => (
-              <Link key={o._id} href={`/order/${o._id}`} className="order-row">
-                <div>
-                  <strong>#{o._id.slice(-8).toUpperCase()}</strong>
-                  <span className="muted"> · {new Date(o.createdAt).toLocaleDateString('en-IN')}</span>
-                </div>
-                <div className="order-row-meta">
-                  <span className="badge">{o.fulfillmentStatus}</span>
-                  <span>{money(o.total)}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="order-history">
+              {orders.map((o) => (
+                <Link key={o._id} href={`/order/${o._id}`} className="order-row">
+                  <div>
+                    <strong>#{o._id.slice(-8).toUpperCase()}</strong>
+                    <span className="muted"> · {new Date(o.createdAt).toLocaleDateString('en-IN')}</span>
+                  </div>
+                  <div className="order-row-meta">
+                    <span className="badge">{o.fulfillmentStatus}</span>
+                    <span>{money(o.total)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <LoadMore
+              onLoadMore={loadMoreOrders}
+              hasMore={ordersHasMore}
+              loading={ordersLoading}
+              error={ordersError}
+              count={orders.length}
+              total={ordersTotal}
+              label="orders"
+            />
+          </>
         )}
       </section>
 
