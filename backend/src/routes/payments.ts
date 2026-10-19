@@ -6,6 +6,7 @@ import { requirePermission } from '../lib/auth.js';
 import { assertPaymentTransition, nextPaymentStatuses, PaymentError } from '../lib/payments.js';
 import { logger } from '../lib/log.js';
 import { escapeRegex } from '../lib/mongo.js';
+import { parsePagination, pageMeta } from '../lib/pagination.js';
 
 const log = logger('pay');
 
@@ -29,12 +30,12 @@ paymentsRouter.get('/', requirePermission('payments.manage'), async (req, res, n
       if (isValidObjectId(q)) or.push({ _id: q });
       filter.$or = or;
     }
-    const orders = await OrderModel.find(filter)
-      .select(LIST_FIELDS)
-      .sort({ createdAt: -1 })
-      .limit(300)
-      .lean();
-    res.json({ data: orders });
+    const pg = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
+    const [orders, total] = await Promise.all([
+      OrderModel.find(filter).select(LIST_FIELDS).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      OrderModel.countDocuments(filter),
+    ]);
+    res.json({ data: orders, pagination: pageMeta(total, pg) });
   } catch (err) {
     next(err);
   }

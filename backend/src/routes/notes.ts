@@ -3,6 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { NoteModel } from '../models/note.js';
 import { noteInputSchema } from '../lib/noteInput.js';
 import { requirePermission, type ActorStaff } from '../lib/auth.js';
+import { parsePagination, pageMeta } from '../lib/pagination.js';
 
 export const notesRouter = Router();
 
@@ -17,8 +18,12 @@ notesRouter.get('/', requirePermission('notes.manage'), async (req, res, next) =
     const filter: Record<string, unknown> = {};
     if (type) filter.targetType = type;
     if (refId && isValidObjectId(refId)) filter.targetId = refId;
-    const notes = await NoteModel.find(filter).sort({ createdAt: -1 }).limit(200).lean();
-    res.json({ data: notes });
+    const pg = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
+    const [notes, total] = await Promise.all([
+      NoteModel.find(filter).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      NoteModel.countDocuments(filter),
+    ]);
+    res.json({ data: notes, pagination: pageMeta(total, pg) });
   } catch (err) {
     next(err);
   }

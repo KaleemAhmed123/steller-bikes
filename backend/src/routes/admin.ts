@@ -11,6 +11,7 @@ import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
+import { parsePagination, pageMeta } from '../lib/pagination.js';
 
 export const adminRouter = Router();
 
@@ -63,8 +64,12 @@ adminRouter.get('/orders', requirePermission('orders.read'), async (req, res, ne
       if (isValidObjectId(q)) or.push({ _id: q });
       filter.$or = or;
     }
-    const orders = await OrderModel.find(filter).sort({ createdAt: -1 }).limit(200).lean();
-    res.json({ data: orders });
+    const pg = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
+    const [orders, total] = await Promise.all([
+      OrderModel.find(filter).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      OrderModel.countDocuments(filter),
+    ]);
+    res.json({ data: orders, pagination: pageMeta(total, pg) });
   } catch (err) {
     next(err);
   }
@@ -160,10 +165,14 @@ adminRouter.post('/inventory/adjust', requirePermission('inventory.adjust'), asy
 // A duplicate slug trips the unique index → isDuplicateKeyError (Mongo 11000).
 
 // GET /api/admin/products — every product, any status (newest first).
-adminRouter.get('/products', requirePermission('products.manage'), async (_req, res, next) => {
+adminRouter.get('/products', requirePermission('products.manage'), async (req, res, next) => {
   try {
-    const products = await ProductModel.find({}).sort({ createdAt: -1 }).lean();
-    res.json({ data: products });
+    const pg = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
+    const [products, total] = await Promise.all([
+      ProductModel.find({}).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      ProductModel.countDocuments({}),
+    ]);
+    res.json({ data: products, pagination: pageMeta(total, pg) });
   } catch (err) {
     next(err);
   }
