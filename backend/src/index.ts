@@ -1,7 +1,9 @@
+import type { Server } from 'node:http';
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
+import mongoose from 'mongoose';
 import { config } from './config.js';
 import { connectDb } from './db.js';
 import { productsRouter } from './routes/products.js';
@@ -72,6 +74,24 @@ app.use(
   },
 );
 
+// Drain in-flight requests, then close the DB, then exit. Render sends SIGTERM on
+// every deploy/restart; without this, Node is killed mid-request. Belt-and-braces
+// timeout so a stuck connection can't hold the shutdown open forever.
+function shutdown(server: Server, signal: string): void {
+  console.log(`${signal} received — shutting down`);
+  const force = setTimeout(() => {
+    console.error('Shutdown timed out — forcing exit');
+    process.exit(1);
+  }, 10_000);
+  force.unref();
+  server.close(() => {
+    mongoose
+      .disconnect()
+      .catch((err) => console.error('Error during DB disconnect:', err))
+      .finally(() => process.exit(0));
+  });
+}
+
 async function start(): Promise<void> {
   await connectDb();
   const server = app.listen(config.PORT, () => {
@@ -84,7 +104,25 @@ async function start(): Promise<void> {
   // headersTimeout must stay > keepAliveTimeout or Node warns.
   server.keepAliveTimeout = 65_000;
   server.headersTimeout = 66_000;
+  // Cap how long a single request may take, so a slow/stuck client can't hold a
+  // socket open indefinitely.
+  server.requestTimeout = 30_000;
+
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.on(signal, () => shutdown(server, signal));
+  }
 }
+
+// A rejected promise or thrown error with no handler leaves the process in an
+// unknown state — log it loudly and exit so the host restarts a clean instance.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+  process.exit(1);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+  process.exit(1);
+});
 
 start().catch((err) => {
   console.error('Failed to start server:', err);
