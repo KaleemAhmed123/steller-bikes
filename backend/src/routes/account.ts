@@ -6,6 +6,7 @@ import { CustomerModel, type Customer } from '../models/customer.js';
 import { sendEmail } from '../lib/email.js';
 import { makeToken, hashToken } from '../lib/tokens.js';
 import { requireCustomer, mergeGuestCart, claimGuestOrders } from '../lib/customerAuth.js';
+import { loginLimiter } from '../lib/rateLimit.js';
 import { config } from '../config.js';
 
 export const accountRouter = Router();
@@ -69,7 +70,7 @@ function publicCustomer(c: LeanCustomer) {
 
 // --- Signup / login / logout / me -------------------------------------------
 
-accountRouter.post('/signup', async (req, res, next) => {
+accountRouter.post('/signup', loginLimiter, async (req, res, next) => {
   try {
     const parsed = signupSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -106,7 +107,11 @@ accountRouter.post('/signup', async (req, res, next) => {
 
 const loginSchema = z.object({ email: emailField, password: z.string().min(1) });
 
-accountRouter.post('/login', async (req, res, next) => {
+// A fixed hash to compare against when the email isn't found, so a missing
+// account costs the same time as a wrong password (no email-enumeration oracle).
+const DUMMY_HASH = bcrypt.hashSync('no-such-account', 10);
+
+accountRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -114,7 +119,8 @@ accountRouter.post('/login', async (req, res, next) => {
       return;
     }
     const customer = await CustomerModel.findOne({ email: parsed.data.email.toLowerCase() });
-    const ok = customer ? await bcrypt.compare(parsed.data.password, customer.passwordHash) : false;
+    // Always run bcrypt (dummy hash when there's no customer) for uniform timing.
+    const ok = await bcrypt.compare(parsed.data.password, customer?.passwordHash ?? DUMMY_HASH);
     if (!customer || !ok) {
       res.status(401).json({ error: { message: 'Wrong email or password.' } });
       return;
@@ -145,14 +151,14 @@ async function sendVerifyEmail(email: string, token: string): Promise<void> {
   const link = `${config.FRONTEND_ORIGIN}/account/verify?token=${token}`;
   await sendEmail({
     to: email,
-    subject: 'Verify your Raju Cycles account',
-    text: `Welcome to Raju Cycles!\n\nVerify your email to link your past orders:\n${link}\n\nThis link expires in 24 hours.`,
+    subject: 'Verify your Stellar Bikes account',
+    text: `Welcome to Stellar Bikes!\n\nVerify your email to link your past orders:\n${link}\n\nThis link expires in 24 hours.`,
   });
 }
 
 const tokenSchema = z.object({ token: z.string().trim().min(1) });
 
-accountRouter.post('/verify', async (req, res, next) => {
+accountRouter.post('/verify', loginLimiter, async (req, res, next) => {
   try {
     const parsed = tokenSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -182,7 +188,7 @@ accountRouter.post('/verify', async (req, res, next) => {
 
 // --- Password reset (request + confirm) -------------------------------------
 
-accountRouter.post('/password/forgot', async (req, res, next) => {
+accountRouter.post('/password/forgot', loginLimiter, async (req, res, next) => {
   try {
     const parsed = z.object({ email: emailField }).safeParse(req.body);
     // Always answer the same way — never reveal which emails are registered.
@@ -196,7 +202,7 @@ accountRouter.post('/password/forgot', async (req, res, next) => {
         const link = `${config.FRONTEND_ORIGIN}/reset-password?token=${token}`;
         await sendEmail({
           to: customer.email,
-          subject: 'Reset your Raju Cycles password',
+          subject: 'Reset your Stellar Bikes password',
           text: `Reset your password here:\n${link}\n\nThis link expires in 1 hour. If you didn't ask for this, ignore this email.`,
         });
       }
@@ -207,7 +213,7 @@ accountRouter.post('/password/forgot', async (req, res, next) => {
   }
 });
 
-accountRouter.post('/password/reset', async (req, res, next) => {
+accountRouter.post('/password/reset', loginLimiter, async (req, res, next) => {
   try {
     const parsed = z.object({ token: z.string().trim().min(1), password: passwordField }).safeParse(req.body);
     if (!parsed.success) {

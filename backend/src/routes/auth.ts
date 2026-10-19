@@ -2,16 +2,22 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { StaffModel } from '../models/staff.js';
+import { loginLimiter } from '../lib/rateLimit.js';
 
 export const authRouter = Router();
+
+// A fixed hash to compare against when the email isn't found, so a missing
+// account costs the same time as a wrong password (no email-enumeration oracle).
+const DUMMY_HASH = bcrypt.hashSync('no-such-account', 10);
 
 const loginSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(1),
 });
 
-// POST /api/auth/login — verify credentials, start a session.
-authRouter.post('/login', async (req, res, next) => {
+// POST /api/auth/login — verify credentials, start a session. Rate-limited to
+// blunt password brute-force against staff accounts.
+authRouter.post('/login', loginLimiter, async (req, res, next) => {
   try {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -19,9 +25,10 @@ authRouter.post('/login', async (req, res, next) => {
       return;
     }
     const staff = await StaffModel.findOne({ email: parsed.data.email.toLowerCase() });
-    let ok = false;
-    if (staff && staff.active) ok = await bcrypt.compare(parsed.data.password, staff.passwordHash);
-    if (!staff || !ok) {
+    // Always run bcrypt (against a dummy hash when there's no staff) so the
+    // response time doesn't reveal whether the email exists.
+    const ok = await bcrypt.compare(parsed.data.password, staff?.passwordHash ?? DUMMY_HASH);
+    if (!staff || !staff.active || !ok) {
       res.status(401).json({ error: { message: 'Wrong email or password.' } });
       return;
     }
