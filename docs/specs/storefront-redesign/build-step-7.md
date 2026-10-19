@@ -67,6 +67,10 @@ the shared field/heading rules — fix at the shared rule, not per page.
   login + admin-login verified serif/ink/orb in the browser. Found and fixed one extra gold link
   (`.empty a`, the empty-cart "Browse cycles" link) and the admin gold chrome during verification.
   Two header/shop gold spots left as an out-of-scope follow-up (see §4).
+- *2026-10-18* — **Owner ran the backend and verified the populated pages** (cart with items,
+  checkout, account, order). Closes the "not confirmed with real data" limitation in §7. Phase 3 is
+  done; the editorial UI rollout is complete across every route. Next work is product features
+  (Razorpay, returns, coupons, real email), not styling.
 
 ## 7. Explanation
 

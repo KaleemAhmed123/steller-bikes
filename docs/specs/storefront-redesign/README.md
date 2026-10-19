@@ -21,6 +21,7 @@ catalogue / product-detail / cards system — built on the existing Next.js + Ex
 | [`build-step-4.md`](build-step-4.md) | **Built** (typecheck + tests green; `next build` pending dev stop) — backend data fields so the frontend stops faking: `featured` flag, image gallery, honest popularity (read from orders), store settings. |
 | [`build-step-5.md`](build-step-5.md) | **Built** (typecheck + tests + live E2E green; `next build` pending dev stop) — admin config: full product CRUD (variants, featured, photo upload, status) + a store-settings editor, with new `products.manage`/`settings.manage` permissions. |
 | [`build-step-6.md`](build-step-6.md) | **Phase 1 built** (typecheck clean, live-verified; `next build` pending dev stop) — editorial "ElevenLabs" revamp: EB Garamond serif + off-white tokens + bigger 3-up Rapha/Aesop product card + editorial product-detail page. |
+| [`build-step-8.md`](build-step-8.md) | **Built** (FE+BE typecheck clean; `next build` + in-browser look pending) — Stellar rebrand (real blue logo, name, Saleem's contact) + hero revamp (loading poster, 25% shorter scroll, text moves from first scroll, extruded 3D logo-mark replacing the second bike, model 2.39 MB → 104 KB) + the first-add cart-reset fix. |
 | [`THIRD-PARTY-ASSETS.md`](THIRD-PARTY-ASSETS.md) | Licence + attribution register for any 3D model / imagery brought in. |
 
 ## Relationship to the rebuild
