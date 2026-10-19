@@ -14,6 +14,8 @@ export interface EmailMessage {
 // throw into the request path (no 500 on a paid order, no orphaned signup). So
 // failures are logged and swallowed. One `fetch`, no SDK (ponytail).
 export async function sendEmail(msg: EmailMessage): Promise<void> {
+  // Never touch the network in tests (no quota spend, no flakiness).
+  if (config.NODE_ENV === 'test') return;
   if (!config.RESEND_API_KEY) {
     console.log(
       [
