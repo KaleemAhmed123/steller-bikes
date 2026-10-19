@@ -10,6 +10,7 @@ status.
 | **Razorpay payments** — online pay (UPI/card/netbanking) alongside COD; server-authoritative amount, signature-verified, stock decremented only after payment. Webhook deferred to deployment | [`razorpay-payments/`](razorpay-payments/) | In progress | 2026-10-18 |
 | **Real email** — Resend-backed `sendEmail` (verify + reset made real) + order-confirmation receipts (COD + paid online); console-mock fallback, never throws | [`real-email/`](real-email/) | In progress | 2026-10-19 |
 | **Admin notes** — free-text notes taggable to an order / product / inventory variant / general; `notes.manage` (owner + manager), reusable widget on those screens + a `/admin/notes` tab | [`admin-notes/`](admin-notes/) | In progress | 2026-10-19 |
+| **Admin payments** — richer payment capture on the order (Razorpay id/method/amount/paid-at) + an owner-only `/admin/payments` tab (table + detail popup) with cash-collected / refunded actions | [`admin-payments/`](admin-payments/) | In progress | 2026-10-19 |
 
 ## What "status" means
 
