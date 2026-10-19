@@ -44,6 +44,7 @@ export default function BikeHero() {
   const [can3d, setCan3d] = useState(false);
   const [cinematic, setCinematic] = useState(false);
   const [active, setActive] = useState(true); // pause the render loop when off-screen
+  const [ready, setReady] = useState(false); // hide the loader once the model is in
 
   useEffect(() => {
     setMounted(true);
@@ -81,7 +82,7 @@ export default function BikeHero() {
         const st = ScrollTrigger.create({
           trigger,
           start: 'top top',
-          end: '+=220%',
+          end: '+=110%', // shorter pin — the 3D sequence finishes sooner, category section is reachable faster
           pin: true,
           scrub: 1,
           onUpdate: (self) => {
@@ -89,13 +90,16 @@ export default function BikeHero() {
           },
         });
 
-        // Headline crossfade timeline, scrubbed over the same range.
+        // Headline crossfade timeline, scrubbed over the same range. The first
+        // beat drifts + fades from the very start of the scroll (no static hold),
+        // so the moment you scroll, the text is clearly part of the animation.
         gsap.set(beats[0], { opacity: 1, yPercent: 0 });
         gsap.set(beats.slice(1), { opacity: 0, yPercent: 30 });
         const tl = gsap.timeline({
-          scrollTrigger: { trigger, start: 'top top', end: '+=220%', scrub: 1 },
+          scrollTrigger: { trigger, start: 'top top', end: '+=110%', scrub: 1 },
         });
-        tl.to(beats[0], { opacity: 0, yPercent: -30, duration: 0.14 }, 0.26)
+        tl.to(beats[0], { yPercent: -16, duration: 0.24, ease: 'none' }, 0.01) // immediate drift
+          .to(beats[0], { opacity: 0, yPercent: -38, duration: 0.12 }, 0.24)
           .fromTo(beats[1], { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, duration: 0.14 }, 0.3)
           .to(beats[1], { opacity: 0, yPercent: -30, duration: 0.14 }, 0.58)
           .fromTo(beats[2], { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, duration: 0.14 }, 0.62);
@@ -116,18 +120,35 @@ export default function BikeHero() {
   }, [mounted]);
 
   return (
-    <section ref={sectionRef} className="rc-hero" aria-label="Raju Cycles">
+    <section ref={sectionRef} className="rc-hero" aria-label="Stellar Bikes">
       <div className="rc-hero-stage">
         <div className="rc-hero-backdrop" aria-hidden="true" />
         <div className="rc-hero-canvas">
           {mounted && can3d ? (
             <CanvasBoundary onError={() => setCan3d(false)}>
-              <BikeCanvas progress={progress} cinematic={cinematic} active={active} />
+              <BikeCanvas
+                progress={progress}
+                cinematic={cinematic}
+                active={active}
+                onReady={() => setReady(true)}
+              />
             </CanvasBoundary>
           ) : (
             <HeroFallback />
           )}
         </div>
+
+        {/* Loading poster over the canvas until the ~1.2 MB model is ready, so the
+            first visit never shows a blank/lagging stage. */}
+        {mounted && can3d && (
+          <div className="rc-hero-loader" data-ready={ready} aria-hidden="true">
+            <div className="rc-hero-loader-art">
+              <HeroFallback />
+            </div>
+            <span className="rc-hero-loader-spin" />
+            <span className="rc-hero-loader-label">Preparing the ride…</span>
+          </div>
+        )}
 
         {/* Persistent eyebrow */}
         <div className="rc-hero-top container">
@@ -168,7 +189,7 @@ export default function BikeHero() {
         </div>
 
         <div className="rc-hero-scroll" aria-hidden="true">
-          <span>Scroll</span>
+          <span>Scroll to explore</span>
           <i />
         </div>
       </div>
