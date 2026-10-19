@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, type MutableRefObject } from 'react';
+import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import {
   useGLTF,
@@ -15,13 +15,13 @@ import * as THREE from 'three';
 import { upgradePaint } from './paint';
 
 // The hero's real-time 3D bike — a cinematic, scroll-driven scene.
-// The bike is a conceptual brand visual (CC-BY model, see THIRD-PARTY-ASSETS.md),
+// The bike is a conceptual brand visual (a purchased/licensed 3D model),
 // never a purchasable SKU.
 //
 // `progress` is a shared ref (0..1) written by the GSAP ScrollTrigger in BikeHero.
 // The camera moves through a sequence of framed "shots" as that value climbs.
 
-const MODEL = '/models/bicycle.glb';
+const MODEL = '/models/cycle.glb';
 
 // Camera keyframes: a deliberate path around the bike (centred at the origin).
 // Each shot is { position, lookAt }. Progress 0..1 interpolates across them.
@@ -32,10 +32,16 @@ const SHOTS: { pos: [number, number, number]; tgt: [number, number, number] }[] 
   { pos: [1.7, 1.0, 6.1], tgt: [0, 0.05, 0] }, // settle, pulled back for the CTA
 ];
 
-function Bike() {
+function Bike({ onReady }: { onReady?: () => void }) {
   const { scene } = useGLTF(MODEL);
   const { gl } = useThree();
   const group = useRef<THREE.Group>(null);
+
+  // This component only mounts once the GLB has loaded (Suspense resolved), so
+  // this is the moment the hero is ready — tell the parent to drop the loader.
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
 
   const { object, scale } = useMemo(() => {
     const object = scene.clone(true);
@@ -103,10 +109,12 @@ export default function BikeCanvas({
   progress,
   cinematic = true,
   active = true,
+  onReady,
 }: {
   progress: MutableRefObject<number>;
   cinematic?: boolean;
   active?: boolean;
+  onReady?: () => void;
 }) {
   return (
     <Canvas
@@ -125,21 +133,23 @@ export default function BikeCanvas({
       <PerspectiveCamera makeDefault position={[1.3, 0.1, 5.1]} fov={34} />
       <CameraRig progress={progress} />
 
-      {/* In-code studio lighting → real reflections, zero network downloads. */}
+      {/* In-code studio lighting → real reflections, zero network downloads.
+          Warm amber-gold studio to match the brand/logo; a deeper amber rim adds
+          cinematic depth. The red paint reads as a rich warm red under this light. */}
       <Environment resolution={256} frames={1}>
-        <color attach="background" args={['#0a0b0d']} />
-        <Lightformer form="rect" intensity={3} color="#6aa8ff" position={[5, 6, 4]} scale={[6, 6, 1]} />
-        <Lightformer form="rect" intensity={2.4} color="#6b8cff" position={[-6, 3, -4]} scale={[8, 6, 1]} />
-        <Lightformer form="circle" intensity={1.4} color="#ffffff" position={[0, 8, 2]} scale={4} />
+        <color attach="background" args={['#0d0a06']} />
+        <Lightformer form="rect" intensity={3} color="#ffcf7a" position={[5, 6, 4]} scale={[6, 6, 1]} />
+        <Lightformer form="rect" intensity={2.2} color="#d9942f" position={[-6, 3, -4]} scale={[8, 6, 1]} />
+        <Lightformer form="circle" intensity={1.5} color="#fff4e0" position={[0, 8, 2]} scale={4} />
         {/* A long thin strip overhead — a bright moving streak across the clearcoat. */}
-        <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[0, 5, -6]} scale={[10, 0.6, 1]} rotation={[0, Math.PI, 0]} />
+        <Lightformer form="rect" intensity={2.2} color="#ffead0" position={[0, 5, -6]} scale={[10, 0.6, 1]} rotation={[0, Math.PI, 0]} />
       </Environment>
 
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[5, 7, 5]} intensity={1.6} color="#6aa8ff" castShadow shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[-6, 3, -4]} intensity={1.3} color="#5b8cff" />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[5, 7, 5]} intensity={1.6} color="#ffd98f" castShadow shadow-mapSize={[1024, 1024]} />
+      <directionalLight position={[-6, 3, -4]} intensity={1.2} color="#c88a3a" />
 
-      <Bike />
+      <Bike onReady={onReady} />
 
       {/* Wet-asphalt reflective floor — the bike mirrors into it. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.72, 0]}>
@@ -154,11 +164,11 @@ export default function BikeCanvas({
             depthScale={1.1}
             minDepthThreshold={0.4}
             maxDepthThreshold={1.3}
-            color="#0a0b0d"
+            color="#0d0a06"
             metalness={0.55}
           />
         ) : (
-          <meshStandardMaterial color="#0a0b0d" roughness={0.9} metalness={0.3} />
+          <meshStandardMaterial color="#0d0a06" roughness={0.9} metalness={0.3} />
         )}
       </mesh>
 

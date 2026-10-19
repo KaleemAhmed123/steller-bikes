@@ -15,6 +15,7 @@ export function upgradePaint(
   maxAnisotropy: number,
 ): THREE.MeshPhysicalMaterial {
   const phys = new THREE.MeshPhysicalMaterial();
+  phys.side = std.side; // keep double-sided panels (some exports flag them) — no missing faces
   phys.color.copy(std.color);
   phys.emissive.copy(std.emissive);
   phys.map = std.map;
