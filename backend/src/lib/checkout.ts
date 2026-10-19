@@ -7,8 +7,20 @@ import { loadVariantMap } from './variants.js';
 import { computeCartView } from './cartView.js';
 import { computeTotals, type Totals } from './pricing.js';
 import { logger } from './log.js';
+import { sendOrderConfirmation } from './email.js';
 
 const log = logger('pay');
+
+// Fire the order-confirmation email without blocking (sendEmail never throws).
+function notifyOrder(to: string, orderId: string, orderItems: OrderItem[], totals: Totals, method: 'cod' | 'razorpay'): void {
+  void sendOrderConfirmation({
+    to,
+    orderId,
+    items: orderItems.map((i) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+    total: totals.total,
+    method,
+  });
+}
 
 export type CheckoutCode = 'EMPTY' | 'CHANGED' | 'OUT_OF_STOCK';
 
@@ -220,7 +232,9 @@ export async function placeOrder(input: CheckoutInput): Promise<string> {
 
   const { totals, orderItems } = await loadCheckoutView(input.owner);
   try {
-    return await runOrderTransaction({ ...input, method: 'cod', paymentStatus: 'unpaid', totals, orderItems });
+    const orderId = await runOrderTransaction({ ...input, method: 'cod', paymentStatus: 'unpaid', totals, orderItems });
+    notifyOrder(input.email, orderId, orderItems, totals, 'cod');
+    return orderId;
   } catch (err) {
     // Two requests with the same key raced: the loser returns the winner's order.
     if (isDuplicateKey(err)) {
@@ -281,6 +295,7 @@ export async function finalizePaidOrder(
       totals,
       orderItems,
     });
+    notifyOrder(input.email, orderId, orderItems, totals, 'razorpay');
     return { orderId, refundRequired: false };
   } catch (err) {
     if (isDuplicateKey(err)) {

@@ -29,6 +29,11 @@ const schema = z.object({
   // The key id is public (the browser needs it); the secret must stay server-side.
   RAZORPAY_KEY_ID: z.string().default(''),
   RAZORPAY_KEY_SECRET: z.string().default(''),
+  // Real email via Resend. Optional: no key → emails print to the console (dev
+  // mock), so local setup needs nothing. MAIL_FROM is the verified sender, e.g.
+  // "Raju Cycles <orders@yourdomain.com>".
+  RESEND_API_KEY: z.string().default(''),
+  MAIL_FROM: z.string().default('Raju Cycles <onboarding@resend.dev>'),
 });
 
 const parsed = schema.safeParse(process.env);
