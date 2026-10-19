@@ -2108,3 +2108,32 @@ h3 {
 .order-page {
   --rc-orb: var(--rc-orb-rose);
 }
+
+/* --- Infinite scroll trigger (LoadMore) ---------------------------------- */
+.load-more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 28px 0 8px;
+  text-align: center;
+}
+.load-more-count {
+  font-size: 0.85rem;
+  color: var(--rc-muted, #6b6b6b);
+  margin: 0;
+}
+.load-more-btn {
+  min-width: 160px;
+}
+.load-more-error {
+  margin: 0;
+}
+.load-more-sentinel {
+  width: 100%;
+  height: 1px;
+}
+.load-more-end {
+  margin: 0;
+  font-size: 0.85rem;
+}
