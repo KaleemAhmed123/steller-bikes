@@ -11,6 +11,7 @@ status.
 | **Real email** — Resend-backed `sendEmail` (verify + reset made real) + order-confirmation receipts (COD + paid online); console-mock fallback, never throws | [`real-email/`](real-email/) | In progress | 2026-10-19 |
 | **Admin notes** — free-text notes taggable to an order / product / inventory variant / general; `notes.manage` (owner + manager), reusable widget on those screens + a `/admin/notes` tab | [`admin-notes/`](admin-notes/) | In progress | 2026-10-19 |
 | **Admin payments** — richer payment capture on the order (Razorpay id/method/amount/paid-at) + an owner-only `/admin/payments` tab (table + detail popup) with cash-collected / refunded actions | [`admin-payments/`](admin-payments/) | In progress | 2026-10-19 |
+| **Admin dashboard** — range-filtered (Today/7d/15d/30d/All, IST) operator dashboard: KPI cards + Recharts charts (revenue, orders, method split, status, top products) + tables | [`admin-dashboard/`](admin-dashboard/) | In progress | 2026-10-19 |
 
 ## What "status" means
 
