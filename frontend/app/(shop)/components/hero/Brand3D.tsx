@@ -5,7 +5,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { HeroFallback } from './HeroFallback';
 
-const BrandCanvas = dynamic(() => import('./BrandCanvas'), { ssr: false });
+const LogoCanvas = dynamic(() => import('./LogoCanvas'), { ssr: false });
 
 class CanvasBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
   state = { failed: false };
@@ -53,7 +53,7 @@ export default function Brand3D() {
       <div className="container rc-brand3d-grid">
         <div className="rc-brand3d-copy">
           <span className="rc-eyebrow" style={{ ['--rc-accent' as string]: '#ffffff' }}>
-            The Raju Cycles look
+            The Stellar look
           </span>
           <h2 className="rc-sec-title">Engineered to look as good as it rides.</h2>
           <p className="rc-sec-blurb rc-sec-blurb--light">
@@ -68,10 +68,10 @@ export default function Brand3D() {
         <div className="rc-brand3d-stage" ref={ref}>
           {visible && can3d ? (
             <CanvasBoundary onError={() => setCan3d(false)}>
-              <BrandCanvas />
+              <LogoCanvas />
             </CanvasBoundary>
           ) : (
-            <div className="rc-brand3d-fallback" style={{ color: 'rgba(255,255,255,0.14)' }}>
+            <div className="rc-brand3d-fallback" style={{ color: 'rgba(242,165,46,0.22)' }}>
               <HeroFallback />
             </div>
           )}
