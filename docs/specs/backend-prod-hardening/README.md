@@ -47,6 +47,12 @@ config, abuse limits, deploy packaging, and indexes.
 - LOW: login timing enumeration (dummy-hash compare), owner-scoped idempotency key, order-history `.limit(100)`.
 - Task B: dedupe the 11000 check + regex-escape into `lib/mongo.ts`; delete dead `paymentStatus` enum values.
 
+### Batch 3 — pagination (shipped)
+- Offset pagination (`?page=&limit=`) on the growth-prone list endpoints: storefront
+  products, admin products/orders/payments/notes, customer order history. Shared
+  `lib/pagination.ts`; backward-compatible response shape (`data` + `pagination`);
+  frontend page controls deferred to a follow-up. See `build-step-3.md`.
+
 **Rejected alternatives:**
 - `express-rate-limit` — rejected per your dep-size rule (single instance makes a
   library unnecessary).
@@ -82,6 +88,13 @@ config, abuse limits, deploy packaging, and indexes.
   typecheck clean, build exit 0, no-DB tests green, boot smoke exits 1 cleanly on
   a bad DB. SIGTERM drain + DB-backed idempotency not run here (need Atlas).
   Walkthrough in `build-step-2.md`. All audit findings now addressed.
+- **2026-10-19** — Batch 3 shipped: offset pagination on the six growth-prone list
+  endpoints, backend-only, backward-compatible shape. New `lib/pagination.ts` +
+  self-check (5/5). The flat `.limit()` caps on orders/payments/notes/order-history
+  are replaced by paging. Verified: typecheck clean, build exit 0, all no-DB tests
+  green. Frontend next/prev controls are the agreed follow-up. Scope note: this
+  went beyond the original audit (owner asked for it) — the audit itself is fully
+  closed as of Batch 2.
 
 ## 7. Explanation
 See [`build-step-1.md`](build-step-1.md).
