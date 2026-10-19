@@ -11,6 +11,7 @@ ordersRouter.get('/', async (req, res, next) => {
   try {
     const orders = await OrderModel.find({ owner: res.locals.owner as string })
       .sort({ createdAt: -1 })
+      .limit(100)
       .lean();
     res.json({ data: orders });
   } catch (err) {
