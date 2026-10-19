@@ -1,36 +1,40 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getProducts } from '@/lib/api';
-import { toCard, sortCards, type SortKey, type CardProduct } from '@/lib/catalogue';
-import { ProductCard } from '../components/ProductCard';
 import { FilterBar } from '../components/FilterBar';
+import { ProductGrid } from '../components/ProductGrid';
 
 export const metadata: Metadata = {
   title: 'All bicycles — Stellar Bikes',
   description: 'Browse the full range of sample bicycles and accessories from Stellar Bikes, Kanpur.',
 };
 
-const SORTS: SortKey[] = ['newest', 'price-asc', 'price-desc', 'popular'];
+// The query params we forward to the API (filters + sort). Sort now runs
+// server-side so paging + infinite scroll stay globally correct.
+const FORWARD = ['category', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
 
-// The catalogue. Server component: reads filters from the URL, fetches the
-// matching products from the API, and renders them. Sort is applied here
-// (newest comes from the API; price sort is derived) via lib/catalogue.
+// The catalogue. Server component: reads filters from the URL, fetches the FIRST
+// page from the API (so the first screen is server-rendered for SEO), then hands it
+// to a client grid that appends more on scroll / "Load more".
 export default async function ShopPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const sp = await searchParams;
-  const rawSort = typeof sp.sort === 'string' ? sp.sort : 'newest';
-  const sort: SortKey = (SORTS as string[]).includes(rawSort) ? (rawSort as SortKey) : 'newest';
 
-  let cards: CardProduct[] = [];
-  let categories: string[] = [];
+  // The forwarded params as plain strings — also the ProductGrid remount key, so a
+  // filter/sort change re-seeds page 1 instead of appending onto the old list.
+  const params: Record<string, string> = {};
+  for (const key of FORWARD) {
+    const v = sp[key];
+    if (typeof v === 'string' && v) params[key] = v;
+  }
+  const gridKey = new URLSearchParams(params).toString();
+
+  let page;
   let error = '';
   try {
-    const { products, categories: cats } = await getProducts(sp);
-    cards = sortCards(products.map(toCard), sort);
-    categories = cats;
+    page = await getProducts(sp, { page: 1 });
   } catch {
     error = 'Could not load the catalogue. Is the API running?';
   }
@@ -48,26 +52,18 @@ export default async function ShopPage({
         </p>
       </header>
 
-      {!error && <FilterBar categories={categories} resultCount={cards.length} />}
-
       {error && <div className="notice error">{error}</div>}
 
-      {!error && cards.length > 0 && (
-        <div className="rc-grid">
-          {cards.map((c) => (
-            <div data-reveal key={c.slug}>
-              <ProductCard card={c} />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {!error && cards.length === 0 && (
-        <div className="empty">
-          <span className="empty-mark">🔍</span>
-          No cycles match these filters.{' '}
-          <Link href="/shop">Clear them and start over</Link>.
-        </div>
+      {!error && page && (
+        <>
+          <FilterBar categories={page.categories} resultCount={page.pagination.total} />
+          <ProductGrid
+            key={gridKey}
+            initialProducts={page.products}
+            initialPagination={page.pagination}
+            params={params}
+          />
+        </>
       )}
     </div>
   );

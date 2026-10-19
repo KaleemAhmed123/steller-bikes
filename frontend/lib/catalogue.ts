@@ -144,40 +144,44 @@ export const COLLECTIONS = {
 
 export type CollectionSlug = keyof typeof COLLECTIONS;
 
-export interface CollectionData {
-  eyebrow: string;
-  title: string;
-  blurb: string;
-  cards: CardProduct[];
+// Collections backed by a real server query get TRUE infinite scroll: the page
+// seeds page 1 and appends more. The value is the query params to forward.
+//   - new-arrivals → the API's default newest-first order.
+//   - budget       → server-side price-asc sort (globally correct across pages).
+export const INFINITE_COLLECTIONS = {
+  'new-arrivals': {},
+  budget: { sort: 'price-asc' },
+} as const satisfies Partial<Record<CollectionSlug, Record<string, string>>>;
+
+export type InfiniteCollectionSlug = keyof typeof INFINITE_COLLECTIONS;
+export type DerivedCollectionSlug = Exclude<CollectionSlug, InfiniteCollectionSlug>;
+
+export function isInfiniteCollection(slug: CollectionSlug): slug is InfiniteCollectionSlug {
+  return slug in INFINITE_COLLECTIONS;
 }
 
-export async function loadCollection(slug: CollectionSlug): Promise<CollectionData> {
-  const { products } = await getProducts({});
+// The derived rails (staff-picks / offers / popular) can't be a server query — the
+// backend has no featured/on-offer/sold filter — so we fetch one big page and derive
+// client-side, as before. ponytail: caps these three at the first 100 products (the
+// API's max page); add server-side filters if the catalogue ever outgrows that.
+export async function loadDerivedCollection(slug: DerivedCollectionSlug): Promise<CardProduct[]> {
+  const { products } = await getProducts({}, { limit: 100 });
   const cards = products.map(toCard); // newest-first
-
-  let list: CardProduct[];
   switch (slug) {
-    case 'new-arrivals':
-      list = cards;
-      break;
     case 'staff-picks':
-      list = cards.filter((c) => c.featured);
-      break;
-    case 'budget':
-      list = sortCards(cards, 'price-asc');
-      break;
+      return cards.filter((c) => c.featured);
     case 'offers':
-      list = cards.filter((c) => c.hasOffer);
-      break;
+      return cards.filter((c) => c.hasOffer);
     case 'popular':
-      list = sortCards(cards.filter((c) => c.soldCount > 0), 'popular');
-      break;
+      return sortCards(cards.filter((c) => c.soldCount > 0), 'popular');
   }
-  return { ...COLLECTIONS[slug], cards: list };
 }
 
 export async function loadHomeData(): Promise<HomeData> {
-  const { products, categories } = await getProducts({});
+  // limit=100 (the API max) so the homepage rails + category tiles derive from the
+  // whole small catalogue, not just the first paged slice. ponytail: a shop with
+  // >100 products needs dedicated rail endpoints; fine until then.
+  const { products, categories } = await getProducts({}, { limit: 100 });
   const cards = products.map(toCard); // API order = newest-first
 
   const byCat = (cat: string) => cards.filter((c) => c.category.toLowerCase() === cat.toLowerCase());
