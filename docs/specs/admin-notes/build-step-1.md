@@ -80,6 +80,14 @@ index: { targetType, targetId, createdAt }
   `.env`, order-confirmation emails were firing real API calls during tests. Added `NODE_ENV=test`
   short-circuit in `sendEmail` and a `tests/setup.ts` preload (wired into `npm test`) so tests never
   touch the network.
+- **2026-10-19** — Made the notes UX consistent across tabs (owner feedback): every list tab now has
+  the same inventory-style per-row **Notes** button that expands an inline notes panel —
+  **Orders, Products, Payments** (and Inventory already had it). Payments reuses `type="order"` (a
+  payment is an order), so it's the same thread as the order's. The **Notes tab** add-form now has a
+  type selector (General / Order / Product / Inventory) + an id field, so a tagged note can be created
+  there too. Detail-page widgets (order detail, product edit) stay as well — same threads.
+  Ceiling: the Notes-tab tagging takes a pasted id; a searchable picker is the upgrade path (the
+  per-row buttons fill the id automatically, so this is secondary).
 
 ## 7. Explanation
 
