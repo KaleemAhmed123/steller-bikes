@@ -50,8 +50,11 @@ export default function SavedPage() {
       {!loading && !error && saved.length === 0 && (
         <div className="empty">
           <span className="empty-mark">♡</span>
-          Nothing saved yet. <Link href="/shop">Browse the catalogue</Link> and tap the heart on any
-          cycle.
+          <p className="empty-title">Nothing saved yet</p>
+          <p className="muted">Tap the heart on any cycle to keep it here for later.</p>
+          <Link href="/shop" className="btn-primary empty-cta">
+            Browse the catalogue
+          </Link>
         </div>
       )}
     </div>

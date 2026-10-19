@@ -28,9 +28,18 @@ export default function CartPage() {
   const items = cart?.items ?? [];
   if (items.length === 0) {
     return (
-      <div className="empty">
-        <span className="empty-mark">🛒</span>
-        Your cart is empty. <Link href="/shop">Browse cycles →</Link>
+      <div className="cart-page">
+        <h1>Your cart</h1>
+        <div className="empty empty-cart">
+          <span className="empty-mark">🛒</span>
+          <p className="empty-title">Your cart is empty</p>
+          <p className="muted">
+            Browse the range and add a cycle — it’ll show up here, ready to check out.
+          </p>
+          <Link href="/shop" className="btn-primary empty-cta">
+            Browse cycles
+          </Link>
+        </div>
       </div>
     );
   }
@@ -44,6 +53,7 @@ export default function CartPage() {
           <div key={line.variantId} className="cart-line">
             {line.available ? (
               <>
+                {/* ponytail: small fixed thumb, few per page — raw img is fine; convert to next/image if cart LCP ever matters. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="cart-thumb" src={line.image} alt={line.name ?? ''} />
                 <div className="cart-line-info">
@@ -103,7 +113,7 @@ export default function CartPage() {
           <span>Subtotal</span>
           <span>{money(cart?.subtotal ?? 0)}</span>
         </div>
-        <p className="muted">Cash on delivery · delivery charges shown at checkout</p>
+        <p className="muted">Free delivery · payment options at checkout</p>
         <Link href="/checkout" className="btn-primary btn-block">
           Proceed to checkout
         </Link>

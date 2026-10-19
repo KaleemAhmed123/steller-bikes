@@ -31,7 +31,16 @@ export default function AccountPage() {
     getOrders().then(setOrders).catch(() => setOrders([]));
   }, [customer]);
 
-  if (loading || !customer) return <p className="muted cart-status">Loading…</p>;
+  if (loading || !customer) {
+    return (
+      <div className="account-page">
+        <div className="skeleton skeleton-line" style={{ width: 200, height: 28, margin: '20px 0 10px' }} />
+        <div className="skeleton skeleton-line short" style={{ marginBottom: 28 }} />
+        <div className="skeleton" style={{ height: 140, borderRadius: 12, marginBottom: 20 }} />
+        <div className="skeleton" style={{ height: 120, borderRadius: 12 }} />
+      </div>
+    );
+  }
 
   const set = (key: keyof typeof EMPTY_ADDR) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setAddr((a) => ({ ...a, [key]: e.target.value }));
