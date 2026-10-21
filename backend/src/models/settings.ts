@@ -1,9 +1,10 @@
 import { Schema, model, InferSchemaType } from 'mongoose';
 
-// Store settings — a single document of shop details the storefront shows
-// (address, phone, hours, delivery policy). Every field defaults to '' so the
-// storefront can keep its honest "coming soon" placeholder until it's filled.
-// There is no admin UI yet (owner-only); set these directly or in a later phase.
+// Store settings — a single document for the whole shop. Two concerns share it:
+//   - shop-facing identity (address, phone, hours, delivery policy) — the Settings tab;
+//   - operational config (categories, payment toggles, announcement) — the Platform tab.
+// Shop-info fields default to '' so the storefront keeps its honest "coming soon".
+// Payment toggles default ON so a fresh shop can sell; announcement is off (empty).
 const settingsSchema = new Schema(
   {
     addressLine1: { type: String, default: '' },
@@ -15,6 +16,11 @@ const settingsSchema = new Schema(
     hours: { type: String, default: '' },
     deliveryPolicy: { type: String, default: '' },
     email: { type: String, default: '' },
+    // Operational config (Platform tab).
+    categories: { type: [String], default: [] }, // canonical category list (dropdown source)
+    codEnabled: { type: Boolean, default: true }, // cash-on-delivery on/off
+    onlinePaymentEnabled: { type: Boolean, default: true }, // Razorpay on/off (on top of env config)
+    announcement: { type: String, default: '' }, // storefront banner line ('' = hidden)
   },
   { timestamps: true },
 );
