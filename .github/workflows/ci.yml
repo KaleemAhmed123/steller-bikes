@@ -1,0 +1,57 @@
+name: CI
+
+# Basic pre-merge gate. Runs on every pull request and on pushes to main.
+# What it proves: both apps typecheck, the backend tests pass against a throwaway
+# in-memory MongoDB (no secrets, see backend/tests/setup.ts), the frontend builds,
+# and no PRODUCTION dependency has a known high/critical vulnerability.
+# Dev-only advisories (e.g. the eslint toolchain) are intentionally not gated —
+# they never ship to production. See docs/specs/prelaunch-hardening.md.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      # Cache the MongoDB binary that mongodb-memory-server downloads on first run,
+      # so test runs stay fast and don't re-download it every time.
+      - name: Cache mongodb-memory-server binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
