@@ -2,6 +2,7 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
+import { SearchX } from 'lucide-react';
 import { getProducts } from '@/lib/api';
 import { toCard } from '@/lib/catalogue';
 import { useInfiniteList } from '@/lib/useInfiniteList';
@@ -39,7 +40,7 @@ export function ProductGrid({
   if (items.length === 0) {
     return (
       <div className="empty">
-        <span className="empty-mark">🔍</span>
+        <SearchX className="empty-mark" size={34} strokeWidth={1.5} aria-hidden />
         No cycles match these filters. <Link href="/shop">Clear them and start over</Link>.
       </div>
     );

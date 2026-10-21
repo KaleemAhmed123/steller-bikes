@@ -1,5 +1,6 @@
 'use client';
 
+import { Heart } from 'lucide-react';
 import { useWishlist } from './WishlistProvider';
 
 // Accessible heart toggle. `variant` only changes styling (floating on a card
@@ -22,15 +23,7 @@ export function WishlistButton({ slug, name, variant = 'card' }: { slug: string;
         toggle(slug);
       }}
     >
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-        <path
-          d="M12 20.7 4.3 13a4.6 4.6 0 0 1 6.5-6.5l1.2 1.2 1.2-1.2A4.6 4.6 0 0 1 19.7 13Z"
-          fill={saved ? 'currentColor' : 'none'}
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <Heart size={18} strokeWidth={1.8} fill={saved ? 'currentColor' : 'none'} aria-hidden />
       {variant === 'inline' && <span>{saved ? 'Saved' : 'Save'}</span>}
     </button>
   );

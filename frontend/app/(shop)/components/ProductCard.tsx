@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Plus } from 'lucide-react';
+import { SafeImage } from '@/components/SafeImage';
 import { money } from '@/lib/api';
 import type { CardProduct } from '@/lib/catalogue';
 import { useCart } from './CartProvider';
+import { useToast } from './ToastProvider';
 import { WishlistButton } from './WishlistButton';
 
 // Best-effort colour-name → swatch colour. Preview only — selecting a real
@@ -24,6 +26,7 @@ function swatch(name: string): string {
 
 export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?: 'light' | 'dark' }) {
   const { add } = useCart();
+  const { show } = useToast();
   const [adding, setAdding] = useState(false);
   const multi = card.variantCount > 1;
   const soldOut = !card.inStock;
@@ -34,9 +37,9 @@ export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?
     if (!card.soleVariantId || soldOut) return;
     setAdding(true);
     try {
-      await add(card.soleVariantId, 1); // global toast confirms
-    } catch {
-      /* CartProvider surfaces errors elsewhere; keep the card quiet */
+      await add(card.soleVariantId, 1); // global toast confirms success
+    } catch (err) {
+      show(err instanceof Error ? err.message : 'Could not add to cart.', 'error');
     } finally {
       setAdding(false);
     }
@@ -45,7 +48,7 @@ export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?
   return (
     <Link href={`/p/${card.slug}`} className={`rc-card rc-card--${tone}`}>
       <div className="rc-card-media">
-        <Image
+        <SafeImage
           src={card.image}
           alt={`${card.name} — illustrative sample photo`}
           fill
@@ -83,7 +86,7 @@ export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?
             <span className="rc-card-action">Choose options</span>
           ) : (
             <button type="button" className="rc-card-add" onClick={quickAdd} disabled={adding}>
-              {adding ? 'Adding…' : 'Add +'}
+              {adding ? 'Adding…' : (<><Plus size={15} strokeWidth={2} aria-hidden />Add</>)}
             </button>
           )}
         </div>

@@ -10,6 +10,7 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
   razorpayEnabled,
+  getSettings,
   money,
 } from '@/lib/api';
 import type { Address, SavedAddress } from '@/lib/types';
@@ -63,7 +64,22 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const prefilled = useRef(false);
-  const online = razorpayEnabled();
+  // Which payment methods the owner has enabled (server is the real authority;
+  // this just hides the button). COD defaults on; online also needs Razorpay keys.
+  const [codEnabled, setCodEnabled] = useState(true);
+  const [onlineEnabled, setOnlineEnabled] = useState(true);
+  const online = razorpayEnabled() && onlineEnabled;
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        setCodEnabled(s.codEnabled);
+        setOnlineEnabled(s.onlinePaymentEnabled);
+        // If COD is off, default the choice to online so the form is ready to pay.
+        if (!s.codEnabled) setPay('online');
+      })
+      .catch(() => undefined);
+  }, []);
 
   // When a logged-in customer lands here, prefill their email and default
   // address once (don't clobber anything they start typing).
@@ -219,7 +235,7 @@ export default function CheckoutPage() {
             </label>
           </div>
 
-          {online && (
+          {codEnabled && online && (
             <fieldset className="pay-methods">
               <legend className="field-label">Payment</legend>
               <label className="pay-option">
@@ -233,13 +249,17 @@ export default function CheckoutPage() {
             </fieldset>
           )}
 
+          {!codEnabled && !online && (
+            <div className="notice error">Checkout is temporarily unavailable. Please try again later.</div>
+          )}
+
           {error && (
             <div className="notice error">
               {error} <Link href="/cart">Review cart →</Link>
             </div>
           )}
 
-          <button type="submit" className="btn-primary btn-block" disabled={submitting}>
+          <button type="submit" className="btn-primary btn-block" disabled={submitting || (!codEnabled && !online)}>
             {submitting
               ? pay === 'online' && online
                 ? 'Opening payment…'

@@ -121,6 +121,9 @@ export default function BikeHero() {
 
   return (
     <section ref={sectionRef} className="rc-hero" aria-label="Stellar Bikes">
+      {/* The page's semantic h1. Visually hidden because the headline is the
+          animated 3D beats below; screen readers + SEO still get a real h1. */}
+      <h1 className="rc-sr-only">Stellar Bikes — affordable bicycles in Kanpur</h1>
       <div className="rc-hero-stage">
         <div className="rc-hero-backdrop" aria-hidden="true" />
         <div className="rc-hero-canvas">

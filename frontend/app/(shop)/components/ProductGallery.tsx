@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ZoomImage } from './ZoomImage';
+import { safeSrc, imgError } from '@/lib/img';
 
 // Product image gallery. The primary `image` plus any extra `images`; a
 // thumbnail strip appears only when there's more than one shot, so a
@@ -34,7 +35,7 @@ export function ProductGallery({
               onClick={() => setActive(i)}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={thumb} alt="" aria-hidden="true" loading="lazy" />
+              <img src={safeSrc(thumb)} alt="" aria-hidden="true" loading="lazy" onError={imgError} />
             </button>
           ))}
         </div>

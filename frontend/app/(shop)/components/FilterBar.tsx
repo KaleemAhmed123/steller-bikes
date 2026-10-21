@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Search, ArrowUpDown } from 'lucide-react';
 
 // Set a param when it has a value, otherwise drop it from the URL.
 function setOrDelete(params: URLSearchParams, key: string, value: string) {
@@ -82,14 +83,17 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
       </div>
 
       <div className="rc-filter-controls">
-        <input
-          type="search"
-          className="rc-input rc-input--search"
-          placeholder="Search cycles…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          aria-label="Search cycles by name or keyword"
-        />
+        <span className="rc-search">
+          <Search aria-hidden strokeWidth={1.75} />
+          <input
+            type="search"
+            className="rc-input rc-input--search"
+            placeholder="Search cycles…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="Search cycles by name or keyword"
+          />
+        </span>
         <input
           type="number"
           className="rc-input rc-input--price"
@@ -110,6 +114,7 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
         />
         <label className="rc-sort">
           <span className="rc-sr-only">Sort by</span>
+          <ArrowUpDown aria-hidden strokeWidth={1.75} />
           <select value={sort} onChange={(e) => changeSort(e.target.value)} aria-label="Sort products">
             <option value="newest">Newest</option>
             <option value="popular">Most popular</option>

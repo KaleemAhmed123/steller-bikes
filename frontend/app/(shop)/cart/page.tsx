@@ -1,12 +1,35 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '../components/CartProvider';
+import { useToast } from '../components/ToastProvider';
 import { money } from '@/lib/api';
+import { safeSrc, imgError } from '@/lib/img';
 
 // The cart page: live lines, quantity steppers, remove, subtotal, and checkout.
 export default function CartPage() {
   const { cart, loading, update, remove } = useCart();
+  const { show } = useToast();
+  // Variant ids with a request in flight — locks that line's buttons so rapid
+  // clicks can't race (out-of-order responses used to leave the wrong quantity).
+  const [pending, setPending] = useState<Set<string>>(new Set());
+
+  async function run(variantId: string, action: () => Promise<void>) {
+    if (pending.has(variantId)) return;
+    setPending((p) => new Set(p).add(variantId));
+    try {
+      await action();
+    } catch (err) {
+      show(err instanceof Error ? err.message : 'Could not update the cart.', 'error');
+    } finally {
+      setPending((p) => {
+        const next = new Set(p);
+        next.delete(variantId);
+        return next;
+      });
+    }
+  }
 
   if (loading) {
     return (
@@ -55,7 +78,7 @@ export default function CartPage() {
               <>
                 {/* ponytail: small fixed thumb, few per page — raw img is fine; convert to next/image if cart LCP ever matters. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="cart-thumb" src={line.image} alt={line.name ?? ''} />
+                <img className="cart-thumb" src={safeSrc(line.image)} alt={line.name ?? ''} onError={imgError} />
                 <div className="cart-line-info">
                   <Link href={`/p/${line.slug}`} className="cart-line-name">
                     {line.name}
@@ -73,7 +96,8 @@ export default function CartPage() {
                 <div className="qty-stepper">
                   <button
                     type="button"
-                    onClick={() => update(line.variantId, line.quantity - 1)}
+                    disabled={pending.has(line.variantId) || line.quantity <= 1}
+                    onClick={() => run(line.variantId, () => update(line.variantId, line.quantity - 1))}
                     aria-label="Decrease quantity"
                   >
                     −
@@ -81,7 +105,8 @@ export default function CartPage() {
                   <span>{line.quantity}</span>
                   <button
                     type="button"
-                    onClick={() => update(line.variantId, line.quantity + 1)}
+                    disabled={pending.has(line.variantId)}
+                    onClick={() => run(line.variantId, () => update(line.variantId, line.quantity + 1))}
                     aria-label="Increase quantity"
                   >
                     +
@@ -99,7 +124,8 @@ export default function CartPage() {
             <button
               type="button"
               className="cart-remove"
-              onClick={() => remove(line.variantId)}
+              disabled={pending.has(line.variantId)}
+              onClick={() => run(line.variantId, () => remove(line.variantId))}
               aria-label="Remove item"
             >
               Remove

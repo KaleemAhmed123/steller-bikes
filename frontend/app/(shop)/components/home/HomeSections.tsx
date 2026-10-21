@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { safeSrc } from '@/lib/img';
 import type { CSSProperties } from 'react';
 import { money } from '@/lib/api';
 import type { StoreSettings } from '@/lib/types';
@@ -90,7 +91,7 @@ export function CategoryExplorer({ tiles }: { tiles: CatTile[] }) {
               style={{ '--rc-accent': CAT_ACCENT[t.name] ?? '#c0974a' } as CSSProperties}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={t.image} alt="" aria-hidden="true" loading="lazy" />
+              <img src={safeSrc(t.image)} alt="" aria-hidden="true" loading="lazy" />
               <div className="rc-cat-body">
                 <span className="rc-cat-count">{t.count} {t.count === 1 ? 'model' : 'models'}</span>
                 <h3>{t.name}</h3>
@@ -114,7 +115,7 @@ export function EditorialFeature({ card }: { card: CardProduct }) {
         <div className="rc-feature">
           <Link href={`/p/${card.slug}`} className="rc-feature-media">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={card.image} alt={`${card.name} — illustrative sample photo`} loading="lazy" />
+            <img src={safeSrc(card.image)} alt={`${card.name} — illustrative sample photo`} loading="lazy" />
             <span className="rc-chip-sample">SAMPLE</span>
           </Link>
           <div className="rc-feature-copy">

@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { addToCart, getCart, removeCartItem, updateCartItem } from '@/lib/api';
 import type { CartView } from '@/lib/types';
+import { useToast } from './ToastProvider';
 
 interface CartContextValue {
   cart: CartView | null;
@@ -21,8 +22,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartView | null>(null);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(false);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { show } = useToast();
 
   useEffect(() => {
     getCart()
@@ -31,18 +31,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const flashToast = useCallback(() => {
-    setToast(true);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(false), 2500);
-  }, []);
-
   const add = useCallback(
     async (variantId: string, quantity = 1) => {
       setCart(await addToCart(variantId, quantity));
-      flashToast();
+      show('Added to cart', 'success');
     },
-    [flashToast],
+    [show],
   );
   const update = useCallback(async (variantId: string, quantity: number) => {
     setCart(await updateCartItem(variantId, quantity));
@@ -57,9 +51,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   return (
     <CartContext.Provider value={{ cart, loading, add, update, remove, refresh }}>
       {children}
-      <div className={`toast ${toast ? 'show' : ''}`} role="status" aria-live="polite">
-        Added to cart <span className="toast-accent">✓</span>
-      </div>
     </CartContext.Provider>
   );
 }

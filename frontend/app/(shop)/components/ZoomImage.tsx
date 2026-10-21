@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import Image from 'next/image';
+import { SafeImage } from '@/components/SafeImage';
 
 // Cursor-follow zoom for the product image — a simple image-inspection aid.
 // Pointer devices only; it degrades to a plain image on touch/no-hover, and the
@@ -28,7 +28,7 @@ export function ZoomImage({ src, alt }: { src: string; alt: string }) {
       onMouseLeave={() => setZoom(false)}
       onMouseMove={onMove}
     >
-      <Image
+      <SafeImage
         src={src}
         alt={alt}
         fill
