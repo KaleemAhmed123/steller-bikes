@@ -14,9 +14,16 @@ const EMPTY: StoreSettings = {
   hours: '',
   deliveryPolicy: '',
   email: '',
+  // Operational config lives on the Platform tab; carried through untouched here.
+  codEnabled: true,
+  onlinePaymentEnabled: true,
+  announcement: '',
 };
 
-const FIELDS: [keyof StoreSettings, string, string][] = [
+// Only the shop-info (string) fields are editable on this tab.
+type ShopKey = { [K in keyof StoreSettings]: StoreSettings[K] extends string ? K : never }[keyof StoreSettings];
+
+const FIELDS: [ShopKey, string, string][] = [
   ['addressLine1', 'Address', 'Shop no. 5, Mall Road'],
   ['city', 'City', 'Kanpur'],
   ['state', 'State', 'Uttar Pradesh'],
@@ -60,7 +67,7 @@ export default function AdminSettings() {
   if (error && !s) return <div className="notice error">{error}</div>;
   if (!s) return <p className="muted">Loading…</p>;
 
-  const set = (key: keyof StoreSettings, value: string) => setS((cur) => ({ ...(cur ?? EMPTY), [key]: value }));
+  const set = (key: ShopKey, value: string) => setS((cur) => ({ ...(cur ?? EMPTY), [key]: value }));
 
   return (
     <div>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi, uploadImage, uploadConfigured } from '@/lib/api';
+import { safeSrc, imgError } from '@/lib/img';
 import type { Product, ProductInput } from '@/lib/types';
 
 // Row shapes while editing (strings so inputs stay controlled); converted to the
@@ -113,7 +114,7 @@ function ImageField({ value, onChange }: { value: string; onChange: (v: string) 
       {err && <div className="notice error">{err}</div>}
       {value && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="admin-img-preview" src={value} alt="" />
+        <img className="admin-img-preview" src={safeSrc(value)} alt="" onError={imgError} />
       )}
     </div>
   );
@@ -124,6 +125,20 @@ export function ProductForm({ product }: { product?: Product }) {
   const [s, setS] = useState<State>(product ? fromProduct(product) : empty);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [cats, setCats] = useState<string[]>([]); // category options from the Platform list
+
+  // Load the category list (the server union of stored + in-use categories).
+  // Fails soft: an empty list just means the dropdown shows only the current value.
+  useEffect(() => {
+    adminApi.categories
+      .list()
+      .then((rows) => setCats(rows.map((r) => r.name)))
+      .catch(() => undefined);
+  }, []);
+
+  // Always include the product's current category, even if it isn't in the list
+  // yet (an older free-text value), so editing never silently drops it.
+  const catOptions = [...new Set([...(s.category ? [s.category] : []), ...cats])];
 
   const set = <K extends keyof State>(key: K, value: State[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -198,7 +213,16 @@ export function ProductForm({ product }: { product?: Product }) {
         </label>
         <label className="field">
           <span>Category</span>
-          <input required value={s.category} onChange={(e) => set('category', e.target.value)} placeholder="City" />
+          <select required value={s.category} onChange={(e) => set('category', e.target.value)}>
+            <option value="" disabled>
+              Choose a category…
+            </option>
+            {catOptions.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="field">
           <span>Status</span>

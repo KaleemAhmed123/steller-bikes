@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useEffect, useState } from 'react';
+import { StickyNote } from 'lucide-react';
 import { adminApi, money } from '@/lib/api';
 import type { InventoryData } from '@/lib/types';
 import { Notes } from '../components/Notes';
@@ -12,6 +13,7 @@ export default function AdminInventory() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [openNotes, setOpenNotes] = useState<string | null>(null); // variantId whose notes are open
+  const [q, setQ] = useState(''); // client-side filter over product name / SKU
 
   useEffect(() => {
     adminApi.inventory().then(setData).catch((e: Error) => setError(e.message));
@@ -36,6 +38,16 @@ export default function AdminInventory() {
 
   if (error && !data) return <div className="notice error">{error}</div>;
   if (!data) return <p className="muted">Loading…</p>;
+
+  // All variants are already loaded, so filtering is a plain client-side match —
+  // no backend call. ponytail: fine while inventory loads everything in one go;
+  // move to a server query if the catalogue ever outgrows "load all".
+  const needle = q.trim().toLowerCase();
+  const rows = needle
+    ? data.variants.filter(
+        (v) => v.productName.toLowerCase().includes(needle) || v.sku.toLowerCase().includes(needle),
+      )
+    : data.variants;
 
   return (
     <div>
@@ -62,6 +74,7 @@ export default function AdminInventory() {
           onChange={(e) => setForm((f) => ({ ...f, delta: e.target.value }))}
         />
         <input
+          className="admin-search"
           required
           placeholder="Reason (e.g. new stock, damaged)"
           value={form.reason}
@@ -75,6 +88,10 @@ export default function AdminInventory() {
       {error && data && <div className="notice error">{error}</div>}
 
       <h2 className="admin-h2">Variants</h2>
+      <div className="admin-filters">
+        <input className="admin-search" placeholder="Filter by product name / SKU" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -87,7 +104,7 @@ export default function AdminInventory() {
           </tr>
         </thead>
         <tbody>
-          {data.variants.map((v) => (
+          {rows.map((v) => (
             <Fragment key={v.variantId}>
               <tr className={v.stock <= v.lowStock ? 'row-low' : ''}>
                 <td>
@@ -103,6 +120,7 @@ export default function AdminInventory() {
                     className="link-btn"
                     onClick={() => setOpenNotes((cur) => (cur === v.variantId ? null : v.variantId))}
                   >
+                    <StickyNote aria-hidden strokeWidth={1.75} />
                     {openNotes === v.variantId ? 'Hide' : 'Notes'}
                   </button>
                 </td>
@@ -118,8 +136,11 @@ export default function AdminInventory() {
           ))}
         </tbody>
       </table>
+      </div>
+      {rows.length === 0 && <div className="empty">No variants match “{q.trim()}”.</div>}
 
       <h2 className="admin-h2">Recent stock movements</h2>
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -142,6 +163,7 @@ export default function AdminInventory() {
           ))}
         </tbody>
       </table>
+      </div>
       {data.movements.length === 0 && <div className="empty">No stock movements yet.</div>}
     </div>
   );

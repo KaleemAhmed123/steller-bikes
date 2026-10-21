@@ -4,12 +4,15 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
+import { Plus, Trash2, StickyNote } from 'lucide-react';
 import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
+import { StatusDot } from '../components/StatusDot';
 
 export default function AdminProducts() {
-  const fetchPage = useCallback((page: number) => adminApi.products.list(page), []);
+  const [q, setQ] = useState('');
+  const fetchPage = useCallback((page: number) => adminApi.products.list(q.trim(), page), [q]);
   const {
     items: products,
     setItems: setProducts,
@@ -24,8 +27,11 @@ export default function AdminProducts() {
   const [busyId, setBusyId] = useState('');
   const [openNotes, setOpenNotes] = useState<string | null>(null);
 
+  // Debounce so typing the search isn't a request per keystroke; a new query
+  // re-seeds from page 1 (reset's identity changes when q changes).
   useEffect(() => {
-    reset();
+    const t = setTimeout(() => reset(), 250);
+    return () => clearTimeout(t);
   }, [reset]);
 
   async function remove(p: Product) {
@@ -50,12 +56,18 @@ export default function AdminProducts() {
       <div className="admin-head-row">
         <h1 className="admin-h1">Products</h1>
         <Link href="/admin/products/new" className="btn-primary">
-          + New product
+          <Plus aria-hidden strokeWidth={2} />
+          New product
         </Link>
+      </div>
+
+      <div className="admin-filters">
+        <input placeholder="Search name / slug / category" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {deleteError && <div className="notice error">{deleteError}</div>}
 
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -76,7 +88,7 @@ export default function AdminProducts() {
                   <span className="muted"> /{p.slug}</span>
                 </td>
                 <td>{p.category}</td>
-                <td>{p.status}</td>
+                <td><StatusDot status={p.status} />{p.status}</td>
                 <td>{p.featured ? '★' : '—'}</td>
                 <td>{p.variants.length}</td>
                 <td className="admin-row-actions">
@@ -86,6 +98,7 @@ export default function AdminProducts() {
                     className="link-btn"
                     onClick={() => setOpenNotes((cur) => (cur === p._id ? null : p._id))}
                   >
+                    <StickyNote aria-hidden strokeWidth={1.75} />
                     {openNotes === p._id ? 'Hide' : 'Notes'}
                   </button>
                   <button
@@ -94,6 +107,7 @@ export default function AdminProducts() {
                     disabled={busyId === p._id}
                     onClick={() => remove(p)}
                   >
+                    <Trash2 aria-hidden strokeWidth={1.75} />
                     {busyId === p._id ? 'Deleting…' : 'Delete'}
                   </button>
                 </td>
@@ -109,8 +123,13 @@ export default function AdminProducts() {
           ))}
         </tbody>
       </table>
+      </div>
       {products.length === 0 ? (
-        <div className="empty">No products yet. Create one to get started.</div>
+        !loading && (
+          <div className="empty">
+            {q.trim() ? `No products match “${q.trim()}”.` : 'No products yet. Create one to get started.'}
+          </div>
+        )
       ) : (
         <LoadMore
           onLoadMore={loadMore}

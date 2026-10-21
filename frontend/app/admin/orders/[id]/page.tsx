@@ -6,6 +6,13 @@ import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
 import type { OrderDetail } from '@/lib/types';
 import { Notes } from '../../components/Notes';
+import { StatusDot } from '../../components/StatusDot';
+
+// Friendly label for a status option in the change dropdown.
+function statusLabel(s: string): string {
+  if (s === 'cancelled') return 'Cancel order (restock)';
+  return `Mark ${s.replace('_', ' ')}`;
+}
 
 export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +20,7 @@ export default function AdminOrderDetail() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [tracking, setTracking] = useState('');
+  const [target, setTarget] = useState(''); // chosen next status in the dropdown
 
   const load = useCallback(() => {
     adminApi
@@ -25,13 +33,15 @@ export default function AdminOrderDetail() {
     load();
   }, [load]);
 
-  async function go(status: string) {
+  async function applyStatus() {
+    if (!target) return;
     setBusy(true);
     setError('');
     try {
-      const fresh = await adminApi.transition(id, status, tracking);
+      const fresh = await adminApi.transition(id, target, tracking);
       setData(fresh);
       setTracking('');
+      setTarget('');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Action failed');
     } finally {
@@ -43,6 +53,7 @@ export default function AdminOrderDetail() {
   if (!data) return <p className="muted">Loading…</p>;
 
   const o = data.order;
+  const needsTracking = target === 'shipped'; // backend requires a tracking ref to ship
 
   return (
     <div>
@@ -52,8 +63,9 @@ export default function AdminOrderDetail() {
       <h1 className="admin-h1">Order {o._id.slice(-8).toUpperCase()}</h1>
 
       <div className="admin-cols">
-        <div>
+        <div className="admin-card">
           <h2 className="admin-h2">Items</h2>
+          <div className="admin-table-wrap">
           <table className="admin-table">
             <tbody>
               {o.items.map((it) => (
@@ -67,12 +79,14 @@ export default function AdminOrderDetail() {
               ))}
             </tbody>
           </table>
-          <p>
-            <strong>Total {money(o.total)}</strong> · {o.method.toUpperCase()} · {o.paymentStatus}
+          </div>
+          <p className="order-total-line">
+            <strong>Total {money(o.total)}</strong> · {o.method.toUpperCase()} ·{' '}
+            <span className="status-pill"><StatusDot status={o.paymentStatus} />{o.paymentStatus.replace('_', ' ')}</span>
           </p>
         </div>
 
-        <div>
+        <div className="admin-card">
           <h2 className="admin-h2">Delivery</h2>
           <p className="order-address">
             {o.address.name}
@@ -89,25 +103,47 @@ export default function AdminOrderDetail() {
         </div>
       </div>
 
-      <h2 className="admin-h2">
-        Status: <span className="status-pill">{o.fulfillmentStatus}</span>
-      </h2>
-      {error && <div className="notice error">{error}</div>}
+      <div className="admin-card" style={{ marginTop: 16 }}>
+        <h2 className="admin-h2">
+          Status <span className="status-pill"><StatusDot status={o.fulfillmentStatus} />{o.fulfillmentStatus.replace('_', ' ')}</span>
+        </h2>
+        {error && <div className="notice error">{error}</div>}
 
-      {data.nextStates.includes('shipped') && (
-        <label className="field">
-          <span className="field-label">Tracking reference (required to ship)</span>
-          <input value={tracking} onChange={(e) => setTracking(e.target.value)} />
-        </label>
-      )}
+        {data.nextStates.length === 0 ? (
+          <p className="muted">No further actions — this order is in a final state.</p>
+        ) : (
+          <>
+            <div className="status-change">
+              <label className="field">
+                <span>Change status to</span>
+                <select value={target} onChange={(e) => setTarget(e.target.value)}>
+                  <option value="">Choose a status…</option>
+                  {data.nextStates.map((s) => (
+                    <option key={s} value={s}>
+                      {statusLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-      <div className="admin-actions">
-        {data.nextStates.length === 0 && <span className="muted">No further actions.</span>}
-        {data.nextStates.map((s) => (
-          <button key={s} type="button" className="btn-primary" disabled={busy} onClick={() => go(s)}>
-            {s === 'cancelled' ? 'Cancel order (restock)' : `Mark ${s.replace('_', ' ')}`}
-          </button>
-        ))}
+              {needsTracking && (
+                <label className="field">
+                  <span>Tracking reference (required to ship)</span>
+                  <input value={tracking} onChange={(e) => setTracking(e.target.value)} />
+                </label>
+              )}
+
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={busy || !target || (needsTracking && !tracking.trim())}
+                onClick={applyStatus}
+              >
+                {busy ? 'Updating…' : 'Update status'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <Notes type="order" refId={o._id} />

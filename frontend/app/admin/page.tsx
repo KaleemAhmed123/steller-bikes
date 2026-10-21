@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { adminApi, money } from '@/lib/api';
 import type { DashboardData } from '@/lib/types';
+import { StatusDot } from './components/StatusDot';
 
 const RANGES: [string, string][] = [
   ['today', 'Today'],
@@ -171,6 +172,7 @@ export default function AdminDashboard() {
       </div>
 
       <h2 className="admin-h2">Recent orders</h2>
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -187,19 +189,21 @@ export default function AdminDashboard() {
               <td>
                 <Link href={`/admin/orders/${o._id}`}>{o._id.slice(-8).toUpperCase()}</Link>
               </td>
-              <td>{o.fulfillmentStatus}</td>
-              <td>{o.paymentStatus}</td>
+              <td><StatusDot status={o.fulfillmentStatus} />{o.fulfillmentStatus}</td>
+              <td><StatusDot status={o.paymentStatus} />{o.paymentStatus}</td>
               <td>{money(o.total)}</td>
               <td>{new Date(o.createdAt).toLocaleDateString()}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
       {data.recent.length === 0 && <div className="empty">No orders in range.</div>}
 
       {data.lowStock.length > 0 && (
         <>
           <h2 className="admin-h2">Low stock</h2>
+          <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr>
@@ -222,6 +226,7 @@ export default function AdminDashboard() {
               ))}
             </tbody>
           </table>
+          </div>
         </>
       )}
     </div>

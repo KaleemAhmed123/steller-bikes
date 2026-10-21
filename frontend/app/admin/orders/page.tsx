@@ -4,9 +4,11 @@ import { Fragment, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
 import type { Order } from '@/lib/types';
+import { StickyNote } from 'lucide-react';
 import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
+import { StatusDot } from '../components/StatusDot';
 
 const STATUSES = ['', 'confirmed', 'processing', 'packed', 'shipped', 'delivered', 'delivery_failed', 'cancelled'];
 
@@ -38,11 +40,12 @@ export default function AdminOrders() {
             </option>
           ))}
         </select>
-        <input placeholder="Search ref / phone / email" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="admin-search" placeholder="Search ref / phone / email" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {error && <div className="notice error">{error}</div>}
 
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -65,8 +68,8 @@ export default function AdminOrders() {
                 <td>
                   {o.address?.name} · {o.address?.phone}
                 </td>
-                <td>{o.fulfillmentStatus}</td>
-                <td>{o.paymentStatus}</td>
+                <td><StatusDot status={o.fulfillmentStatus} />{o.fulfillmentStatus}</td>
+                <td><StatusDot status={o.paymentStatus} />{o.paymentStatus}</td>
                 <td>{money(o.total)}</td>
                 <td>{new Date(o.createdAt).toLocaleDateString()}</td>
                 <td>
@@ -75,6 +78,7 @@ export default function AdminOrders() {
                     className="link-btn"
                     onClick={() => setOpenNotes((cur) => (cur === o._id ? null : o._id))}
                   >
+                    <StickyNote aria-hidden strokeWidth={1.75} />
                     {openNotes === o._id ? 'Hide' : 'Notes'}
                   </button>
                 </td>
@@ -90,6 +94,7 @@ export default function AdminOrders() {
           ))}
         </tbody>
       </table>
+      </div>
       {orders.length === 0 ? (
         !loading && !error && <div className="empty">No orders match.</div>
       ) : (

@@ -3,9 +3,11 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { adminApi, money } from '@/lib/api';
 import type { Order, PaymentDetail } from '@/lib/types';
+import { StickyNote } from 'lucide-react';
 import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
+import { StatusDot } from '../components/StatusDot';
 
 const STATUSES = ['', 'unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'];
 const METHODS = ['', 'cod', 'razorpay'];
@@ -57,11 +59,12 @@ export default function AdminPayments() {
             </option>
           ))}
         </select>
-        <input placeholder="Search email / phone / payment id" value={q} onChange={(e) => setQ(e.target.value)} />
+        <input className="admin-search" placeholder="Search email / phone / payment id" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
 
       {error && <div className="notice error">{error}</div>}
 
+      <div className="admin-table-wrap">
       <table className="admin-table">
         <thead>
           <tr>
@@ -88,7 +91,7 @@ export default function AdminPayments() {
                 <td>{money(o.total)}</td>
                 <td>{o.method.toUpperCase()}</td>
                 <td>
-                  <span className={`pay-status pay-${o.paymentStatus}`}>{o.paymentStatus.replace('_', ' ')}</span>
+                  <span className={`pay-status pay-${o.paymentStatus}`}><StatusDot status={o.paymentStatus} />{o.paymentStatus.replace('_', ' ')}</span>
                 </td>
                 <td>
                   <button
@@ -99,6 +102,7 @@ export default function AdminPayments() {
                       setOpenNotes((cur) => (cur === o._id ? null : o._id));
                     }}
                   >
+                    <StickyNote aria-hidden strokeWidth={1.75} />
                     {openNotes === o._id ? 'Hide' : 'Notes'}
                   </button>
                 </td>
@@ -115,6 +119,7 @@ export default function AdminPayments() {
           ))}
         </tbody>
       </table>
+      </div>
       {rows.length === 0 ? (
         !loading && !error && <div className="empty">No payments match.</div>
       ) : (
@@ -195,7 +200,7 @@ function PaymentModal({ id, onClose, onChanged }: { id: string; onClose: () => v
             <dl className="pay-detail">
               <dt>Status</dt>
               <dd>
-                <span className={`pay-status pay-${o.paymentStatus}`}>{o.paymentStatus.replace('_', ' ')}</span>
+                <span className={`pay-status pay-${o.paymentStatus}`}><StatusDot status={o.paymentStatus} />{o.paymentStatus.replace('_', ' ')}</span>
               </dd>
               <dt>Method</dt>
               <dd>{o.method.toUpperCase()}{p?.method ? ` · ${p.method}` : ''}</dd>
