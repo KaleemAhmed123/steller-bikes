@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { Store, Phone, MapPin, User } from 'lucide-react';
+import { getSettings } from '@/lib/api';
+import { ToastProvider } from './components/ToastProvider';
 import { CartProvider } from './components/CartProvider';
 import { CartButton } from './components/CartButton';
 import { AccountProvider } from './components/AccountProvider';
@@ -11,30 +14,26 @@ import { Wordmark } from './components/Wordmark';
 
 // Storefront shell: sticky header + shared cart/account/wishlist state +
 // scroll-reveal + footer. Wraps every shop route.
-export default function ShopLayout({ children }: { children: React.ReactNode }) {
+export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
+  // Owner-set storefront banner ('' = hidden). getSettings never throws.
+  const { announcement } = await getSettings();
   return (
-    <AccountProvider>
-      <CartProvider>
-        <WishlistProvider>
+    <ToastProvider>
+      <AccountProvider>
+        <CartProvider>
+          <WishlistProvider>
+          <a href="#main" className="skip-link">Skip to main content</a>
           <RevealOnScroll />
           <HeaderHeroWatch />
-          {/* Set the dark over-hero header before first paint on the homepage,
-              so the light header never flashes at the top. The observer takes
-              over for scroll updates. */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html:
-                "if(location.pathname==='/'){document.body.setAttribute('data-over-hero','true')}",
-            }}
-          />
+          {announcement && <div className="rc-announce">{announcement}</div>}
           <header className="rc-header">
             <div className="rc-header-inner container">
               <Link href="/" className="rc-brand" aria-label="Stellar Bikes — home">
                 <Wordmark />
               </Link>
               <nav className="rc-nav" aria-label="Primary">
-                <Link href="/shop" className="rc-nav-link">Shop</Link>
+                <Link href="/shop" className="rc-nav-link"><Store aria-hidden strokeWidth={1.75} /><span className="rc-nav-text">Shop</span></Link>
                 <SavedNav />
                 <AccountNav />
                 <CartButton />
@@ -52,7 +51,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
               </div>
 
               <nav className="rc-footer-col" aria-label="Shop">
-                <h4>Shop</h4>
+                <h2>Shop</h2>
                 <Link href="/shop">All bicycles</Link>
                 <Link href="/shop?category=Mountain">Mountain</Link>
                 <Link href="/shop?category=City">City</Link>
@@ -61,12 +60,12 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
               </nav>
 
               <div className="rc-footer-col">
-                <h4>Store</h4>
-                <span>Kanpur, Uttar Pradesh</span>
+                <h2>Store</h2>
+                <span className="rc-contact"><MapPin aria-hidden strokeWidth={1.75} />Kanpur, Uttar Pradesh</span>
                 <span>Cash on delivery</span>
                 <span>Saleem</span>
-                <a href="tel:+918090109621">+91 80901 09621</a>
-                <Link href="/account">Your account</Link>
+                <a href="tel:+918090109621" className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />+91 80901 09621</a>
+                <Link href="/account" className="rc-contact"><User aria-hidden strokeWidth={1.75} />Your account</Link>
               </div>
             </div>
 
@@ -74,8 +73,9 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
               <span>© {year} Stellar Bikes · stellarbikes.in</span>
             </div>
           </footer>
-        </WishlistProvider>
-      </CartProvider>
-    </AccountProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </AccountProvider>
+    </ToastProvider>
   );
 }

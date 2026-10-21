@@ -8,12 +8,14 @@ import type { Order, SavedAddress } from '@/lib/types';
 import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { useAccount } from '../components/AccountProvider';
+import { useToast } from '../components/ToastProvider';
 
 const EMPTY_ADDR = { label: '', name: '', phone: '', line1: '', city: '', state: '', pin: '' };
 
 export default function AccountPage() {
   const router = useRouter();
   const { customer, loading, setCustomer, refresh } = useAccount();
+  const { show } = useToast();
   const fetchOrders = useCallback((page: number) => getOrdersPage(page), []);
   const {
     items: orders,
@@ -57,7 +59,11 @@ export default function AccountPage() {
     setAddr((a) => ({ ...a, [key]: e.target.value }));
 
   async function logout() {
-    await accountApi.logout();
+    try {
+      await accountApi.logout();
+    } catch {
+      /* clear the client either way — the session is effectively gone to the user */
+    }
     setCustomer(null);
     router.replace('/');
   }
@@ -80,13 +86,21 @@ export default function AccountPage() {
   }
 
   async function makeDefault(id: string) {
-    setAddresses(await accountApi.updateAddress(id, { isDefault: true }));
-    await refresh();
+    try {
+      setAddresses(await accountApi.updateAddress(id, { isDefault: true }));
+      await refresh();
+    } catch (err) {
+      show(err instanceof Error ? err.message : 'Could not update the address.', 'error');
+    }
   }
 
   async function removeAddress(id: string) {
-    setAddresses(await accountApi.deleteAddress(id));
-    await refresh();
+    try {
+      setAddresses(await accountApi.deleteAddress(id));
+      await refresh();
+    } catch (err) {
+      show(err instanceof Error ? err.message : 'Could not remove the address.', 'error');
+    }
   }
 
   return (
