@@ -448,6 +448,7 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   background: var(--rc-ink);
   color: var(--rc-surface);
   border: none;
@@ -466,6 +467,45 @@ h3 {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Line icons inside buttons: inherit text color, align with the label. */
+.btn-primary svg,
+.btn-gold svg,
+.btn-ghost svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.link-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Tiny status dot: colour by tone, reusing the status palette already in use. */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: middle;
+  background: var(--rc-muted);
+}
+.status-dot[data-tone='ok'] {
+  background: #1f7a3a;
+}
+.status-dot[data-tone='warn'] {
+  background: #8a6400;
+}
+.status-dot[data-tone='bad'] {
+  background: #a12626;
 }
 
 /* Gold CTA for high-emphasis moments (hero, primary actions). */
@@ -885,15 +925,24 @@ h3 {
   min-height: 100vh;
 }
 
+/* Mobile top bar — hidden on desktop, shown under 900px to host the hamburger. */
+.admin-topbar {
+  display: none;
+}
+
 .admin-sidebar {
-  width: 220px;
+  width: 260px;
   flex-shrink: 0;
   background: var(--primary);
   color: #e7eae4;
   display: flex;
   flex-direction: column;
-  padding: 22px 16px;
+  padding: 24px 18px;
   gap: 8px;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
 }
 
 .admin-brand {
@@ -918,11 +967,19 @@ h3 {
 }
 
 .admin-navlink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 9px 12px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   color: #cdd6cc;
+}
+.admin-navlink svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
 }
 
 .admin-navlink:hover {
@@ -962,8 +1019,97 @@ h3 {
 .admin-main {
   flex: 1;
   min-width: 0;
-  padding: 28px 32px;
-  max-width: 1100px;
+  padding: 32px 40px;
+  max-width: 1440px;
+}
+
+/* Hamburger button (lives in the mobile top bar). */
+.admin-hamburger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #e7eae4;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.admin-backdrop {
+  display: none;
+}
+
+/* --- Admin mobile: top bar + slide-in drawer (under 900px) ---------------- */
+@media (max-width: 900px) {
+  .admin {
+    flex-direction: column;
+  }
+
+  .admin-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--primary);
+    color: #e7eae4;
+    padding: 12px 16px;
+  }
+
+  .admin-topbar .admin-brand {
+    margin-bottom: 0;
+    font-size: 16px;
+  }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 60;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 18, 14, 0.5);
+    z-index: 50;
+  }
+
+  .admin-main {
+    padding: 20px 16px;
+    max-width: none;
+  }
+
+  .admin-cols {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-filters,
+  .admin-adjust {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-filters input,
+  .admin-adjust select,
+  .admin-adjust input {
+    max-width: none;
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 .admin-h1 {
@@ -987,9 +1133,10 @@ h3 {
 
 .stat {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 16px 20px;
-  background: #fff;
+  background: var(--surface);
+  box-shadow: var(--shadow);
   min-width: 150px;
 }
 
@@ -1006,25 +1153,43 @@ h3 {
   font-weight: 800;
 }
 
+/* Card wrapper around every admin table: rounded + shadow, and scrolls
+   horizontally on narrow screens so wide tables never break the layout. */
+.admin-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  background: #fff;
+  background: transparent;
+  min-width: 600px;
 }
 
 .admin-table th,
 .admin-table td {
   text-align: left;
-  padding: 10px 12px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.admin-table th {
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table thead th {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted-foreground);
+  background: color-mix(in srgb, var(--background) 60%, transparent);
+  border-bottom: 1px solid var(--border);
 }
 
 .admin-table a {
@@ -1033,45 +1198,52 @@ h3 {
   text-decoration: underline;
 }
 
+/* Row hover — helps the eye track across a wide row. */
+.admin-table tbody tr:hover td {
+  background: color-mix(in srgb, var(--rc-ink) 3%, transparent);
+}
+
 .row-low td {
   background: #fff6e8;
 }
 
-.admin-filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.admin-filters select,
-.admin-filters input {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-size: 14px;
-  font-family: inherit;
-}
-
-.admin-filters input {
-  flex: 1;
-  max-width: 320px;
-}
-
+.admin-filters,
 .admin-adjust {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
+.admin-filters select,
+.admin-filters input,
 .admin-adjust select,
 .admin-adjust input {
+  height: 42px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 0 12px;
   font-size: 14px;
   font-family: inherit;
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Keyboard-visible focus ring on every admin control. */
+.admin-filters select:focus,
+.admin-filters input:focus,
+.admin-adjust select:focus,
+.admin-adjust input:focus {
+  outline: none;
+  border-color: var(--rc-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rc-ink) 12%, transparent);
+}
+
+/* Free-text search grows to fill the row — there's plenty of width. */
+.admin-search {
+  flex: 1 1 260px;
+  min-width: 220px;
 }
 
 .admin-adjust select {
@@ -1080,6 +1252,7 @@ h3 {
 
 .admin-adjust input[type='number'] {
   width: 120px;
+  flex: 0 0 auto;
 }
 
 .admin-cols {
@@ -1093,6 +1266,52 @@ h3 {
   line-height: 1.7;
 }
 
+/* Light panel for detail-page sections (order detail, etc.). */
+.admin-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+.admin-card > :first-child {
+  margin-top: 0;
+}
+.admin-card > :last-child {
+  margin-bottom: 0;
+}
+
+/* Order detail: current status + change control on one tidy row. */
+.status-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+.status-change .field {
+  margin-bottom: 0;
+}
+.status-change select {
+  height: 42px;
+  min-width: 220px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface);
+  text-transform: capitalize;
+}
+.status-change select:focus {
+  outline: none;
+  border-color: var(--rc-ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rc-ink) 12%, transparent);
+}
+.order-total-line {
+  margin-top: 12px;
+  font-size: 15px;
+}
+
 .admin-actions {
   display: flex;
   gap: 10px;
@@ -1101,11 +1320,14 @@ h3 {
 }
 
 .status-pill {
-  display: inline-block;
-  background: var(--rc-ink);
-  color: var(--rc-surface);
+  display: inline-flex;
+  align-items: center;
+  background: var(--rc-surface-strong);
+  color: var(--rc-ink);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 2px 12px;
+  padding: 3px 12px;
+  text-transform: capitalize;
   font-size: 14px;
   font-weight: 700;
 }
@@ -1179,9 +1401,10 @@ h3 {
 
 .note-item {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .note-body {
@@ -1231,8 +1454,9 @@ h3 {
   gap: 4px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 14px 16px;
-  background: #fff;
+  padding: 16px 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .kpi-label {
@@ -1263,8 +1487,9 @@ h3 {
 .chart-card {
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 16px;
-  background: #fff;
+  padding: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .chart-card.chart-wide {
@@ -1741,6 +1966,12 @@ h3 {
   transform: translateX(-50%) translateY(0);
 }
 
+/* Error variant of the shared toast (failed cart/account actions). */
+.toast.is-error {
+  background: #b42318;
+  color: #fff;
+}
+
 /* Scroll reveal — only active once JS marks <html>, so no-JS shows everything. */
 .js-reveal [data-reveal] {
   opacity: 0;
@@ -1765,7 +1996,8 @@ h3 {
 .empty .empty-mark {
   font-size: 34px;
   display: block;
-  margin-bottom: 10px;
+  margin: 0 auto 10px;
+  color: var(--rc-muted);
 }
 
 /* Root 404 / error fallbacks — no shop chrome, so centre them on the page. */
