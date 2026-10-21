@@ -10,10 +10,19 @@ import {
 } from '../lib/razorpay.js';
 import { logger } from '../lib/log.js';
 import { checkoutLimiter } from '../lib/rateLimit.js';
+import { SettingsModel } from '../models/settings.js';
 
 const log = logger('pay');
 
 export const checkoutRouter = Router();
+
+// The owner's payment toggles. Missing doc / field → enabled (the model default),
+// so a fresh shop can sell. The storefront hides a disabled method; this is the
+// server-side guard so a hidden button can't be forced.
+async function paymentFlags(): Promise<{ cod: boolean; online: boolean }> {
+  const s = await SettingsModel.findOne().lean();
+  return { cod: s?.codEnabled !== false, online: s?.onlinePaymentEnabled !== false };
+}
 
 const addressSchema = z.object({
   name: z.string().trim().min(1),
@@ -46,6 +55,11 @@ checkoutRouter.post('/', checkoutLimiter, async (req, res, next) => {
       return;
     }
 
+    if (!(await paymentFlags()).cod) {
+      res.status(403).json({ error: { message: 'Cash on delivery is not available right now.' } });
+      return;
+    }
+
     const orderId = await placeOrder({
       owner: res.locals.owner as string,
       ...parsed.data,
@@ -65,7 +79,7 @@ checkoutRouter.post('/', checkoutLimiter, async (req, res, next) => {
 // can't change what it's charged. No stock is touched yet.
 checkoutRouter.post('/razorpay/order', checkoutLimiter, async (req, res, next) => {
   try {
-    if (!razorpayConfigured()) {
+    if (!razorpayConfigured() || !(await paymentFlags()).online) {
       res.status(503).json({ error: { message: 'Online payment is not available right now.' } });
       return;
     }
@@ -102,7 +116,7 @@ const verifySchema = z.object({
 // PAID order. A paid-but-out-of-stock order comes back flagged for refund.
 checkoutRouter.post('/razorpay/verify', checkoutLimiter, async (req, res, next) => {
   try {
-    if (!razorpayConfigured()) {
+    if (!razorpayConfigured() || !(await paymentFlags()).online) {
       res.status(503).json({ error: { message: 'Online payment is not available right now.' } });
       return;
     }
