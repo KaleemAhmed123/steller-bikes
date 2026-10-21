@@ -43,11 +43,18 @@ export function razorpayKeyId(): string {
 // Create a payment order on Razorpay for the given amount (paise). `receipt` is
 // our own reference for reconciliation. Throws on a non-2xx so the caller can
 // return a clear checkout error.
+//
+// payment_capture:true makes Razorpay capture (actually collect) an approved
+// payment automatically, instead of leaving it merely 'authorized' (funds held,
+// not taken). We set it PER ORDER so capture never depends on the dashboard's
+// account-level auto-capture toggle being on — a mis-set toggle would otherwise
+// strand customers' funds with no sale recorded. See docs/specs for the webhook
+// debt this pairs with.
 export async function createRazorpayOrder(amountPaise: number, receipt: string): Promise<RazorpayOrder> {
   const res = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
     headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: amountPaise, currency: 'INR', receipt }),
+    body: JSON.stringify({ amount: amountPaise, currency: 'INR', receipt, payment_capture: true }),
   });
   const json = (await res.json().catch(() => ({}))) as Partial<RazorpayOrder> & {
     error?: { description?: string };
