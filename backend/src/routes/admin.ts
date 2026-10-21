@@ -164,13 +164,21 @@ adminRouter.post('/inventory/adjust', requirePermission('inventory.adjust'), asy
 // --- Products (full CRUD) ---------------------------------------------------
 // A duplicate slug trips the unique index → isDuplicateKeyError (Mongo 11000).
 
-// GET /api/admin/products — every product, any status (newest first).
+// GET /api/admin/products?q= — every product, ANY status (newest first). `q`
+// matches name / slug / category (case-insensitive). Unlike the storefront's
+// published-only filter, this searches drafts and archived too.
 adminRouter.get('/products', requirePermission('products.manage'), async (req, res, next) => {
   try {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const filter: Record<string, unknown> = {};
+    if (q) {
+      const rx = new RegExp(escapeRegex(q), 'i');
+      filter.$or = [{ name: rx }, { slug: rx }, { category: rx }];
+    }
     const pg = parsePagination(req.query, { defaultLimit: 20, maxLimit: 100 });
     const [products, total] = await Promise.all([
-      ProductModel.find({}).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
-      ProductModel.countDocuments({}),
+      ProductModel.find(filter).sort({ createdAt: -1 }).skip(pg.skip).limit(pg.limit).lean(),
+      ProductModel.countDocuments(filter),
     ]);
     res.json({ data: products, pagination: pageMeta(total, pg) });
   } catch (err) {
@@ -275,6 +283,11 @@ const settingsSchema = z.object({
   hours: z.string().trim().max(200),
   deliveryPolicy: z.string().trim().max(500),
   email: z.string().trim().max(120),
+  // Operational config (Platform tab). `categories` is NOT here — it is managed
+  // by the dedicated category endpoints, so a settings save can never touch it.
+  codEnabled: z.boolean(),
+  onlinePaymentEnabled: z.boolean(),
+  announcement: z.string().trim().max(300),
 });
 
 // GET /api/admin/settings — current shop details (empty object if unset).
@@ -295,8 +308,128 @@ adminRouter.patch('/settings', requirePermission('settings.manage'), async (req,
       res.status(400).json({ error: { message: parsed.error.issues[0]?.message ?? 'Check the settings.' } });
       return;
     }
+    // Guard: never leave the shop unbuyable. Check the patch against the live doc —
+    // the effective flags after this save must keep at least one payment method on.
+    if ('codEnabled' in parsed.data || 'onlinePaymentEnabled' in parsed.data) {
+      const current = await SettingsModel.findOne().lean();
+      const cod = parsed.data.codEnabled ?? current?.codEnabled ?? true;
+      const online = parsed.data.onlinePaymentEnabled ?? current?.onlinePaymentEnabled ?? true;
+      if (!cod && !online) {
+        res.status(400).json({ error: { message: 'Keep at least one payment method on (COD or online).' } });
+        return;
+      }
+    }
     const doc = await SettingsModel.findOneAndUpdate({}, { $set: parsed.data }, { new: true, upsert: true }).lean();
     res.json({ data: doc });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// --- Categories (config-driven) ---------------------------------------------
+// The canonical list lives on the settings doc; the dropdown the product form
+// shows is the UNION of that list and the categories actually on products, so
+// nothing is ever orphaned and no data migration is needed.
+
+// Read the stored category list (empty if no settings doc yet).
+async function storedCategories(): Promise<string[]> {
+  const doc = await SettingsModel.findOne().lean();
+  return doc?.categories ?? [];
+}
+
+// Every category name → how many products use it. Union of stored + in-use.
+async function categoriesWithCounts(): Promise<{ name: string; count: number }[]> {
+  const [stored, grouped] = await Promise.all([
+    storedCategories(),
+    ProductModel.aggregate<{ _id: string; count: number }>([
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+    ]),
+  ]);
+  const counts = new Map(grouped.map((g) => [g._id, g.count]));
+  const names = new Set<string>([...stored, ...counts.keys()]);
+  return [...names]
+    .filter((n) => n) // drop any empty/null category
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ name, count: counts.get(name) ?? 0 }));
+}
+
+// GET /api/admin/categories — the dropdown source (managers need it for the
+// product form), each with its product count for the Platform manager.
+adminRouter.get('/categories', requirePermission('products.manage'), async (_req, res, next) => {
+  try {
+    res.json({ data: await categoriesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const categoryNameSchema = z.string().trim().min(1).max(60);
+
+// POST /api/admin/categories — add a category to the stored list (owner only).
+adminRouter.post('/categories', requirePermission('settings.manage'), async (req, res, next) => {
+  try {
+    const parsed = z.object({ name: categoryNameSchema }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: { message: 'Enter a category name (1–60 characters).' } });
+      return;
+    }
+    const name = parsed.data.name;
+    const stored = await storedCategories();
+    if (stored.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      res.status(409).json({ error: { message: 'That category already exists.' } });
+      return;
+    }
+    await SettingsModel.findOneAndUpdate({}, { $push: { categories: name } }, { upsert: true });
+    res.status(201).json({ data: await categoriesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/admin/categories — rename (owner only). Bulk-updates every product
+// with the old category, then renames it in the stored list. One updateMany.
+adminRouter.patch('/categories', requirePermission('settings.manage'), async (req, res, next) => {
+  try {
+    const parsed = z.object({ from: categoryNameSchema, to: categoryNameSchema }).safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: { message: 'Enter both the old and new category name.' } });
+      return;
+    }
+    const { from, to } = parsed.data;
+    if (from === to) {
+      res.json({ data: await categoriesWithCounts() });
+      return;
+    }
+    const all = await categoriesWithCounts();
+    if (all.some((c) => c.name.toLowerCase() === to.toLowerCase())) {
+      res.status(409).json({ error: { message: 'A category with the new name already exists.' } });
+      return;
+    }
+    await ProductModel.updateMany({ category: from }, { $set: { category: to } });
+    // Rename in the stored list: drop the old name, add the new (works whether or
+    // not `from` was stored — a purely in-use category becomes stored under `to`).
+    await SettingsModel.findOneAndUpdate({}, { $pull: { categories: from } }, { upsert: true });
+    await SettingsModel.findOneAndUpdate({}, { $addToSet: { categories: to } }, { upsert: true });
+    res.json({ data: await categoriesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/admin/categories/:name — delete (owner only). BLOCKED while any
+// product still uses it (409 + the count); otherwise removed from the stored list.
+adminRouter.delete('/categories/:name', requirePermission('settings.manage'), async (req, res, next) => {
+  try {
+    const name = req.params.name;
+    const count = await ProductModel.countDocuments({ category: name });
+    if (count > 0) {
+      res.status(409).json({
+        error: { message: `${count} product${count === 1 ? '' : 's'} still use “${name}”. Reassign them first.` },
+      });
+      return;
+    }
+    await SettingsModel.findOneAndUpdate({}, { $pull: { categories: name } });
+    res.json({ data: await categoriesWithCounts() });
   } catch (err) {
     next(err);
   }
