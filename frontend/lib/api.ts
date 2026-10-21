@@ -15,6 +15,7 @@ import type {
   SavedAddress,
   StaffMe,
   StoreSettings,
+  AdminCategory,
 } from './types';
 
 // The Express API base URL. Public (not a secret) so it works in both the
@@ -76,6 +77,9 @@ const EMPTY_SETTINGS: StoreSettings = {
   hours: '',
   deliveryPolicy: '',
   email: '',
+  codEnabled: true,
+  onlinePaymentEnabled: true,
+  announcement: '',
 };
 
 // Public shop details for the footer/showroom. Never throws — falls back to the
@@ -256,7 +260,8 @@ export const adminApi = {
     }),
   // Products — full CRUD (owner + manager).
   products: {
-    list: (page = 1) => apiFetchPage<Product>(`/api/admin/products?page=${page}&limit=20`),
+    list: (q = '', page = 1) =>
+      apiFetchPage<Product>(`/api/admin/products?q=${encodeURIComponent(q)}&page=${page}&limit=20`),
     get: (id: string) => apiFetch<Product>(`/api/admin/products/${id}`),
     create: (body: ProductInput) =>
       apiFetch<Product>('/api/admin/products', { method: 'POST', body: JSON.stringify(body) }),
@@ -265,11 +270,22 @@ export const adminApi = {
     remove: (id: string) =>
       apiFetch<{ ok: boolean }>(`/api/admin/products/${id}`, { method: 'DELETE' }),
   },
-  // Store settings (owner only).
+  // Store settings — read: owner only; PATCH: owner only.
   settings: {
     get: () => apiFetch<Partial<StoreSettings>>('/api/admin/settings'),
     update: (body: Partial<StoreSettings>) =>
       apiFetch<StoreSettings>('/api/admin/settings', { method: 'PATCH', body: JSON.stringify(body) }),
+  },
+  // Categories — list is readable by managers (the product form's dropdown);
+  // add/rename/delete are owner only (enforced server-side).
+  categories: {
+    list: () => apiFetch<AdminCategory[]>('/api/admin/categories'),
+    add: (name: string) =>
+      apiFetch<AdminCategory[]>('/api/admin/categories', { method: 'POST', body: JSON.stringify({ name }) }),
+    rename: (from: string, to: string) =>
+      apiFetch<AdminCategory[]>('/api/admin/categories', { method: 'PATCH', body: JSON.stringify({ from, to }) }),
+    remove: (name: string) =>
+      apiFetch<AdminCategory[]>(`/api/admin/categories/${encodeURIComponent(name)}`, { method: 'DELETE' }),
   },
   // Operator notes (owner + manager). refId omitted → by type or all.
   notes: {

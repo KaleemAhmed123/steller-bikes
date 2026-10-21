@@ -73,6 +73,17 @@ export interface StoreSettings {
   hours: string;
   deliveryPolicy: string;
   email: string;
+  // Operational config (Platform tab). The storefront reads the toggles + banner.
+  codEnabled: boolean;
+  onlinePaymentEnabled: boolean;
+  announcement: string;
+}
+
+// One row in the admin category manager: a name and how many products use it
+// (count > 0 means delete is blocked).
+export interface AdminCategory {
+  name: string;
+  count: number;
 }
 
 // One line in the server-computed cart view. Fields past `available` are present
