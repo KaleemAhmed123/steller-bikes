@@ -1,24 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { adminApi } from '@/lib/api';
+import { adminApi, EMPTY_SETTINGS as EMPTY } from '@/lib/api';
 import type { StoreSettings } from '@/lib/types';
-
-const EMPTY: StoreSettings = {
-  addressLine1: '',
-  city: '',
-  state: '',
-  pin: '',
-  phone: '',
-  whatsapp: '',
-  hours: '',
-  deliveryPolicy: '',
-  email: '',
-  // Operational config lives on the Platform tab; carried through untouched here.
-  codEnabled: true,
-  onlinePaymentEnabled: true,
-  announcement: '',
-};
 
 // Only the shop-info (string) fields are editable on this tab.
 type ShopKey = { [K in keyof StoreSettings]: StoreSettings[K] extends string ? K : never }[keyof StoreSettings];
@@ -54,7 +38,9 @@ export default function AdminSettings() {
     setError('');
     setMessage('');
     try {
-      const saved = await adminApi.settings.update(s);
+      // Only this tab's fields — the Platform and Site content tabs own the rest.
+      const body = Object.fromEntries([...FIELDS.map(([k]) => k), 'deliveryPolicy'].map((k) => [k, s[k as ShopKey]]));
+      const saved = await adminApi.settings.update(body);
       setS({ ...EMPTY, ...saved });
       setMessage('Settings saved.');
     } catch (err) {
