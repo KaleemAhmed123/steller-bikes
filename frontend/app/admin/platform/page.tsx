@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
-import type { AdminCategory } from '@/lib/types';
+import { offerLabel } from '@/lib/offers';
+import type { AdminCategory, AdminOfferType } from '@/lib/types';
 
 // The operational config for the shop (owner-only). Two parts share the one
 // settings document: payment toggles + storefront announcement, and the category
-// list. Shop-facing identity (address/phone/hours) lives on the Settings tab.
+// list, plus the offer types (Diwali, New Year…) products can be tagged with. Shop-facing identity (address/phone/hours) lives on the Settings tab.
 type Config = { codEnabled: boolean; onlinePaymentEnabled: boolean; announcement: string };
 
 export default function AdminPlatform() {
@@ -17,6 +18,9 @@ export default function AdminPlatform() {
   const [busy, setBusy] = useState(false);
   const [newCat, setNewCat] = useState('');
   const [catError, setCatError] = useState('');
+  const [offers, setOffers] = useState<AdminOfferType[]>([]);
+  const [newOffer, setNewOffer] = useState('');
+  const [offerError, setOfferError] = useState('');
 
   useEffect(() => {
     adminApi.settings
@@ -30,6 +34,7 @@ export default function AdminPlatform() {
       )
       .catch((e: Error) => setError(e.message));
     adminApi.categories.list().then(setCats).catch(() => undefined);
+    adminApi.offerTypes.list().then(setOffers).catch(() => undefined);
   }, []);
 
   async function saveConfig(e: React.FormEvent) {
@@ -92,6 +97,34 @@ export default function AdminPlatform() {
       setCats(await adminApi.categories.remove(c.name));
     } catch (err) {
       setCatError(err instanceof Error ? err.message : 'Could not delete category.');
+    }
+  }
+
+  async function addOffer(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newOffer.trim();
+    if (!name) return;
+    setOfferError('');
+    try {
+      setOffers(await adminApi.offerTypes.add(name));
+      setNewOffer('');
+    } catch (err) {
+      setOfferError(err instanceof Error ? err.message : 'Could not add offer type.');
+    }
+  }
+
+  // Same guard as categories: a type still on products can't be deleted.
+  async function removeOffer(o: AdminOfferType) {
+    if (o.count > 0) {
+      setOfferError(`${o.count} product${o.count === 1 ? '' : 's'} still use “${offerLabel(o.key)}”. Untag them first.`);
+      return;
+    }
+    if (!confirm(`Delete offer type “${offerLabel(o.key)}”? This cannot be undone.`)) return;
+    setOfferError('');
+    try {
+      setOffers(await adminApi.offerTypes.remove(o.key));
+    } catch (err) {
+      setOfferError(err instanceof Error ? err.message : 'Could not delete offer type.');
     }
   }
 
@@ -189,6 +222,53 @@ export default function AdminPlatform() {
         </table>
       </div>
       {cats.length === 0 && <div className="empty">No categories yet. Add one above.</div>}
+
+      <h2 className="admin-h2" style={{ marginTop: 32 }}>
+        Offer types
+      </h2>
+      <p className="muted">
+        Tag products with these (Diwali, New Year…) in the product form. Shoppers can filter by them on the shop page, and
+        the homepage offer rail (Site content) shows the ones you choose. A type still on products can’t be deleted.
+      </p>
+
+      <form className="admin-filters" onSubmit={addOffer}>
+        <input placeholder="New offer type, e.g. Diwali" value={newOffer} onChange={(e) => setNewOffer(e.target.value)} />
+        <button type="submit" className="btn-secondary" disabled={!newOffer.trim()}>
+          Add offer type
+        </button>
+      </form>
+
+      {offerError && <div className="notice error">{offerError}</div>}
+
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Offer type</th>
+              <th>Key</th>
+              <th>Products</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {offers.map((o) => (
+              <tr key={o.key}>
+                <td>{offerLabel(o.key)}</td>
+                <td>
+                  <code>{o.key}</code>
+                </td>
+                <td>{o.count}</td>
+                <td className="admin-row-actions">
+                  <button type="button" className="link-btn danger" onClick={() => removeOffer(o)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {offers.length === 0 && <div className="empty">No offer types yet. Add one above.</div>}
     </div>
   );
 }

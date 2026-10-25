@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adminApi, uploadImage, uploadConfigured } from '@/lib/api';
-import { safeSrc, imgError } from '@/lib/img';
+import { adminApi } from '@/lib/api';
+import { offerLabel } from '@/lib/offers';
 import type { Product, ProductInput } from '@/lib/types';
+import { ImageField } from './ImageField';
 
 // Row shapes while editing (strings so inputs stay controlled); converted to the
 // real ProductInput (paise, numbers) on submit.
@@ -33,6 +34,7 @@ function fromProduct(p: Product): State {
     image: p.image,
     images: p.images ?? [],
     featured: p.featured ?? false,
+    offerTypes: p.offerTypes ?? [],
     status: (p.status as State['status']) ?? 'draft',
     specs: Object.entries(p.specs ?? {}).map(([key, value]) => ({ key, value })),
     variants: p.variants.map((v) => ({
@@ -56,6 +58,7 @@ type State = {
   image: string;
   images: string[];
   featured: boolean;
+  offerTypes: string[];
   status: 'draft' | 'published' | 'archived';
   specs: SpecRow[];
   variants: VariantRow[];
@@ -69,56 +72,11 @@ const empty: State = {
   image: '',
   images: [],
   featured: false,
+  offerTypes: [],
   status: 'draft',
   specs: [],
   variants: [blankVariant()],
 };
-
-// A single image field: a URL/path input plus (when Cloudinary is set up) an
-// Upload button. Preview thumbnail when a value is present.
-function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setBusy(true);
-    setErr('');
-    try {
-      onChange(await uploadImage(file));
-    } catch (ex) {
-      setErr(ex instanceof Error ? ex.message : 'Upload failed.');
-    } finally {
-      setBusy(false);
-      e.target.value = '';
-    }
-  }
-
-  return (
-    <div className="admin-img">
-      <div className="admin-img-row">
-        <input
-          className="admin-img-url"
-          placeholder="/images/bike.jpg or https://…"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-        {uploadConfigured() && (
-          <label className="btn-secondary admin-img-upload">
-            {busy ? 'Uploading…' : 'Upload'}
-            <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />
-          </label>
-        )}
-      </div>
-      {err && <div className="notice error">{err}</div>}
-      {value && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="admin-img-preview" src={safeSrc(value)} alt="" onError={imgError} />
-      )}
-    </div>
-  );
-}
 
 export function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
@@ -126,6 +84,7 @@ export function ProductForm({ product }: { product?: Product }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [cats, setCats] = useState<string[]>([]); // category options from the Platform list
+  const [offers, setOffers] = useState<string[]>([]); // offer-type options from the Platform list
 
   // Load the category list (the server union of stored + in-use categories).
   // Fails soft: an empty list just means the dropdown shows only the current value.
@@ -134,11 +93,20 @@ export function ProductForm({ product }: { product?: Product }) {
       .list()
       .then((rows) => setCats(rows.map((r) => r.name)))
       .catch(() => undefined);
+    adminApi.offerTypes
+      .list()
+      .then((rows) => setOffers(rows.map((r) => r.key)))
+      .catch(() => undefined);
   }, []);
 
   // Always include the product's current category, even if it isn't in the list
   // yet (an older free-text value), so editing never silently drops it.
   const catOptions = [...new Set([...(s.category ? [s.category] : []), ...cats])];
+
+  // Offer checkboxes: the master list plus anything already on the product.
+  const offerOptions = [...new Set([...s.offerTypes, ...offers])];
+  const toggleOffer = (key: string) =>
+    set('offerTypes', s.offerTypes.includes(key) ? s.offerTypes.filter((k) => k !== key) : [...s.offerTypes, key]);
 
   const set = <K extends keyof State>(key: K, value: State[K]) => setS((prev) => ({ ...prev, [key]: value }));
 
@@ -169,6 +137,7 @@ export function ProductForm({ product }: { product?: Product }) {
       image: s.image.trim(),
       images: s.images.map((x) => x.trim()).filter(Boolean),
       featured: s.featured,
+      offerTypes: s.offerTypes,
       status: s.status,
       specs: Object.fromEntries(s.specs.filter((r) => r.key.trim()).map((r) => [r.key.trim(), r.value.trim()])),
       variants: s.variants.map((v) => ({
@@ -243,6 +212,22 @@ export function ProductForm({ product }: { product?: Product }) {
         <input type="checkbox" checked={s.featured} onChange={(e) => set('featured', e.target.checked)} />
         <span>Featured (shows in Staff picks)</span>
       </label>
+
+      <fieldset className="field admin-offers">
+        <legend>Offer types (this product is part of…)</legend>
+        {offerOptions.length === 0 ? (
+          <p className="muted">No offer types yet. The owner can add them on the Platform page.</p>
+        ) : (
+          <div className="admin-offers-list">
+            {offerOptions.map((k) => (
+              <label className="admin-check" key={k}>
+                <input type="checkbox" checked={s.offerTypes.includes(k)} onChange={() => toggleOffer(k)} />
+                <span>{offerLabel(k)}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </fieldset>
 
       <h2 className="admin-h2">Main photo</h2>
       <ImageField value={s.image} onChange={(v) => set('image', v)} />

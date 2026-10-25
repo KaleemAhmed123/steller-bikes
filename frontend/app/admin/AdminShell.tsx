@@ -12,6 +12,7 @@ import {
   CreditCard,
   Settings,
   SlidersHorizontal,
+  LayoutTemplate,
   Menu,
   LogOut,
   type LucideIcon,
@@ -28,6 +29,7 @@ const NAV: { href: string; label: string; icon: LucideIcon; ownerOnly?: boolean 
   { href: '/admin/payments', label: 'Payments', icon: CreditCard, ownerOnly: true },
   { href: '/admin/settings', label: 'Settings', icon: Settings, ownerOnly: true },
   { href: '/admin/platform', label: 'Platform', icon: SlidersHorizontal, ownerOnly: true },
+  { href: '/admin/content', label: 'Site content', icon: LayoutTemplate, ownerOnly: true },
 ];
 
 // Guards the authenticated admin pages: checks the session, bounces to /login if
