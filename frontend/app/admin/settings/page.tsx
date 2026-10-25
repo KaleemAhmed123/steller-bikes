@@ -5,7 +5,7 @@ import { adminApi, EMPTY_SETTINGS as EMPTY } from '@/lib/api';
 import type { StoreSettings } from '@/lib/types';
 
 // Only the shop-info (string) fields are editable on this tab.
-type ShopKey = { [K in keyof StoreSettings]: StoreSettings[K] extends string ? K : never }[keyof StoreSettings];
+type ShopKey = { [K in keyof StoreSettings]-?: StoreSettings[K] extends string ? K : never }[keyof StoreSettings];
 
 const FIELDS: [ShopKey, string, string][] = [
   ['addressLine1', 'Address', 'Shop no. 5, Mall Road'],
@@ -18,8 +18,18 @@ const FIELDS: [ShopKey, string, string][] = [
   ['email', 'Email', 'hello@stellarbikes.in'],
 ];
 
+// "208001, 208002\n208003" -> ['208001','208002','208003']; null if anything is not a 6-digit pincode.
+function parsePins(text: string): string[] | null {
+  const tokens = text.split(/[\s,;]+/).filter(Boolean);
+  if (tokens.length === 0 || tokens.some((t) => !/^\d{6}$/.test(t))) return null;
+  return [...new Set(tokens)];
+}
+
 export default function AdminSettings() {
   const [s, setS] = useState<StoreSettings | null>(null);
+  // Delivery rules are edited as text (fee in rupees, pincodes as a list) and converted on save.
+  const [feeText, setFeeText] = useState('');
+  const [pinText, setPinText] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -27,21 +37,40 @@ export default function AdminSettings() {
   useEffect(() => {
     adminApi.settings
       .get()
-      .then((data) => setS({ ...EMPTY, ...data }))
+      .then((data) => {
+        setS({ ...EMPTY, ...data });
+        setFeeText(String((data.kanpurDeliveryFee ?? EMPTY.kanpurDeliveryFee) / 100));
+        setPinText((data.kanpurPincodes ?? []).join(', '));
+      })
       .catch((e: Error) => setError(e.message));
   }, []);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!s) return;
-    setBusy(true);
     setError('');
     setMessage('');
+    const pins = parsePins(pinText);
+    const feeRupees = Number(feeText);
+    if (!pins) {
+      setError('Kanpur pincodes: enter at least one, each exactly 6 digits, separated by commas or spaces.');
+      return;
+    }
+    if (!Number.isFinite(feeRupees) || feeRupees < 0) {
+      setError('Delivery fee must be 0 or more rupees.');
+      return;
+    }
+    setBusy(true);
     try {
       // Only this tab's fields — the Platform and Site content tabs own the rest.
-      const body = Object.fromEntries([...FIELDS.map(([k]) => k), 'deliveryPolicy'].map((k) => [k, s[k as ShopKey]]));
+      const body = {
+        ...Object.fromEntries([...FIELDS.map(([k]) => k), 'deliveryPolicy'].map((k) => [k, s[k as ShopKey]])),
+        kanpurPincodes: pins,
+        kanpurDeliveryFee: Math.round(feeRupees * 100),
+      };
       const saved = await adminApi.settings.update(body);
       setS({ ...EMPTY, ...saved });
+      setPinText((saved.kanpurPincodes ?? pins).join(', '));
       setMessage('Settings saved.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed.');
@@ -80,6 +109,29 @@ export default function AdminSettings() {
             placeholder="e.g. Flat Fitted Delivery in Kanpur; elsewhere charged by Delhivery distance."
             onChange={(e) => set('deliveryPolicy', e.target.value)}
           />
+        </label>
+
+        <h2 className="admin-h2">Delivery charges</h2>
+        <p className="muted">
+          Inside Kanpur every order pays this flat <strong>Fitted Delivery</strong> fee. Anywhere else nothing is added
+          at checkout — our agent agrees the Delhivery charge by phone and sends an advance-payment link on the order.
+        </p>
+        <div className="admin-form-grid">
+          <label className="field">
+            <span>Flat fee inside Kanpur (₹, 0 = free)</span>
+            <input
+              type="number"
+              min={0}
+              step="1"
+              inputMode="numeric"
+              value={feeText}
+              onChange={(e) => setFeeText(e.target.value)}
+            />
+          </label>
+        </div>
+        <label className="field">
+          <span>Pincodes that count as “inside Kanpur” ({parsePins(pinText)?.length ?? 0} listed)</span>
+          <textarea rows={3} value={pinText} onChange={(e) => setPinText(e.target.value)} />
         </label>
 
         {message && <div className="notice">{message}</div>}
