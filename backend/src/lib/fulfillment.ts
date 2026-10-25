@@ -57,6 +57,9 @@ export async function transitionOrder(
       const set: Record<string, unknown> = { fulfillmentStatus: to };
       if (to === 'shipped') set.tracking = tracking.trim();
       if (to === 'cancelled' && order.paymentStatus === 'paid') set.paymentStatus = 'refund_required';
+      // Cash on delivery: the money is collected at the door, so delivered = paid.
+      // Same write (and same guard) as the status change, so they can't disagree.
+      if (to === 'delivered' && order.method === 'cod' && order.paymentStatus === 'unpaid') set.paymentStatus = 'paid';
 
       const updated = await OrderModel.updateOne(
         { _id: orderId, fulfillmentStatus: from },
