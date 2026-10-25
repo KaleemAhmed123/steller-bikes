@@ -64,6 +64,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                 <span>Saleem</span>
                 <a href="tel:+918090109621" className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />+91 80901 09621</a>
                 <Link href="/account" className="rc-contact"><User aria-hidden strokeWidth={1.75} />Your account</Link>
+                <Link href="/about">About us</Link>
               </div>
             </div>
 
