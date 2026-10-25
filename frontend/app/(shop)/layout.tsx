@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Store, Phone, MapPin, User } from 'lucide-react';
-import { getSettings } from '@/lib/api';
+import { getSettings, moneyShort } from '@/lib/api';
 import { ToastProvider } from './components/ToastProvider';
 import { CartProvider } from './components/CartProvider';
 import { CartButton } from './components/CartButton';
@@ -16,7 +16,7 @@ import { Wordmark } from './components/Wordmark';
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
   // Owner-set storefront banner ('' = hidden). getSettings never throws.
-  const { announcement } = await getSettings();
+  const { announcement, kanpurDeliveryFee } = await getSettings();
   return (
     <ToastProvider>
       <AccountProvider>
@@ -61,6 +61,10 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
                 <h2>Store</h2>
                 <span className="rc-contact"><MapPin aria-hidden strokeWidth={1.75} />Kanpur, Uttar Pradesh</span>
                 <span>Cash on delivery</span>
+                <span>
+                  Kanpur: flat {kanpurDeliveryFee > 0 ? moneyShort(kanpurDeliveryFee) : 'free'} Fitted Delivery
+                </span>
+                <span>Elsewhere: Delhivery — our agent calls to confirm your order</span>
                 <span>Saleem</span>
                 <a href="tel:+918090109621" className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />+91 80901 09621</a>
                 <Link href="/account" className="rc-contact"><User aria-hidden strokeWidth={1.75} />Your account</Link>

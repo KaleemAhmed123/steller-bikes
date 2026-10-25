@@ -182,7 +182,7 @@ export default function OrderPage() {
           )}
           <div className="order-total-row">
             <span>Delivery</span>
-            <span>{order.shipping > 0 ? money(order.shipping) : 'Free'}</span>
+            <span>{order.shipping > 0 ? money(order.shipping) : 'Agreed with our agent'}</span>
           </div>
           {order.tax > 0 && (
             <div className="order-total-row">

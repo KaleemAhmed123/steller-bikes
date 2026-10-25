@@ -2573,3 +2573,36 @@ h3 {
   font-size: 13px;
   color: var(--rc-muted, #777);
 }
+
+/* ---- Pincode check on the product page ---------------------------------- */
+.rc-pincheck {
+  margin-top: 14px;
+}
+.rc-pincheck-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.rc-pincheck-label svg {
+  width: 16px;
+  height: 16px;
+}
+.rc-pincheck input {
+  width: 100%;
+  max-width: 220px;
+  border: 1px solid var(--rc-line, #ddd);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.rc-pincheck-result {
+  min-height: 20px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--rc-muted, #666);
+}
