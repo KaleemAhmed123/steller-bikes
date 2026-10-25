@@ -5,7 +5,7 @@
 
 ## One-line pitch
 
-A distinctive, art-directed customer-facing storefront for Raju Cycles — a cinematic scroll-driven
+A distinctive, art-directed customer-facing storefront for Stellar Bikes — a cinematic scroll-driven
 3D bicycle hero, an editorial homepage with section-specific layouts, and a redesigned
 catalogue / product-detail / cards system — built on the existing Next.js + Express + MongoDB app
 **without changing any backend route, schema, migration, or business logic**.

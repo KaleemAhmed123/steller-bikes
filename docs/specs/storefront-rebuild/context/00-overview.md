@@ -1,13 +1,13 @@
 # Context: System Overview
 
-> **Living doc.** The shared mental model of the Raju Cycles rebuild. Nothing is built yet — this is
+> **Living doc.** The shared mental model of the Stellar Bikes rebuild. Nothing is built yet — this is
 > the target the scaffold and build steps work toward. Commands and run steps live in
 > [`../../../../playbook.md`](../../../../playbook.md); the first-code plan is
 > [`../scaffold.md`](../scaffold.md).
 
 ## In plain words (read this first)
 
-**The shop.** Raju Cycles is a real bicycle shop in Kanpur, UP. The owner wants an online store
+**The shop.** Stellar Bikes is a real bicycle shop in Kanpur, UP. The owner wants an online store
 where customers browse cycles and place orders, plus a private back-office ("admin") where the owner
 and staff manage products, stock, and orders.
 

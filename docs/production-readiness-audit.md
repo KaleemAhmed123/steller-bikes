@@ -1,4 +1,4 @@
-# Production-Readiness Audit — Raju Cycles (Stellar Bikes) Storefront + Admin
+# Production-Readiness Audit — Stellar Bikes (Stellar Bikes) Storefront + Admin
 
 - **Audit date:** 2026-10-21
 - **Repository revision:** `b74c820` (branch `main`) **plus the uncommitted working tree** (many modified + untracked files were present at audit time; see §3). The audit reflects the **working tree**, not just the last commit.
