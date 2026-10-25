@@ -83,8 +83,14 @@ checkoutRouter.post('/razorpay/order', checkoutLimiter, async (req, res, next) =
       res.status(503).json({ error: { message: 'Online payment is not available right now.' } });
       return;
     }
+    const pin = z.string().trim().regex(/^\d{6}$/).safeParse(req.body?.pin);
+    if (!pin.success) {
+      res.status(400).json({ error: { message: 'Enter your 6-digit PIN code first.' } });
+      return;
+    }
     const owner = res.locals.owner as string;
-    const amount = await computeCartTotal(owner);
+    // The pincode decides the delivery fee; the server prices it, the browser only names the pin.
+    const amount = await computeCartTotal(owner, pin.data);
     const order = await createRazorpayOrder(amount, `rc_${Date.now().toString(36)}`);
     log.info('create: razorpay order', { razorpayOrderId: order.id, amount: order.amount, owner });
     res.status(201).json({

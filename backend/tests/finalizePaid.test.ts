@@ -20,7 +20,9 @@ try {
 }
 const uri = process.env.MONGODB_URI;
 
-const address = { name: 'Test', phone: '9999999999', line1: '1 St', city: 'Kanpur', state: 'UP', pin: '208001' };
+// A pincode OUTSIDE Kanpur (Lucknow) so these tests keep paying exactly the item price; the Kanpur
+// flat delivery fee has its own tests in checkoutDelivery.test.ts.
+const address = { name: 'Test', phone: '9999999999', line1: '1 St', city: 'Lucknow', state: 'UP', pin: '226001' };
 const PRICE = 100000; // paise per unit
 
 // A verified Razorpay payment record for `amount` paise.
