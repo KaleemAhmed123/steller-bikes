@@ -13,6 +13,28 @@ const slugField = z
   .max(80)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase words joined by hyphens.');
 
+// A variant's own photos/videos. Capped so a product page stays fast.
+export const MAX_VARIANT_MEDIA = 10;
+
+export const mediaItemSchema = z.object({
+  // Same rule as product photos: a local /path or an https link. Anything else
+  // (javascript:, http:, data:) is refused at the boundary.
+  url: z
+    .string()
+    .trim()
+    .min(1)
+    .max(500)
+    .refine((u) => u.startsWith('/') || u.startsWith('https://'), 'Use a /path or an https:// link.'),
+  type: z.enum(['image', 'video']),
+  position: z.coerce.number().int().nonnegative().default(0),
+});
+
+// Order by the position the admin set (ties keep the order sent — Array.sort is
+// stable), then re-number 0..n-1 so stored positions never have gaps or duplicates.
+function renumber(items: z.infer<typeof mediaItemSchema>[]) {
+  return [...items].sort((a, b) => a.position - b.position).map((m, i) => ({ ...m, position: i }));
+}
+
 export const variantInputSchema = z.object({
   // Preserved on edit so an existing variant keeps its id (carts, orders and
   // inventory history reference it). Omitted for a brand-new variant.
@@ -24,6 +46,7 @@ export const variantInputSchema = z.object({
   compareAt: money.default(0),
   stock: z.coerce.number().int().nonnegative(),
   lowStock: z.coerce.number().int().nonnegative().default(3),
+  media: z.array(mediaItemSchema).max(MAX_VARIANT_MEDIA).default([]).transform(renumber),
 });
 
 export const productInputSchema = z.object({
