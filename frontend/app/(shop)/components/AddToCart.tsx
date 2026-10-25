@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from './CartProvider';
+import { useVariantSelection } from './VariantSelection';
 import { money } from '@/lib/api';
 
 export interface PickVariant {
@@ -23,8 +24,8 @@ export interface PickVariant {
 export function AddToCart({ variants }: { variants: PickVariant[] }) {
   const { add } = useCart();
 
-  const firstAvailable = variants.find((v) => v.stock > 0) ?? variants[0];
-  const [variantId, setVariantId] = useState(firstAvailable?.variantId ?? '');
+  // The selected variant lives in <VariantSelection> so the gallery can follow it.
+  const { variantId, setVariantId } = useVariantSelection();
   const [quantity, setQuantity] = useState(1);
   const [status, setStatus] = useState<'idle' | 'adding' | 'added' | 'error'>('idle');
   const [message, setMessage] = useState('');

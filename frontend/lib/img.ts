@@ -24,6 +24,20 @@ export function safeSrc(src: string | null | undefined): string {
   return PLACEHOLDER;
 }
 
+// Same idea for <video>: a local path or an https Cloudinary link, otherwise null
+// (the caller skips the item — there is no video placeholder to fall back to).
+export function safeVideoSrc(src: string | null | undefined): string | null {
+  const s = (src ?? '').trim();
+  if (s.startsWith('/')) return s;
+  try {
+    const url = new URL(s);
+    if (url.protocol === 'https:' && ALLOWED_HOSTS.includes(url.hostname)) return s;
+  } catch {
+    // not a valid absolute URL → refuse
+  }
+  return null;
+}
+
 // onError handler for plain <img>: swap to the placeholder once (the data-fb
 // guard stops an infinite loop if the placeholder itself were ever missing).
 export function imgError(e: React.SyntheticEvent<HTMLImageElement>) {
