@@ -46,6 +46,8 @@ Backend `.env` keys: `MONGODB_URI` (required), `PORT` (default 3001), `FRONTEND_
   account → Settings → API Keys → **Test mode** → generate test keys → paste both here. The secret
   stays server-side only. (Confirm **auto-capture** is ON in the dashboard so approved payments are
   actually collected.)
+- `RAZORPAY_WEBHOOK_SECRET` — for **advance-payment links** (see 1e). Optional; without it the
+  webhook refuses calls and the admin's "Check with Razorpay" button is the way to confirm a payment.
 - `RESEND_API_KEY` + `MAIL_FROM` — to send **real email** (account verify, password reset, order
   receipts). Blank key → emails print to the server console (dev mock); nothing breaks. Setup: make a
   free account at [resend.com](https://resend.com) → **API Keys** → create one (`re_…`) → paste as
@@ -67,6 +69,9 @@ Frontend `.env.local` keys (all optional in dev):
   This **also powers the retailer-logo Upload button** (Admin → Site content). **TODO (owner):** create
   the Cloudinary account and add these two values to `frontend/.env.local` (and Vercel). Until then the
   Upload button says "not set up" and pasting a logo link / `/path` works.
+  - `NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB` (default 50) — biggest video the admin may upload (variant
+    videos, hero video). Cloudinary's free plan allows up to 100 MB. The upload preset must allow
+    **images and videos** (don't restrict it to images).
 
 ### 1c. Seed the sample cycles
 
@@ -92,6 +97,42 @@ overwrites retailers or offer-rail settings you have already saved.
 - Shop filter: `/shop?offerType=diwali,new-year` (any-of; synced to the URL).
 - Hero videos: `frontend/public/hero_section_{desktop,mobile}_view_video_compressed.mp4`. To change a
   video, replace the file (keep the names) and redeploy.
+
+### 1e. Advance-payment links (agent → customer) — needs Razorpay keys
+
+How it works: an agent calls the customer and agrees an amount (usually the Delhivery delivery
+charge). In **Admin → Orders → (order) → Advance payment** they enter the amount + a note and press
+**Generate payment link**. The customer sees "Advance payment requested" with a **Pay now** button on
+their order page (`/order/<id>`). The admin card shows awaiting / paid / cancelled / expired.
+
+Until `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` exist in `backend/.env` the card shows "Payment links
+aren't switched on yet" — nothing else breaks. **To switch it on (owner):**
+1. Razorpay account → complete KYC → Settings → API Keys → generate keys (Test mode first) → put both in
+   `backend/.env`. Confirm **Payment Links** is enabled on the account (Dashboard → Payment Links).
+2. So a payment is recorded even if the customer closes the tab: Settings → **Webhooks → Add new
+   webhook** → URL `https://<your-backend>/api/webhooks/razorpay` (needs a public https URL — your Render
+   backend; local testing needs a tunnel such as ngrok) → events `payment_link.paid`,
+   `payment_link.cancelled`, `payment_link.expired` → choose a secret → put it in
+   `RAZORPAY_WEBHOOK_SECRET`.
+3. **If a customer says they paid but the order shows "awaiting payment":** press **Check with
+   Razorpay** on that link. It asks Razorpay directly and records the truth. Every payment also shows
+   in the Razorpay dashboard under the order id (`reference_id`) for reconciliation.
+
+Rules: ₹1–₹1,00,000 per link · one open link per order · a paid link is final (never double-counted) ·
+an advance is tracked **separately** from the order's own payment status (it is extra money for
+delivery). If you cancel an order after an advance was paid, refund it from the Razorpay dashboard.
+
+**COD orders:** marking an order **delivered** now marks it **paid** automatically. The order page also
+has a **Payment** card (owner only) to mark COD cash received / refunds by hand.
+
+### 1f. Product photos & videos per option
+
+In **Admin → Products → (product)**, open **Photos & videos** under each variant (size/colour). Add by
+link or upload, reorder with the arrows (top = shown first), max 10 per option. The product page swaps
+the gallery when the shopper picks an option. An option with **no** media shows a "No Image Available"
+box (it never borrows another option's photo). **Existing products need media once:** run
+`cd backend && npm run backfill:variant-media` (copies each product's main/gallery photos into options
+that have none; safe to re-run). `npm run seed` already does this for the demo catalogue.
 
 ### 1d. Create your admin login + (optional) demo orders
 
