@@ -61,3 +61,14 @@ test('productSortSpec maps each sort to a stable, _id-tiebroken spec', () => {
   assert.deepEqual(productSortSpec('price-desc'), { fromPrice: -1, _id: 1 });
   assert.deepEqual(productSortSpec('popular'), { soldCount: -1, createdAt: -1, _id: 1 });
 });
+
+test('offerType accepts a comma list and matches products with ANY of them', () => {
+  const parsed = productQuerySchema.parse({ offerType: 'diwali, new-year' });
+  assert.deepEqual(parsed.offerType, ['diwali', 'new-year']);
+  assert.deepEqual(buildProductFilter(parsed).offerTypes, { $in: ['diwali', 'new-year'] });
+});
+
+test('a garbage offerType is rejected, and none means no offer filter', () => {
+  assert.ok(!productQuerySchema.safeParse({ offerType: 'NOT OK' }).success);
+  assert.equal(buildProductFilter(productQuerySchema.parse({})).offerTypes, undefined);
+});

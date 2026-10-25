@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { offerKeySchema } from './siteContent.js';
 
 // Validate an admin product create/update payload at the API boundary, so no
 // garbage reaches the database. Money is in paise (integers) — the admin UI
@@ -33,6 +34,7 @@ export const productInputSchema = z.object({
   image: z.string().trim().min(1).max(500), // primary / card thumbnail (URL or /path)
   images: z.array(z.string().trim().min(1).max(500)).max(12).default([]),
   featured: z.boolean().default(false),
+  offerTypes: z.array(offerKeySchema).max(10).default([]), // must exist in the master list (checked in the route)
   status: z.enum(['draft', 'published', 'archived']).default('draft'),
   specs: z.record(z.string(), z.string()).default({}),
   variants: z.array(variantInputSchema).min(1, 'Add at least one variant.'),

@@ -24,6 +24,7 @@ const productSchema = new Schema(
     image: { type: String, required: true }, // primary / card thumbnail
     images: { type: [String], default: [] }, // extra gallery shots (empty = single-image)
     featured: { type: Boolean, default: false }, // editorial "Staff picks" flag (set via seed)
+    offerTypes: { type: [String], default: [] }, // offer keys this product is part of, e.g. ['diwali']
     specs: { type: Map, of: String, default: {} },
     status: {
       type: String,

@@ -5,7 +5,7 @@ import { parsePagination, pageMeta } from '../lib/pagination.js';
 
 export const productsRouter = Router();
 
-// GET /api/products[?category=&q=&minPrice=&maxPrice=&sort=&page=&limit=]
+// GET /api/products[?category=&offerType=&q=&minPrice=&maxPrice=&sort=&page=&limit=]
 // The published catalogue, optionally filtered and sorted, one page at a time.
 // Also returns the full list of published categories (over ALL published products,
 // not the filtered set) so the storefront's category buttons stay stable while a
@@ -31,7 +31,7 @@ productsRouter.get('/', async (req, res, next) => {
     const filter = buildProductFilter(parsed.data);
     const pg = parsePagination(req.query); // default 24/page, max 100
 
-    const [products, total, categories] = await Promise.all([
+    const [products, total, categories, offerTypes] = await Promise.all([
       ProductModel.aggregate([
         { $match: filter },
         { $addFields: { fromPrice: { $min: '$variants.price' } } },
@@ -56,11 +56,13 @@ productsRouter.get('/', async (req, res, next) => {
       ]),
       ProductModel.countDocuments(filter),
       ProductModel.distinct('category', { status: 'published' }),
+      ProductModel.distinct('offerTypes', { status: 'published' }),
     ]);
 
     res.json({
       data: products,
       categories: categories.sort(),
+      offerTypes: offerTypes.sort(), // offer keys in use, for the storefront's Offers filter
       pagination: pageMeta(total, pg),
     });
   } catch (err) {

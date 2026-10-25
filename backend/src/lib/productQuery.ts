@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { FilterQuery } from 'mongoose';
 import { escapeRegex } from './mongo.js';
+import { offerKeySchema } from './siteContent.js';
 
 // Validate the storefront's filter query params at the API boundary.
 // Unknown/garbage values are rejected here so they never reach the database query.
@@ -8,6 +9,12 @@ import { escapeRegex } from './mongo.js';
 export const productQuerySchema = z.object({
   category: z.string().trim().min(1).optional(),
   q: z.string().trim().min(1).optional(),
+  // Comma-separated offer keys: ?offerType=diwali,new-year → products with ANY of them.
+  offerType: z
+    .string()
+    .transform((v) => v.split(',').map((k) => k.trim()).filter(Boolean))
+    .pipe(z.array(offerKeySchema).min(1).max(10))
+    .optional(),
   minPrice: z.coerce.number().int().nonnegative().optional(),
   maxPrice: z.coerce.number().int().nonnegative().optional(),
   // Lenient like pagination: an unknown/garbage sort falls back to 'newest' rather
@@ -41,6 +48,7 @@ export function buildProductFilter(q: ProductQuery): FilterQuery<unknown> {
   const filter: FilterQuery<unknown> = { status: 'published' };
 
   if (q.category) filter.category = q.category;
+  if (q.offerType) filter.offerTypes = { $in: q.offerType };
 
   if (q.q) {
     const rx = new RegExp(escapeRegex(q.q), 'i'); // case-insensitive
