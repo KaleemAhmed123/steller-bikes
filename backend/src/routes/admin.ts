@@ -14,6 +14,7 @@ import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 import { parsePagination, pageMeta } from '../lib/pagination.js';
 import { orderDetail } from '../lib/orderDetail.js';
+import { loadDeliveryRules } from '../lib/delivery.js';
 
 export const adminRouter = Router();
 
@@ -310,7 +311,9 @@ const settingsSchema = z.object({
 adminRouter.get('/settings', requirePermission('settings.manage'), async (_req, res, next) => {
   try {
     const doc = await SettingsModel.findOne().lean();
-    res.json({ data: withSiteContent(doc) }); // defaults merged so the form is never blank
+    const rules = await loadDeliveryRules(); // effective values (defaults when never saved)
+    // defaults merged so the form is never blank
+    res.json({ data: { ...withSiteContent(doc), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee } });
   } catch (err) {
     next(err);
   }
@@ -336,7 +339,8 @@ adminRouter.patch('/settings', requirePermission('settings.manage'), async (req,
       }
     }
     const doc = await SettingsModel.findOneAndUpdate({}, { $set: parsed.data }, { new: true, upsert: true }).lean();
-    res.json({ data: withSiteContent(doc) });
+    const rules = await loadDeliveryRules();
+    res.json({ data: { ...withSiteContent(doc), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee } });
   } catch (err) {
     next(err);
   }

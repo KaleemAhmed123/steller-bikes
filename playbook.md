@@ -125,6 +125,25 @@ delivery). If you cancel an order after an advance was paid, refund it from the 
 **COD orders:** marking an order **delivered** now marks it **paid** automatically. The order page also
 has a **Payment** card (owner only) to mark COD cash received / refunds by hand.
 
+### 1g. Delivery charges (Kanpur flat fee) and pincode autofill
+
+- **Inside Kanpur:** every order pays a flat **Fitted Delivery** fee (default **₹299**, on every product).
+  **Elsewhere:** nothing is added at checkout — delivery is charged by Delhivery distance; an agent calls to
+  confirm the order and agree the advance, then raises a payment link (1e).
+- Change the fee or the list of "inside Kanpur" pincodes in **Admin → Settings → Delivery charges**
+  (default list: 208001–208027; set the fee to 0 for free Kanpur delivery). "Inside Kanpur" is decided by
+  **this list**, never by a web lookup, so pricing always works offline.
+- At checkout the customer types the pincode and **city/state autofill** from India Post's free public
+  directory (`api.postalpincode.in`, no account or key). It is only a convenience: if it is slow or down the
+  customer types city/state and the fee is still correct. Answers are cached 24 h.
+- The same wording ("Inside Kanpur…, outside Kanpur…, our agent will call to confirm every order") shows on
+  the product page (with a pincode checker), cart, checkout and footer — it is one component
+  (`DeliveryInfo.tsx`); edit the sentences there.
+- Orders placed before this change keep their old totals. **Guest customers** find their order (and its
+  payment link) through the browser they ordered from or by signing in to **Your account**, so encourage
+  customers to create an account at checkout; the admin card also has a **Copy link** button to send a link by
+  WhatsApp.
+
 ### 1f. Product photos & videos per option
 
 In **Admin → Products → (product)**, open **Photos & videos** under each variant (size/colour). Add by

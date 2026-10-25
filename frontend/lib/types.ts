@@ -101,6 +101,9 @@ export interface StoreSettings {
   // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
   // Shown in the delivery messages — the server still prices every order itself.
   kanpurDeliveryFee: number;
+  // Pincodes charged that fee. Admin settings only (the public API never sends the list;
+  // the storefront asks /api/delivery/:pin instead).
+  kanpurPincodes?: string[];
   // Admin-editable site content (Site content tab). Defaults are merged by the API.
   hero: HeroContent;
   offerSection: OfferSection;
