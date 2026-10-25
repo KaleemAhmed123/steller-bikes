@@ -2526,3 +2526,50 @@ h3 {
   gap: 10px;
   margin-top: 12px;
 }
+
+/* ---- Delivery & ordering information (product page, cart, checkout, footer) */
+.rc-delivery {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--rc-line, #e6e1d6);
+  border-radius: 14px;
+  background: #fffaf0;
+  font-size: 14px;
+}
+.rc-delivery-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.rc-delivery ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.rc-delivery li,
+.rc-delivery--compact {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.45;
+}
+.rc-delivery svg {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  color: var(--rc-gold, #f4a522);
+}
+.rc-delivery--compact {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.rc-pin-status {
+  display: block;
+  min-height: 18px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--rc-muted, #777);
+}

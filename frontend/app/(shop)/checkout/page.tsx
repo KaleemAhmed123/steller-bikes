@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useCart } from '../components/CartProvider';
+import { DeliveryInfo } from '../components/DeliveryInfo';
 import { useAccount } from '../components/AccountProvider';
 import {
   checkout,
@@ -11,9 +12,11 @@ import {
   verifyRazorpayPayment,
   razorpayEnabled,
   getSettings,
+  getDelivery,
   money,
+  moneyShort,
 } from '@/lib/api';
-import type { Address, SavedAddress } from '@/lib/types';
+import type { Address, DeliveryQuote, SavedAddress } from '@/lib/types';
 
 const EMPTY = { email: '', name: '', phone: '', line1: '', city: '', state: '', pin: '' };
 
@@ -69,11 +72,18 @@ export default function CheckoutPage() {
   const [codEnabled, setCodEnabled] = useState(true);
   const [onlineEnabled, setOnlineEnabled] = useState(true);
   const online = razorpayEnabled() && onlineEnabled;
+  // Delivery: what the typed pincode tells us (fee + city/state to autofill).
+  const [kanpurFee, setKanpurFee] = useState(29900); // live value arrives with the settings
+  const [delivery, setDelivery] = useState<DeliveryQuote | null>(null);
+  const [lookingUp, setLookingUp] = useState(false);
+  // What we last autofilled, so we only overwrite city/state the customer has not changed.
+  const autofilled = useRef({ city: '', state: '' });
 
   useEffect(() => {
     getSettings()
       .then((s) => {
         setCodEnabled(s.codEnabled);
+        setKanpurFee(s.kanpurDeliveryFee);
         setOnlineEnabled(s.onlinePaymentEnabled);
         // If COD is off, default the choice to online so the form is ready to pay.
         if (!s.codEnabled) setPay('online');
@@ -90,7 +100,35 @@ export default function CheckoutPage() {
     setForm(def ? fromSaved(def, customer.email) : { ...EMPTY, email: customer.email });
   }, [customer]);
 
+  // Look the pincode up as soon as it is 6 digits. A newer pincode cancels the older request.
+  useEffect(() => {
+    if (!/^\d{6}$/.test(form.pin)) {
+      setDelivery(null);
+      setLookingUp(false);
+      return;
+    }
+    const ctl = new AbortController();
+    setLookingUp(true);
+    getDelivery(form.pin, ctl.signal).then((q) => {
+      if (ctl.signal.aborted) return;
+      setLookingUp(false);
+      setDelivery(q);
+      if (q?.lookup === 'ok') {
+        const last = autofilled.current;
+        setForm((f) => ({
+          ...f,
+          city: !f.city || f.city === last.city ? q.city : f.city,
+          state: !f.state || f.state === last.state ? q.state : f.state,
+        }));
+        autofilled.current = { city: q.city, state: q.state };
+      }
+    });
+    return () => ctl.abort();
+  }, [form.pin]);
+
   const items = cart?.items ?? [];
+  const subtotal = cart?.subtotal ?? 0;
+  const knownFee = delivery?.kanpur ? delivery.fee : 0; // outside Kanpur nothing is added here
   const set = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }));
 
@@ -120,7 +158,7 @@ export default function CheckoutPage() {
   // popup, then verify what it returns on our server. Stock + the paid order are
   // created only after verify succeeds.
   async function payOnline() {
-    const { razorpayOrderId, amount, keyId } = await createRazorpayOrder();
+    const { razorpayOrderId, amount, keyId } = await createRazorpayOrder(form.pin);
     await loadRazorpay();
     const Razorpay = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
     const rzp = new Razorpay({
@@ -220,6 +258,24 @@ export default function CheckoutPage() {
             <span className="field-label">Address</span>
             <input required value={form.line1} onChange={set('line1')} />
           </label>
+          <label className="field">
+            <span className="field-label">PIN code (6 digits) — city and state fill in automatically</span>
+            <input
+              required
+              inputMode="numeric"
+              pattern="\d{6}"
+              maxLength={6}
+              autoComplete="postal-code"
+              value={form.pin}
+              onChange={set('pin')}
+            />
+            <span className="rc-pin-status" aria-live="polite">
+              {lookingUp && 'Looking up your pincode…'}
+              {!lookingUp && delivery?.lookup === 'ok' && `✓ ${delivery.city}, ${delivery.state}`}
+              {!lookingUp && delivery?.lookup === 'not_found' && 'We couldn’t find this pincode — please check it, or type your city and state.'}
+              {!lookingUp && delivery?.lookup === 'unavailable' && 'Couldn’t look it up just now — please type your city and state.'}
+            </span>
+          </label>
           <div className="field-row">
             <label className="field">
               <span className="field-label">City</span>
@@ -229,11 +285,9 @@ export default function CheckoutPage() {
               <span className="field-label">State</span>
               <input required value={form.state} onChange={set('state')} />
             </label>
-            <label className="field">
-              <span className="field-label">PIN (6 digits)</span>
-              <input required inputMode="numeric" pattern="\d{6}" value={form.pin} onChange={set('pin')} />
-            </label>
           </div>
+
+          <DeliveryInfo fee={kanpurFee} />
 
           {codEnabled && online && (
             <fieldset className="pay-methods">
@@ -280,11 +334,39 @@ export default function CheckoutPage() {
               <span>{money(line.lineTotal ?? 0)}</span>
             </div>
           ))}
+          <div className="summary-line">
+            <span>Subtotal</span>
+            <span>{money(subtotal)}</span>
+          </div>
+          <div className="summary-line">
+            <span>Delivery</span>
+            <span>
+              {!/^\d{6}$/.test(form.pin)
+                ? 'Enter PIN code'
+                : lookingUp
+                  ? 'Checking…'
+                  : delivery?.kanpur
+                    ? `${money(delivery.fee)} · Fitted Delivery`
+                    : delivery
+                      ? 'To be confirmed'
+                      : 'Added at order'}
+            </span>
+          </div>
           <div className="cart-subtotal">
             <span>Total</span>
-            <span>{money(cart?.subtotal ?? 0)}</span>
+            <span>{money(subtotal + knownFee)}</span>
           </div>
+          {delivery && !delivery.kanpur && (
+            <p className="muted">
+              Delivery to your pincode is charged by Delhivery distance. Our agent will call you to confirm your order
+              and agree the delivery advance, then send a payment link under your order.
+            </p>
+          )}
+          {delivery?.kanpur && (
+            <p className="muted">Includes the flat {moneyShort(delivery.fee)} Fitted Delivery for Kanpur.</p>
+          )}
           <p className="muted">{pay === 'online' && online ? 'Pay securely online' : 'Pay cash on delivery'}</p>
+          <p className="muted">Our agent will call you to confirm this order.</p>
         </aside>
       </div>
     </div>
