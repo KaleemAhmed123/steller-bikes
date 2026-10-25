@@ -9,7 +9,6 @@ import { AccountNav } from './components/AccountNav';
 import { WishlistProvider } from './components/WishlistProvider';
 import { SavedNav } from './components/SavedNav';
 import { RevealOnScroll } from './components/RevealOnScroll';
-import { HeaderHeroWatch } from './components/HeaderHeroWatch';
 import { Wordmark } from './components/Wordmark';
 
 // Storefront shell: sticky header + shared cart/account/wishlist state +
@@ -25,7 +24,6 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
           <WishlistProvider>
           <a href="#main" className="skip-link">Skip to main content</a>
           <RevealOnScroll />
-          <HeaderHeroWatch />
           {announcement && <div className="rc-announce">{announcement}</div>}
           <header className="rc-header">
             <div className="rc-header-inner container">
