@@ -6,13 +6,14 @@ import { ProductModel } from '../models/product.js';
 import { SettingsModel } from '../models/settings.js';
 import { InventoryMovementModel } from '../models/inventoryMovement.js';
 import { requirePermission, type ActorStaff } from '../lib/auth.js';
-import { transitionOrder, TransitionError, TRANSITIONS } from '../lib/fulfillment.js';
+import { transitionOrder, TransitionError } from '../lib/fulfillment.js';
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
 import { siteContentShape, toOfferKey, withSiteContent } from '../lib/siteContent.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 import { parsePagination, pageMeta } from '../lib/pagination.js';
+import { orderDetail } from '../lib/orderDetail.js';
 
 export const adminRouter = Router();
 
@@ -83,12 +84,12 @@ adminRouter.get('/orders/:id', requirePermission('orders.read'), async (req, res
       res.status(404).json({ error: { message: 'Order not found.' } });
       return;
     }
-    const order = await OrderModel.findById(req.params.id).lean();
-    if (!order) {
+    const detail = await orderDetail(req.params.id);
+    if (!detail) {
       res.status(404).json({ error: { message: 'Order not found.' } });
       return;
     }
-    res.json({ data: { order, nextStates: TRANSITIONS[order.fulfillmentStatus] ?? [] } });
+    res.json({ data: detail });
   } catch (err) {
     next(err);
   }
@@ -112,8 +113,7 @@ adminRouter.post('/orders/:id/transition', requirePermission('orders.update'), a
       return;
     }
     await transitionOrder(actor(res), req.params.id, parsed.data.status, parsed.data.tracking);
-    const order = await OrderModel.findById(req.params.id).lean();
-    res.json({ data: { order, nextStates: TRANSITIONS[order!.fulfillmentStatus] ?? [] } });
+    res.json({ data: await orderDetail(req.params.id) });
   } catch (err) {
     if (err instanceof TransitionError) {
       const status = err.code === 'NOT_FOUND' ? 404 : err.code === 'CONCURRENT' ? 409 : 422;

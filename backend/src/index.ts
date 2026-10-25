@@ -16,6 +16,8 @@ import { adminRouter } from './routes/admin.js';
 import { accountRouter } from './routes/account.js';
 import { notesRouter } from './routes/notes.js';
 import { paymentsRouter } from './routes/payments.js';
+import { advanceAdminRouter } from './routes/advancePayments.js';
+import { webhooksRouter } from './routes/webhooks.js';
 import { guestCart } from './lib/guest.js';
 import { requireAuth } from './lib/auth.js';
 
@@ -25,6 +27,9 @@ app.set('trust proxy', 1);
 // Allow the frontend (a different origin on Vercel/localhost:3000) to call this API.
 // credentials:true lets the browser send/receive the cart + session cookies cross-origin.
 app.use(cors({ origin: config.FRONTEND_ORIGIN, credentials: true }));
+// Razorpay webhooks need the RAW body (the signature is over the exact bytes), so this
+// mount sits BEFORE express.json() and only for this path. Server-to-server: no CORS/cookies.
+app.use('/api/webhooks', express.raw({ type: '*/*', limit: '100kb' }), webhooksRouter);
 app.use(express.json());
 
 const prod = config.NODE_ENV === 'production';
@@ -64,6 +69,7 @@ app.use('/api/auth', authRouter);
 // Specific admin sub-routers mount before the general admin mount so their paths resolve here.
 app.use('/api/admin/notes', requireAuth, notesRouter);
 app.use('/api/admin/payments', requireAuth, paymentsRouter);
+app.use('/api/admin/orders/:id/advance-payments', requireAuth, advanceAdminRouter);
 app.use('/api/admin', requireAuth, adminRouter);
 
 // Last-resort error handler: log the real error, return a safe generic message.
