@@ -47,6 +47,23 @@ const DAY = 24 * 60 * 60 * 1000;
 const cache = new Map<string, { at: number; ttl: number; value: PincodeLookup }>();
 const MAX_CACHE = 5000; // pincodes are a closed set (~20k), but never let this grow without bound
 
+// One pincode can span several districts (208001 has Kanpur city AND rural Kanpur Dehat
+// offices, and the API lists them in arbitrary order). Take the most common value;
+// on a tie the first one listed wins.
+function mostCommon(values: (string | undefined)[]): string {
+  const counts = new Map<string, number>();
+  for (const v of values) if (v?.trim()) counts.set(v.trim(), (counts.get(v.trim()) ?? 0) + 1);
+  let best = '';
+  let bestCount = 0;
+  for (const [v, n] of counts) {
+    if (n > bestCount) {
+      best = v;
+      bestCount = n;
+    }
+  }
+  return best;
+}
+
 export function clearPincodeCache(): void {
   cache.clear();
 }
@@ -66,9 +83,11 @@ export async function lookupPincode(pin: string): Promise<PincodeLookup> {
       Status?: string;
       PostOffice?: { District?: string; State?: string }[] | null;
     }[];
-    const office = json?.[0]?.PostOffice?.[0];
-    if (json?.[0]?.Status === 'Success' && office?.District && office.State) {
-      value = { status: 'ok', city: office.District.trim(), state: office.State.trim() };
+    const offices = json?.[0]?.PostOffice ?? [];
+    const city = mostCommon(offices.map((o) => o.District));
+    const state = mostCommon(offices.map((o) => o.State));
+    if (json?.[0]?.Status === 'Success' && city && state) {
+      value = { status: 'ok', city, state };
     } else {
       value = { status: 'not_found' };
     }

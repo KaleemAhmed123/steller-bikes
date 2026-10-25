@@ -58,6 +58,15 @@ test('lookup returns the district as city and the state, and remembers the answe
   assert.equal(calls, 1); // second call came from the cache
 });
 
+test('a pincode shared by several districts uses the most common one, not the first listed', async () => {
+  clearPincodeCache();
+  // Shape of the real 208001 answer: rural Kanpur Dehat offices listed first, city offices more numerous.
+  const dehat = { District: 'Kanpur Dehat', State: 'Uttar Pradesh' };
+  const nagar = { District: 'Kanpur Nagar', State: 'Uttar Pradesh' };
+  reply = indiaPost([{ Status: 'Success', PostOffice: [dehat, dehat, nagar, nagar, nagar] }]);
+  assert.deepEqual(await lookupPincode('208001'), { status: 'ok', city: 'Kanpur Nagar', state: 'Uttar Pradesh' });
+});
+
 test('an unknown pincode is not_found; a broken API is unavailable (and retried soon)', async () => {
   clearPincodeCache();
   reply = indiaPost([{ Status: 'Error', PostOffice: null }]);
