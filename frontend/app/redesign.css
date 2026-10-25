@@ -2000,3 +2000,29 @@ a.rc-retailer:hover {
   margin: 6px 0 0;
   font-size: 12.5px;
 }
+
+/* ---- Responsive overflow fixes ------------------------------------------
+   1) The decorative blurred orb on cart/checkout/account pages hangs 6% past
+      the page's right edge, which made the whole page scroll sideways at every
+      width. `clip` (not `hidden`) trims it without making <main> a scroll
+      container, so sticky children keep working.
+   2) On very narrow phones the logo + tagline + four nav icons were wider than
+      the screen. Let the brand shrink, drop the tagline and tighten the gaps. */
+main {
+  overflow-x: clip;
+}
+.rc-brand,
+.rc-wordmark-words {
+  min-width: 0;
+}
+@media (max-width: 420px) {
+  .rc-header-inner {
+    gap: 10px;
+  }
+  .rc-nav {
+    gap: 12px;
+  }
+  .rc-wordmark-tagline {
+    display: none;
+  }
+}
