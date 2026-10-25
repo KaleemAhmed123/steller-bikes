@@ -17,6 +17,7 @@ import {
   moneyShort,
 } from '@/lib/api';
 import type { Address, DeliveryQuote, SavedAddress } from '@/lib/types';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 const EMPTY = { email: '', name: '', phone: '', line1: '', city: '', state: '', pin: '' };
 
@@ -212,7 +213,7 @@ export default function CheckoutPage() {
     }
   }
 
-  if (loading) return <p className="muted cart-status">Loading…</p>;
+  if (loading) return <PageSkeleton />;
   if (items.length === 0) {
     return (
       <div className="empty">

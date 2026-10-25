@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { adminApi } from '@/lib/api';
 import { offerLabel } from '@/lib/offers';
 import type { AdminCategory, AdminOfferType } from '@/lib/types';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 // The operational config for the shop (owner-only). Two parts share the one
 // settings document: payment toggles + storefront announcement, and the category
@@ -129,7 +130,7 @@ export default function AdminPlatform() {
   }
 
   if (error && !cfg) return <div className="notice error">{error}</div>;
-  if (!cfg) return <p className="muted">Loading…</p>;
+  if (!cfg) return <PageSkeleton />;
 
   const set = <K extends keyof Config>(key: K, value: Config[K]) => setCfg((c) => ({ ...(c as Config), [key]: value }));
 

@@ -5,6 +5,7 @@ import { adminApi } from '@/lib/api';
 import type { Product } from '@/lib/types';
 import { ProductForm } from '../../components/ProductForm';
 import { Notes } from '../../components/Notes';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -19,7 +20,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   if (error) return <div className="notice error">{error}</div>;
-  if (!product) return <p className="muted">Loading…</p>;
+  if (!product) return <PageSkeleton />;
 
   return (
     <div>

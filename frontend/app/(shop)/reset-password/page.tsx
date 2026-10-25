@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { accountApi } from '@/lib/api';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 function ResetForm() {
   const token = useSearchParams().get('token') ?? '';
@@ -67,7 +68,7 @@ function ResetForm() {
 export default function ResetPasswordPage() {
   return (
     <div className="auth-page">
-      <Suspense fallback={<div className="auth-card">Loading…</div>}>
+      <Suspense fallback={<div className="auth-card"><PageSkeleton rows={2} /></div>}>
         <ResetForm />
       </Suspense>
     </div>

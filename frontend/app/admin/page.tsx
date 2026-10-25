@@ -19,6 +19,7 @@ import {
 import { adminApi, money } from '@/lib/api';
 import type { DashboardData } from '@/lib/types';
 import { StatusDot } from './components/StatusDot';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 const RANGES: [string, string][] = [
   ['today', 'Today'],
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
   }, [load]);
 
   if (error) return <div className="notice error">{error}</div>;
-  if (!data) return <p className="muted">Loading…</p>;
+  if (!data) return <PageSkeleton />;
 
   const k = data.kpis;
   const revenueData = data.series.map((d) => ({ date: d.date.slice(5), revenue: Math.round(d.revenue / 100), orders: d.orders }));

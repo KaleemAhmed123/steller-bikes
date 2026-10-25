@@ -5,6 +5,7 @@ import { StickyNote } from 'lucide-react';
 import { adminApi, money } from '@/lib/api';
 import type { InventoryData } from '@/lib/types';
 import { Notes } from '../components/Notes';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function AdminInventory() {
   const [data, setData] = useState<InventoryData | null>(null);
@@ -37,7 +38,7 @@ export default function AdminInventory() {
   }
 
   if (error && !data) return <div className="notice error">{error}</div>;
-  if (!data) return <p className="muted">Loading…</p>;
+  if (!data) return <PageSkeleton />;
 
   // All variants are already loaded, so filtering is a plain client-side match —
   // no backend call. ponytail: fine while inventory loads everything in one go;

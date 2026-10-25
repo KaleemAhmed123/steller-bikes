@@ -9,6 +9,7 @@ import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
 import { StatusDot } from '../components/StatusDot';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 export default function AdminProducts() {
   const [q, setQ] = useState('');
@@ -49,7 +50,7 @@ export default function AdminProducts() {
   }
 
   if (error && products.length === 0) return <div className="notice error">{error}</div>;
-  if (loading && products.length === 0) return <p className="muted">Loading…</p>;
+  if (loading && products.length === 0) return <PageSkeleton />;
 
   return (
     <div>
