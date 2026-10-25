@@ -23,7 +23,7 @@ export function RailCarousel({
   accent,
   section,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   blurb?: string;
   cards: CardProduct[];

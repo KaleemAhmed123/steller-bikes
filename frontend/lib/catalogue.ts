@@ -33,6 +33,7 @@ export interface CardProduct {
   inStock: boolean;
   featured: boolean; // editorial "Staff picks" flag (from the backend)
   soldCount: number; // real units sold (0 when none)
+  offerTypes: string[]; // offer keys, e.g. ['diwali'] (empty when none)
 }
 
 export function toCard(p: Product): CardProduct {
@@ -64,6 +65,7 @@ export function toCard(p: Product): CardProduct {
     inStock: p.variants.some((v) => v.stock > 0),
     featured: p.featured ?? false,
     soldCount: p.soldCount ?? 0,
+    offerTypes: p.offerTypes ?? [],
   };
 }
 
@@ -98,18 +100,10 @@ function catTiles(cards: CardProduct[]): CatTile[] {
   });
 }
 
-// Everything the homepage needs, fetched once and derived here.
+// What the homepage needs: one tile per real category (the rest of the homepage
+// is admin-driven content, see the Site content page).
 export interface HomeData {
-  categories: string[];
-  total: number;
   tiles: CatTile[];
-  newArrivals: CardProduct[];
-  featured: CardProduct[];
-  budget: CardProduct[];
-  offers: CardProduct[];
-  kids: CardProduct[];
-  accessories: CardProduct[];
-  heroNew: CardProduct | null; // the single newest, for the editorial lead
 }
 
 // Dedicated collection pages (the rails that moved off the trimmed homepage).
@@ -178,24 +172,8 @@ export async function loadDerivedCollection(slug: DerivedCollectionSlug): Promis
 }
 
 export async function loadHomeData(): Promise<HomeData> {
-  // limit=100 (the API max) so the homepage rails + category tiles derive from the
-  // whole small catalogue, not just the first paged slice. ponytail: a shop with
-  // >100 products needs dedicated rail endpoints; fine until then.
-  const { products, categories } = await getProducts({}, { limit: 100 });
-  const cards = products.map(toCard); // API order = newest-first
-
-  const byCat = (cat: string) => cards.filter((c) => c.category.toLowerCase() === cat.toLowerCase());
-
-  return {
-    categories,
-    total: cards.length,
-    tiles: catTiles(cards),
-    newArrivals: cards.slice(0, 8),
-    heroNew: cards[0] ?? null,
-    featured: cards.filter((c) => c.featured),
-    budget: sortCards(cards, 'price-asc').slice(0, 8),
-    offers: cards.filter((c) => c.hasOffer),
-    kids: byCat('Kids'),
-    accessories: byCat('Accessories'),
-  };
+  // limit=100 (the API max) so the tiles derive from the whole small catalogue.
+  // ponytail: a shop with >100 products needs a dedicated categories endpoint.
+  const { products } = await getProducts({}, { limit: 100 });
+  return { tiles: catTiles(products.map(toCard)) };
 }

@@ -16,17 +16,18 @@ import type {
   StaffMe,
   StoreSettings,
   AdminCategory,
+  AdminOfferType,
 } from './types';
 
 // The Express API base URL. Public (not a secret) so it works in both the
 // server-render and the browser. Falls back to local dev if unset.
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
-type ListResult = { products: Product[]; categories: string[]; pagination: PageMeta };
+type ListResult = { products: Product[]; categories: string[]; offerTypes: string[]; pagination: PageMeta };
 
 // Which URL search params we forward to the API. `sort` is now applied server-side
 // (so paging is globally correct), alongside the catalogue filters.
-const FILTER_KEYS = ['category', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
+const FILTER_KEYS = ['category', 'offerType', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
 
 // Fetch one page of the (optionally filtered + sorted) catalogue + the category list.
 // cache:'no-store' = always fresh, so stock/price are never stale. `opts.page` is
@@ -51,6 +52,7 @@ export async function getProducts(
   return {
     products: (json.data ?? []) as Product[],
     categories: (json.categories ?? []) as string[],
+    offerTypes: (json.offerTypes ?? []) as string[],
     pagination: json.pagination as PageMeta,
   };
 }
@@ -67,7 +69,10 @@ export async function getProduct(slug: string): Promise<Product | null> {
   return json.data as Product;
 }
 
-const EMPTY_SETTINGS: StoreSettings = {
+// Blank store, used when the API is unreachable (and as the admin forms' initial
+// state). Site-content copy is NOT repeated here — the API merges the real defaults;
+// blank fields simply hide their line, the offer rail stays off.
+export const EMPTY_SETTINGS: StoreSettings = {
   addressLine1: '',
   city: '',
   state: '',
@@ -80,6 +85,18 @@ const EMPTY_SETTINGS: StoreSettings = {
   codEnabled: true,
   onlinePaymentEnabled: true,
   announcement: '',
+  hero: {
+    statValue: '',
+    statLabel: '',
+    tagline: '',
+    ctaLabel: '',
+    ctaHref: '',
+    promoTitle: '',
+    promoSubtitle: '',
+    promoHref: '',
+  },
+  offerSection: { enabled: false, title: '', subtitle: '', offerTypes: [] },
+  retailers: [],
 };
 
 // Public shop details for the footer/showroom. Never throws — falls back to the
@@ -286,6 +303,14 @@ export const adminApi = {
       apiFetch<AdminCategory[]>('/api/admin/categories', { method: 'PATCH', body: JSON.stringify({ from, to }) }),
     remove: (name: string) =>
       apiFetch<AdminCategory[]>(`/api/admin/categories/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+  },
+  // Offer types — list readable by managers (product form checkboxes); add/delete owner only.
+  offerTypes: {
+    list: () => apiFetch<AdminOfferType[]>('/api/admin/offer-types'),
+    add: (name: string) =>
+      apiFetch<AdminOfferType[]>('/api/admin/offer-types', { method: 'POST', body: JSON.stringify({ name }) }),
+    remove: (key: string) =>
+      apiFetch<AdminOfferType[]>(`/api/admin/offer-types/${encodeURIComponent(key)}`, { method: 'DELETE' }),
   },
   // Operator notes (owner + manager). refId omitted → by type or all.
   notes: {

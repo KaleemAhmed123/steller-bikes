@@ -7,6 +7,7 @@ import { AddToCart } from '../../components/AddToCart';
 import { ProductGallery } from '../../components/ProductGallery';
 import { WishlistButton } from '../../components/WishlistButton';
 import { ProductCard } from '../../components/ProductCard';
+import { OfferTags } from '../../components/OfferTags';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -50,15 +51,17 @@ export default async function ProductPage({ params }: Params) {
       <article className="rc-detail">
         <div className="rc-detail-media">
           <ProductGallery image={product.image} images={product.images} name={product.name} />
+          <OfferTags types={product.offerTypes ?? []} linked />
         </div>
 
+        {/* Buy panel: only what's needed to choose and buy. Price, options, quantity,
+            Add to cart and the stock line all live inside <AddToCart>. */}
         <div className="rc-detail-info">
           <div className="rc-detail-top">
             <span className="rc-card-cat">{product.category}</span>
             <WishlistButton slug={product.slug} name={product.name} variant="inline" />
           </div>
           <h1 className="rc-detail-title">{product.name}</h1>
-          <p className="rc-detail-desc">{product.description}</p>
 
           <AddToCart
             variants={product.variants.map((v) => ({
@@ -71,12 +74,20 @@ export default async function ProductPage({ params }: Params) {
               lowStock: v.lowStock,
             }))}
           />
+        </div>
+      </article>
 
-          <p className="rc-detail-note">
-            Stock and price are tracked per option above. Photos are illustrative sample images.
-          </p>
+      {/* Details band: description on the left, specifications on the right
+          (stacked on phones). */}
+      <section className={`rc-detail-more ${specs.length === 0 ? 'is-single' : ''}`} aria-label="Product details">
+        <div className="rc-detail-more-col">
+          <h2 className="rc-detail-more-title">Description</h2>
+          <p className="rc-detail-desc">{product.description}</p>
+        </div>
 
-          {specs.length > 0 && (
+        {specs.length > 0 && (
+          <div className="rc-detail-more-col">
+            <h2 className="rc-detail-more-title">Specifications</h2>
             <table className="rc-specs">
               <caption className="rc-sr-only">Specifications</caption>
               <tbody>
@@ -88,9 +99,10 @@ export default async function ProductPage({ params }: Params) {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-      </article>
+          </div>
+        )}
+        <p className="rc-detail-note">Stock and price are tracked per option above.</p>
+      </section>
 
       {related.length > 0 && (
         <section className="rc-related">
