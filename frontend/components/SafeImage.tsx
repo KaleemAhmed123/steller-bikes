@@ -10,7 +10,9 @@ import { PLACEHOLDER, safeSrc } from '@/lib/img';
 //  2. onError swaps to the placeholder if an allowed image still fails to load
 //     at runtime (e.g. a Cloudinary file was deleted).
 export function SafeImage({ src, alt, ...rest }: ImageProps) {
-  const initial = typeof src === 'string' ? safeSrc(src) : src;
-  const [current, setCurrent] = useState(initial);
-  return <Image {...rest} alt={alt} src={current} onError={() => setCurrent(PLACEHOLDER)} />;
+  const wanted = typeof src === 'string' ? safeSrc(src) : src;
+  // Remember WHICH src failed (not just "something failed"), so when the parent
+  // passes a different src later (e.g. the gallery switching variant) we show it.
+  const [failed, setFailed] = useState<typeof wanted | null>(null);
+  return <Image {...rest} alt={alt} src={failed === wanted ? PLACEHOLDER : wanted} onError={() => setFailed(wanted)} />;
 }
