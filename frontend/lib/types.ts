@@ -8,6 +8,13 @@ export interface PageMeta {
   hasMore: boolean;
 }
 
+// One photo or video of a variant. `position` is the display order (0 = first).
+export interface MediaItem {
+  url: string; // /path or https link
+  type: 'image' | 'video';
+  position: number;
+}
+
 export interface Variant {
   _id: string;
   sku: string;
@@ -17,6 +24,7 @@ export interface Variant {
   compareAt: number;
   stock: number;
   lowStock: number;
+  media?: MediaItem[]; // this variant's own gallery (absent/empty = "No Image Available")
 }
 
 export interface Product {

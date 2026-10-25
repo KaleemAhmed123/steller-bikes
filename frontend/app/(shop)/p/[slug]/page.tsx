@@ -5,6 +5,7 @@ import { getProduct, getProducts } from '@/lib/api';
 import { toCard } from '@/lib/catalogue';
 import { AddToCart } from '../../components/AddToCart';
 import { ProductGallery } from '../../components/ProductGallery';
+import { VariantSelection } from '../../components/VariantSelection';
 import { WishlistButton } from '../../components/WishlistButton';
 import { ProductCard } from '../../components/ProductCard';
 import { OfferTags } from '../../components/OfferTags';
@@ -27,6 +28,8 @@ export default async function ProductPage({ params }: Params) {
   if (!product) notFound();
 
   const specs = Object.entries(product.specs ?? {});
+  // Start on the first option that's in stock (same rule the buy panel used before).
+  const initialVariant = product.variants.find((v) => v.stock > 0) ?? product.variants[0];
 
   // Honest recommendations: real products in the same category (not a faked
   // "frequently bought together"). Omitted entirely if there are none.
@@ -48,9 +51,13 @@ export default async function ProductPage({ params }: Params) {
         <span aria-current="page">{product.name}</span>
       </nav>
 
+      <VariantSelection initialId={initialVariant?._id ?? ''}>
       <article className="rc-detail">
         <div className="rc-detail-media">
-          <ProductGallery image={product.image} images={product.images} name={product.name} />
+          <ProductGallery
+            variants={product.variants.map((v) => ({ variantId: v._id, media: v.media ?? [] }))}
+            name={product.name}
+          />
           <OfferTags types={product.offerTypes ?? []} linked />
         </div>
 
@@ -76,6 +83,7 @@ export default async function ProductPage({ params }: Params) {
           />
         </div>
       </article>
+      </VariantSelection>
 
       {/* Details band: description on the left, specifications on the right
           (stacked on phones). */}
