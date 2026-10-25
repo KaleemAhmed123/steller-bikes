@@ -18,7 +18,7 @@ export function HeroVideo({ hero }: { hero: HeroContent }) {
   return (
     <section className="rc-hero" aria-label="Stellar Bikes">
       <h1 className="rc-sr-only">Stellar Bikes — 35 years of mastery, affordable bicycles in Kanpur</h1>
-      <HeroBackdropVideo />
+      <HeroBackdropVideo desktop={hero.videoDesktop} mobile={hero.videoMobile} />
       <div className="rc-hero-scrim" aria-hidden="true" />
 
       <div className="rc-hero-overlay">

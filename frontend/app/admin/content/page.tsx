@@ -5,6 +5,7 @@ import { adminApi, EMPTY_SETTINGS } from '@/lib/api';
 import { offerLabel } from '@/lib/offers';
 import type { HeroContent, OfferSection, Retailer } from '@/lib/types';
 import { ImageField } from '../components/ImageField';
+import { VideoField } from '../components/VideoField';
 
 // "Site content" (owner-only): the storefront copy that used to need a developer —
 // the text over the hero video, the homepage offer rail, and the Authorized
@@ -112,6 +113,29 @@ export default function AdminContent() {
               <input value={c.hero[key]} placeholder={placeholder} onChange={(e) => setHero(key, e.target.value)} />
             </label>
           ))}
+        </div>
+
+        <h2 className="admin-h2" style={{ marginTop: 32 }}>
+          Hero video
+        </h2>
+        <p className="muted">
+          The video behind the hero text. It plays once and stops on its last frame. Upload a video for wide screens and
+          one for phones, then press Save. Remove one to go back to the video that ships with the site. If you only set
+          one, it is used on both screens.
+        </p>
+        <div className="admin-video-grid">
+          <VideoField
+            label="Wide screens (desktop, tablet)"
+            help="Landscape, 16:9 works best. Keep it under a few MB (e.g. 1080p, 10–20 seconds)."
+            value={c.hero.videoDesktop}
+            onChange={(v) => setHero('videoDesktop', v)}
+          />
+          <VideoField
+            label="Phones"
+            help="Portrait, about 9:16. Keep it small — phones may be on mobile data."
+            value={c.hero.videoMobile}
+            onChange={(v) => setHero('videoMobile', v)}
+          />
         </div>
 
         <h2 className="admin-h2" style={{ marginTop: 32 }}>

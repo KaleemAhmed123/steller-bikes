@@ -37,6 +37,8 @@ const settingsSchema = new Schema(
       promoTitle: String,
       promoSubtitle: String,
       promoHref: String,
+      videoDesktop: String,
+      videoMobile: String,
     },
     offerSection: {
       enabled: Boolean,

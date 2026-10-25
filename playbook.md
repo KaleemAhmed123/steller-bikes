@@ -125,6 +125,14 @@ delivery). If you cancel an order after an advance was paid, refund it from the 
 **COD orders:** marking an order **delivered** now marks it **paid** automatically. The order page also
 has a **Payment** card (owner only) to mark COD cash received / refunds by hand.
 
+### 1h. Changing the homepage hero video (no developer needed)
+
+**Admin → Site content → Hero video.** Upload one video for wide screens and one for phones (or paste an
+`https://` link), press **Save**. **Remove** puts back the video that ships with the site. Set only one and
+it is used on both screens. The video plays once and stops on its last frame. Uploading needs the
+Cloudinary values from 1b (preset must allow videos; cap = `NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB`, default
+50 MB). Keep it small — a few MB — so the homepage stays fast on mobile data.
+
 ### 1g. Delivery charges (Kanpur flat fee) and pincode autofill
 
 - **Inside Kanpur:** every order pays a flat **Fitted Delivery** fee (default **₹299**, on every product).
