@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getOrder, money } from '@/lib/api';
+import { getOrder, money, syncAdvancePayments } from '@/lib/api';
 import type { Order } from '@/lib/types';
 
 // The happy-path fulfillment stages, in order. `delivery_failed` and `cancelled`
@@ -62,6 +62,8 @@ export default function OrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [checking, setChecking] = useState(false);
+  const [checkError, setCheckError] = useState('');
 
   useEffect(() => {
     getOrder(params.id)
@@ -69,6 +71,26 @@ export default function OrderPage() {
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  // Razorpay sends the customer back here with ?razorpay_payment_link_status=… after they
+  // pay. We never trust that query string — it only tells us to ASK the server, which
+  // asks Razorpay what really happened and returns the real order.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('razorpay_payment_link_status')) return;
+    syncAdvancePayments(params.id).then(setOrder).catch(() => undefined);
+  }, [params.id]);
+
+  async function checkPayment() {
+    setChecking(true);
+    setCheckError('');
+    try {
+      setOrder(await syncAdvancePayments(params.id));
+    } catch (e) {
+      setCheckError(e instanceof Error ? e.message : 'Could not check just now. Please try again in a minute.');
+    } finally {
+      setChecking(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -200,6 +222,40 @@ export default function OrderPage() {
           )}
         </div>
       </div>
+
+      {/* Advance payment(s) the agent asked for (e.g. the Delhivery delivery charge). */}
+      {(order.advancePayments ?? [])
+        .filter((a) => a.status === 'created' || a.status === 'paid')
+        .map((a) => (
+          <div key={a._id} className={`order-advance ${a.status === 'paid' ? 'is-paid' : ''}`}>
+            {a.status === 'paid' ? (
+              <>
+                <h3>Advance payment received ✓</h3>
+                <p>
+                  We received your advance of <strong>{money(a.amount)}</strong>
+                  {a.paidAt && <> on {new Date(a.paidAt).toLocaleDateString('en-IN')}</>}. Thank you!
+                </p>
+              </>
+            ) : (
+              <>
+                <h3>Advance payment requested: {money(a.amount)}</h3>
+                <p className="muted">
+                  {a.note || 'Our agent has asked for this advance after speaking with you.'} Pay securely online
+                  with UPI, card or net banking.
+                </p>
+                <div className="order-advance-actions">
+                  <a href={a.shortUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                    Pay {money(a.amount)} now
+                  </a>
+                  <button type="button" className="btn-secondary" onClick={checkPayment} disabled={checking}>
+                    {checking ? 'Checking…' : 'I’ve paid — refresh'}
+                  </button>
+                </div>
+                {checkError && <p className="muted">{checkError}</p>}
+              </>
+            )}
+          </div>
+        ))}
 
       <p className="muted order-note">
         {needsRefund
