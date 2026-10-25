@@ -22,6 +22,10 @@ const settingsSchema = new Schema(
     onlinePaymentEnabled: { type: Boolean, default: true }, // Razorpay on/off (on top of env config)
     announcement: { type: String, default: '' }, // storefront banner line ('' = hidden)
     offerTypes: { type: [String], default: [] }, // master list of offer-type keys (Platform tab)
+    // Delivery rules (Settings tab). No defaults here on purpose: they live in
+    // lib/delivery.ts and are applied on read, so there is one copy of the numbers.
+    kanpurPincodes: { type: [String], default: undefined }, // pincodes charged the flat fee
+    kanpurDeliveryFee: { type: Number, min: 0 }, // paise, flat fee inside Kanpur
     // Site content (Site content tab). No defaults here on purpose: they live in
     // lib/siteContent.ts and are merged on read, so there is one copy of the copy.
     hero: {
