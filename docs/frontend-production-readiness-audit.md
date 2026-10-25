@@ -1,4 +1,4 @@
-# Frontend Production-Readiness Audit — Stellar Bikes (Raju Cycles v2)
+# Frontend Production-Readiness Audit — Stellar Bikes (Stellar Bikes v2)
 
 - **Date:** 2026-10-21
 - **Branch:** `main`

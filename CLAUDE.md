@@ -1,4 +1,4 @@
-# Raju Cycles — project rules for Claude
+# Stellar Bikes — project rules for Claude
 
 Online store **and** back-office for a real cycle shop in Kanpur, UP, India. **One idea:**
 a store the owner can actually run and *maintain* — boring, lean, on a stack a normal Node

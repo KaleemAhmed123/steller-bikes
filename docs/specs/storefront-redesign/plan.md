@@ -9,7 +9,7 @@
 
 ## 2. What you asked for (from the brief + grill answers)
 
-A complete revamp of the customer-facing storefront for **Raju Cycles**:
+A complete revamp of the customer-facing storefront for **Stellar Bikes**:
 
 - A **cinematic, scroll-driven 3D bicycle hero** that makes visitors pause, with a camera that
   moves deliberately as they scroll and strong oversized typography.
@@ -32,7 +32,7 @@ A complete revamp of the customer-facing storefront for **Raju Cycles**:
    pinned sequence + reveals.
 2. **Data:** rewrite the seed to ~24 clearly-sample bikes across Mountain / City / Road / Kids +
    a few Accessories, with real `compareAt` discounts and multi-variant products. Data only.
-3. **Brand name:** **Raju Cycles** (matches the whole existing app).
+3. **Brand name:** **Stellar Bikes** (matches the whole existing app).
 4. **Scope:** homepage + catalogue + product detail + shared nav/footer/cards get the full new
    system; cart/checkout/account get a light token refresh; **admin untouched**.
 5. **Motion:** add **GSAP + ScrollTrigger** on top of R3F.

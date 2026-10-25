@@ -1,4 +1,4 @@
-# Raju Cycles
+# Stellar Bikes
 
 Online store **and** owner back-office for a cycle shop in Kanpur, UP, India. A rebuild of the v1
 prototype onto a maintainable stack — **Next.js (frontend) + Node/Express + MongoDB** — carrying over

@@ -21,7 +21,7 @@ design system (ElevenLabs + Rapha/Aesop, "Stellar Bikes" brand) does not change.
 
 ## 3. Open questions (answered)
 
-1. **Brand name** — storefront shows "Stellar Bikes" everywhere, repo is "Raju Cycles".
+1. **Brand name** — storefront shows "Stellar Bikes" everywhere, repo is "Stellar Bikes".
    → **Answer: keep "Stellar Bikes".** It is consistent across layout, metadata, footer
    (`stellarbikes.in`), and the Razorpay popup. Treated as the go-to-market name. No rename.
 2. **What `tracking` means** — courier AWB (air waybill = a courier's parcel number) or free text?
@@ -97,7 +97,7 @@ price/stock/payment rule.
 - **2026-10-19** — Fast-follow: order-confirmation email now points to `/account` (not a per-order
   deep-link — the order page is cookie/session-scoped, so a cold email click would 404). Touches
   `backend/src/lib/email.ts` (real-email task's file). Backend typecheck + email tests green.
-  **Flagged:** the receipt still signs off "Raju Cycles" / "Your Raju Cycles order" while the
+  **Flagged:** the receipt still signs off "Stellar Bikes" / "Your Stellar Bikes order" while the
   storefront brand is "Stellar Bikes" — left as-is pending the brand-name decision (open question 1).
 - **2026-10-19** — Brand decision taken as **Stellar Bikes** (every customer-facing surface already
   shows it). Aligned all customer-facing emails: order receipt subject + sign-off (`email.ts`),

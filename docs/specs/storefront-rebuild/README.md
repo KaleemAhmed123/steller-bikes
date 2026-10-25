@@ -6,7 +6,7 @@
 
 ## One-line pitch
 
-An online store **and** owner back-office for Raju Cycles (a real cycle shop in Kanpur, UP), rebuilt
+An online store **and** owner back-office for Stellar Bikes (a real cycle shop in Kanpur, UP), rebuilt
 on a stack the owner can maintain — **Next.js (frontend) + Node/Express + MongoDB** — carrying over the proven,
 hard-won design from the v1 prototype instead of reinventing it.
 

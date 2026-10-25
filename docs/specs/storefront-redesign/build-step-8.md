@@ -4,7 +4,7 @@
 **Date:** 2026-10-19.
 
 This step does three things from one working session: (1) fixes a first-add-to-cart connection
-reset, (2) rebrands the storefront from "Raju Cycles" to **Stellar Bikes** with the real logo + the
+reset, (2) rebrands the storefront from "Stellar Bikes" to **Stellar Bikes** with the real logo + the
 owner's contact, and (3) overhauls the hero + second 3D moment for a faster, livelier first visit.
 
 ---
@@ -40,7 +40,7 @@ Verified: the changed server boots (`Connected to MongoDB` → `API listening` �
   hero's electric blue (`--rc-hero #3d82ff`) so it matches the site. Lives at
   [`frontend/public/brand/stellar-logo.png`](../../../frontend/public/brand/stellar-logo.png).
   The header/footer `Wordmark` now renders this image instead of the old code-drawn SVG mark.
-- **Name:** every user-facing "Raju Cycles" → "Stellar Bikes" — browser-tab titles (home, shop,
+- **Name:** every user-facing "Stellar Bikes" → "Stellar Bikes" — browser-tab titles (home, shop,
   product, collection, not-found), header/footer, hero + section labels, Razorpay payment name, and
   the admin header/login. (Two CSS **comments** still say "Raju"; not user-facing, left alone.)
 - **Contact:** footer "Store" column shows **Saleem** + a tappable **+91 80901 09621**; the copyright

@@ -1,6 +1,6 @@
-# Raju Cycles — Project Context
+# Stellar Bikes — Project Context
 
-> **Living doc.** The shared mental model for the Raju Cycles rebuild — written so an AI agent gets
+> **Living doc.** The shared mental model for the Stellar Bikes rebuild — written so an AI agent gets
 > the full picture and a new teammate or the owner can follow what it is and why it's shaped this
 > way. Nothing is built yet; this describes the target.
 >
