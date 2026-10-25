@@ -18,6 +18,7 @@ import { notesRouter } from './routes/notes.js';
 import { paymentsRouter } from './routes/payments.js';
 import { advanceAdminRouter } from './routes/advancePayments.js';
 import { webhooksRouter } from './routes/webhooks.js';
+import { deliveryRouter } from './routes/delivery.js';
 import { guestCart } from './lib/guest.js';
 import { requireAuth } from './lib/auth.js';
 
@@ -57,6 +58,7 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/products', productsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/delivery', deliveryRouter);
 // The cart, checkout and orders are keyed to a per-browser guest cookie.
 app.use('/api/cart', guestCart, cartRouter);
 app.use('/api/checkout', guestCart, checkoutRouter);

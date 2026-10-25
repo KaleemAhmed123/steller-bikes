@@ -294,6 +294,9 @@ const settingsSchema = z.object({
   hours: z.string().trim().max(200),
   deliveryPolicy: z.string().trim().max(500),
   email: z.string().trim().max(120),
+  // Delivery rules: pincodes charged the flat Fitted Delivery fee, and that fee in paise.
+  kanpurPincodes: z.array(z.string().trim().regex(/^\d{6}$/, 'Pincodes must be 6 digits.')).min(1, 'Keep at least one pincode.').max(200),
+  kanpurDeliveryFee: z.coerce.number().int().min(0).max(1_000_000),
   // Operational config (Platform tab). `categories` is NOT here — it is managed
   // by the dedicated category endpoints, so a settings save can never touch it.
   codEnabled: z.boolean(),
