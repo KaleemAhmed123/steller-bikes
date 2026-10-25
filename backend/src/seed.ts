@@ -183,7 +183,10 @@ async function seed(): Promise<void> {
     seen[p.category] = n + 1;
     const daysAgo = (FRESH[p.category] ?? 15) + n;
     const when = new Date(now - daysAgo * DAY);
-    return { ...p, featured: FEATURED.has(p.slug), offerTypes: DIWALI.has(p.slug) ? ['diwali'] : [], status: 'published', createdAt: when, updatedAt: when };
+    // Each variant gets the product photo as its first (and only) media item, so the sample shop
+    // shows photos instead of the "No Image Available" box.
+    const variants = p.variants.map((x) => ({ ...x, media: [{ url: p.image, type: 'image', position: 0 }] }));
+    return { ...p, variants, featured: FEATURED.has(p.slug), offerTypes: DIWALI.has(p.slug) ? ['diwali'] : [], status: 'published', createdAt: when, updatedAt: when };
   });
 
   await ProductModel.deleteMany({ slug: { $in: catalogue.map((p) => p.slug) } });

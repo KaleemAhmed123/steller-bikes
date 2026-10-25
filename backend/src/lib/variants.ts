@@ -21,7 +21,7 @@ export async function loadVariantMap(variantIds: string[]): Promise<Map<string, 
         variantId: id,
         name: p.name,
         slug: p.slug,
-        image: p.image,
+        image: v.media?.find((m) => m.type === 'image')?.url ?? p.image, // cart thumbnail only; the product page never borrows p.image
         sku: v.sku,
         size: v.size,
         color: v.color,
