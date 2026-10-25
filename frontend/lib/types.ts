@@ -72,6 +72,16 @@ export interface ProductInput {
   variants: VariantInput[];
 }
 
+// What the checkout learns when the customer types a pincode (GET /api/delivery/:pin).
+export interface DeliveryQuote {
+  pin: string;
+  kanpur: boolean; // inside the flat-fee area
+  fee: number; // paise; 0 outside Kanpur (an agent agrees the charge by phone)
+  lookup: 'ok' | 'not_found' | 'unavailable'; // did the pincode directory answer?
+  city: string; // '' unless lookup === 'ok'
+  state: string;
+}
+
 // Public shop details shown in the storefront footer/showroom. Every field can
 // be '' — the UI falls back to an honest "coming soon" when blank.
 export interface StoreSettings {
@@ -88,6 +98,9 @@ export interface StoreSettings {
   codEnabled: boolean;
   onlinePaymentEnabled: boolean;
   announcement: string;
+  // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
+  // Shown in the delivery messages — the server still prices every order itself.
+  kanpurDeliveryFee: number;
   // Admin-editable site content (Site content tab). Defaults are merged by the API.
   hero: HeroContent;
   offerSection: OfferSection;

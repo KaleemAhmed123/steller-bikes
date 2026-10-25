@@ -3,6 +3,7 @@ import type {
   CartView,
   Customer,
   DashboardData,
+  DeliveryQuote,
   InventoryData,
   Note,
   NoteType,
@@ -85,6 +86,7 @@ export const EMPTY_SETTINGS: StoreSettings = {
   codEnabled: true,
   onlinePaymentEnabled: true,
   announcement: '',
+  kanpurDeliveryFee: 29900,
   hero: {
     statValue: '',
     statLabel: '',
@@ -172,7 +174,7 @@ export async function checkout(payload: {
 // Razorpay hands back. The server decrements stock + creates the PAID order only
 // after verify succeeds.
 
-export async function createRazorpayOrder(): Promise<{
+export async function createRazorpayOrder(pin: string): Promise<{
   razorpayOrderId: string;
   amount: number;
   keyId: string;
@@ -181,6 +183,8 @@ export async function createRazorpayOrder(): Promise<{
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
+    // The server prices the delivery fee from this pincode; we never send an amount.
+    body: JSON.stringify({ pin }),
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error?.message ?? 'Could not start online payment');
@@ -451,6 +455,27 @@ export const accountApi = {
 };
 
 // Format paise (integers) as Indian rupees, e.g. 2499900 -> "₹24,999.00".
+// City/state to autofill and the delivery fee for a pincode. Never throws: a failed
+// lookup just means the customer types city/state themselves.
+export async function getDelivery(pin: string, signal?: AbortSignal): Promise<DeliveryQuote | null> {
+  try {
+    const res = await fetch(`${BASE}/api/delivery/${encodeURIComponent(pin)}`, { signal });
+    if (!res.ok) return null;
+    return (await res.json()).data as DeliveryQuote;
+  } catch {
+    return null;
+  }
+}
+
+// "₹299" for whole rupees, "₹1,250.50" otherwise — for copy where ".00" is noise.
+export function moneyShort(paise: number): string {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: paise % 100 === 0 ? 0 : 2,
+  }).format(paise / 100);
+}
+
 export function money(paise: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
