@@ -57,9 +57,16 @@ export default function AdminProducts() {
         <h1 className="admin-h1">Products</h1>
         <Link href="/admin/products/new" className="btn-primary">
           <Plus aria-hidden strokeWidth={2} />
-          New product
+          Add product
         </Link>
       </div>
+
+      <p className="muted">
+        To add a product, click <strong>Add product</strong>: fill in the name, category and description, add a main
+        photo, then add at least one option (size + colour with its price and stock) — open “Photos &amp; videos”
+        under an option to give it its own pictures. Set <strong>Status</strong> to <strong>Published</strong> to make
+        it visible in the shop; <strong>Draft</strong> keeps it hidden.
+      </p>
 
       <div className="admin-filters">
         <input placeholder="Search name / slug / category" value={q} onChange={(e) => setQ(e.target.value)} />
