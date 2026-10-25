@@ -2500,3 +2500,29 @@ h3 {
 .admin-advance-form .admin-advance-note input {
   max-width: none;
 }
+
+/* ---- Customer order page: advance payment requested / received ---------- */
+.order-advance {
+  border: 1.5px solid var(--rc-gold, #f4a522);
+  background: #fff8ea;
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin: 18px 0;
+}
+.order-advance.is-paid {
+  border-color: #2e7d4f;
+  background: #f0faf4;
+}
+.order-advance h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.order-advance p {
+  margin: 4px 0;
+}
+.order-advance-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
