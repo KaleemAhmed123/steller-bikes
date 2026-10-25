@@ -9,6 +9,7 @@ import { requirePermission, type ActorStaff } from '../lib/auth.js';
 import { transitionOrder, TransitionError, TRANSITIONS } from '../lib/fulfillment.js';
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
+import { siteContentShape, toOfferKey, withSiteContent } from '../lib/siteContent.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 import { parsePagination, pageMeta } from '../lib/pagination.js';
@@ -212,6 +213,11 @@ adminRouter.post('/products', requirePermission('products.manage'), async (req, 
       res.status(400).json({ error: { message: parsed.error.issues[0]?.message ?? 'Check the product details.' } });
       return;
     }
+    const badTag = await firstUnknownOfferType(parsed.data.offerTypes);
+    if (badTag) {
+      res.status(400).json({ error: { message: `“${badTag}” isn’t an offer type. Add it on the Platform page first.` } });
+      return;
+    }
     const product = await ProductModel.create(parsed.data);
     res.status(201).json({ data: product.toObject() });
   } catch (err) {
@@ -233,6 +239,11 @@ adminRouter.patch('/products/:id', requirePermission('products.manage'), async (
     const parsed = productUpdateSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: { message: parsed.error.issues[0]?.message ?? 'Check the product details.' } });
+      return;
+    }
+    const badTag = await firstUnknownOfferType(parsed.data.offerTypes);
+    if (badTag) {
+      res.status(400).json({ error: { message: `“${badTag}” isn’t an offer type. Add it on the Platform page first.` } });
       return;
     }
     const product = await ProductModel.findByIdAndUpdate(req.params.id, parsed.data, {
@@ -288,13 +299,15 @@ const settingsSchema = z.object({
   codEnabled: z.boolean(),
   onlinePaymentEnabled: z.boolean(),
   announcement: z.string().trim().max(300),
+  // Site content tab (hero text, offer rail, retailers) — rules + defaults in lib/siteContent.ts.
+  ...siteContentShape,
 });
 
 // GET /api/admin/settings — current shop details (empty object if unset).
 adminRouter.get('/settings', requirePermission('settings.manage'), async (_req, res, next) => {
   try {
     const doc = await SettingsModel.findOne().lean();
-    res.json({ data: doc ?? {} });
+    res.json({ data: withSiteContent(doc) }); // defaults merged so the form is never blank
   } catch (err) {
     next(err);
   }
@@ -320,7 +333,7 @@ adminRouter.patch('/settings', requirePermission('settings.manage'), async (req,
       }
     }
     const doc = await SettingsModel.findOneAndUpdate({}, { $set: parsed.data }, { new: true, upsert: true }).lean();
-    res.json({ data: doc });
+    res.json({ data: withSiteContent(doc) });
   } catch (err) {
     next(err);
   }
@@ -430,6 +443,86 @@ adminRouter.delete('/categories/:name', requirePermission('settings.manage'), as
     }
     await SettingsModel.findOneAndUpdate({}, { $pull: { categories: name } });
     res.json({ data: await categoriesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// --- Offer types (config-driven, like categories) ---------------------------
+// The master list lives on the settings doc; a product's `offerTypes` tags must come
+// from it. The list the admin sees is the UNION of stored + in-use keys, so nothing
+// is ever orphaned. No rename (ponytail: delete + re-tag if a key must change).
+
+async function storedOfferTypes(): Promise<string[]> {
+  const doc = await SettingsModel.findOne().lean();
+  return doc?.offerTypes ?? [];
+}
+
+// First tag in `tags` that is not in the master list, or undefined if all are fine.
+async function firstUnknownOfferType(tags: string[] | undefined): Promise<string | undefined> {
+  if (!tags?.length) return undefined;
+  const known = new Set(await storedOfferTypes());
+  return tags.find((t) => !known.has(t));
+}
+
+async function offerTypesWithCounts(): Promise<{ key: string; count: number }[]> {
+  const [stored, grouped] = await Promise.all([
+    storedOfferTypes(),
+    ProductModel.aggregate<{ _id: string; count: number }>([
+      { $unwind: '$offerTypes' },
+      { $group: { _id: '$offerTypes', count: { $sum: 1 } } },
+    ]),
+  ]);
+  const counts = new Map(grouped.map((g) => [g._id, g.count]));
+  return [...new Set<string>([...stored, ...counts.keys()])]
+    .filter((k) => k)
+    .sort((a, b) => a.localeCompare(b))
+    .map((key) => ({ key, count: counts.get(key) ?? 0 }));
+}
+
+// GET /api/admin/offer-types — the product form's checkboxes + the Platform manager.
+adminRouter.get('/offer-types', requirePermission('products.manage'), async (_req, res, next) => {
+  try {
+    res.json({ data: await offerTypesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/admin/offer-types — add one (owner only). The admin types a name
+// ("New Year"); we store the key ("new-year").
+adminRouter.post('/offer-types', requirePermission('settings.manage'), async (req, res, next) => {
+  try {
+    const parsed = z.object({ name: z.string().trim().min(1).max(60) }).safeParse(req.body);
+    const key = parsed.success ? toOfferKey(parsed.data.name) : '';
+    if (!key) {
+      res.status(400).json({ error: { message: 'Enter an offer name, e.g. Diwali or New Year.' } });
+      return;
+    }
+    if ((await storedOfferTypes()).includes(key)) {
+      res.status(409).json({ error: { message: 'That offer type already exists.' } });
+      return;
+    }
+    await SettingsModel.findOneAndUpdate({}, { $addToSet: { offerTypes: key } }, { upsert: true });
+    res.status(201).json({ data: await offerTypesWithCounts() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/admin/offer-types/:key — owner only; BLOCKED while any product carries it.
+adminRouter.delete('/offer-types/:key', requirePermission('settings.manage'), async (req, res, next) => {
+  try {
+    const key = req.params.key;
+    const count = await ProductModel.countDocuments({ offerTypes: key });
+    if (count > 0) {
+      res.status(409).json({
+        error: { message: `${count} product${count === 1 ? '' : 's'} still use “${key}”. Untag them first.` },
+      });
+      return;
+    }
+    await SettingsModel.findOneAndUpdate({}, { $pull: { offerTypes: key } });
+    res.json({ data: await offerTypesWithCounts() });
   } catch (err) {
     next(err);
   }

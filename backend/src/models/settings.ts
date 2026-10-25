@@ -21,6 +21,26 @@ const settingsSchema = new Schema(
     codEnabled: { type: Boolean, default: true }, // cash-on-delivery on/off
     onlinePaymentEnabled: { type: Boolean, default: true }, // Razorpay on/off (on top of env config)
     announcement: { type: String, default: '' }, // storefront banner line ('' = hidden)
+    offerTypes: { type: [String], default: [] }, // master list of offer-type keys (Platform tab)
+    // Site content (Site content tab). No defaults here on purpose: they live in
+    // lib/siteContent.ts and are merged on read, so there is one copy of the copy.
+    hero: {
+      statValue: String,
+      statLabel: String,
+      tagline: String,
+      ctaLabel: String,
+      ctaHref: String,
+      promoTitle: String,
+      promoSubtitle: String,
+      promoHref: String,
+    },
+    offerSection: {
+      enabled: Boolean,
+      title: String,
+      subtitle: String,
+      offerTypes: { type: [String], default: undefined }, // undefined (not []) so the default key list applies
+    },
+    retailers: [{ _id: false, name: String, logo: String, href: String }],
   },
   { timestamps: true },
 );

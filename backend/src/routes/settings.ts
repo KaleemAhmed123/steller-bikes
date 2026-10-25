@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { SettingsModel } from '../models/settings.js';
+import { withSiteContent } from '../lib/siteContent.js';
 
 export const settingsRouter = Router();
 
@@ -26,7 +27,7 @@ const EMPTY = {
 settingsRouter.get('/', async (_req, res, next) => {
   try {
     const doc = await SettingsModel.findOne().lean();
-    res.json({ data: doc ? { ...EMPTY, ...doc } : EMPTY });
+    res.json({ data: withSiteContent(doc ? { ...EMPTY, ...doc } : EMPTY) });
   } catch (err) {
     next(err);
   }

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { connectDb } from './db.js';
 import { ProductModel } from './models/product.js';
+import { SettingsModel } from './models/settings.js';
 
 // Clearly-labelled SAMPLE catalogue for the storefront redesign. ~25 products
 // across Mountain / City / Road / Kids / Accessories, with multi-size/colour
@@ -156,6 +157,9 @@ const catalogue: Seed[] = [
 
 // Curated "Staff picks" — an editorial spread across categories. Sets the real
 // `featured` flag the storefront reads (replacing the old hardcoded slug list).
+// A few SAMPLE products tagged for the Diwali offer rail (fake data, demo only).
+const DIWALI = new Set(['trail-29', 'metro-one', 'sprint-road', 'junior-16', 'guardian-helmet']);
+
 const FEATURED = new Set([
   'metro-one',
   'velocity-r',
@@ -179,13 +183,29 @@ async function seed(): Promise<void> {
     seen[p.category] = n + 1;
     const daysAgo = (FRESH[p.category] ?? 15) + n;
     const when = new Date(now - daysAgo * DAY);
-    return { ...p, featured: FEATURED.has(p.slug), status: 'published', createdAt: when, updatedAt: when };
+    return { ...p, featured: FEATURED.has(p.slug), offerTypes: DIWALI.has(p.slug) ? ['diwali'] : [], status: 'published', createdAt: when, updatedAt: when };
   });
 
   await ProductModel.deleteMany({ slug: { $in: catalogue.map((p) => p.slug) } });
   // timestamps:false so our staggered createdAt stands instead of being overwritten.
   // Mongoose honours this option at runtime; its typings for this version omit it.
   await ProductModel.insertMany(docs, { timestamps: false } as Record<string, unknown>);
+
+  await SettingsModel.findOneAndUpdate({}, { $addToSet: { offerTypes: 'diwali' } }, { upsert: true });
+
+  // Demo site content so the homepage sections have something to show. Only fills
+  // what has NEVER been saved (an owner's real retailers / offer-rail settings are
+  // never overwritten). All fake: clearly-labelled sample logos, no real brands.
+  const current = await SettingsModel.findOne().lean();
+  if (!current?.retailers?.length) {
+    await SettingsModel.updateOne(
+      {},
+      { $set: { retailers: ['a', 'b', 'c', 'd', 'e', 'f'].map((k) => ({ name: `Sample Brand ${k.toUpperCase()}`, logo: `/logos/sample-brand-${k}.svg`, href: '' })) } },
+    );
+  }
+  if (!current?.offerSection) {
+    await SettingsModel.updateOne({}, { $set: { offerSection: { enabled: true, title: 'Diwali Offer', subtitle: 'Boat Headphones available on selective products', offerTypes: ['diwali'] } } });
+  }
 
   console.log(`Seeded ${docs.length} SAMPLE products across Mountain/City/Road/Kids/Accessories.`);
   await mongoose.disconnect();
