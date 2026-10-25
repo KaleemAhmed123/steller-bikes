@@ -367,6 +367,36 @@ export async function uploadImage(file: File): Promise<string> {
   return json.secure_url as string;
 }
 
+// Upload an image OR a video to Cloudinary ("auto" lets Cloudinary decide) and say
+// which one it was, so the caller can tag the media item. Videos are capped by
+// NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB (default 50) before anything is sent.
+export async function uploadMedia(file: File): Promise<{ url: string; type: 'image' | 'video' }> {
+  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  if (!cloud || !preset) {
+    throw new Error('Upload isn’t set up yet. Paste a link/path instead, or add the Cloudinary keys.');
+  }
+  const maxMb = Number(process.env.NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB) || 50;
+  if (file.type.startsWith('video/') && file.size > maxMb * 1024 * 1024) {
+    throw new Error(`That video is over ${maxMb} MB. Compress it, or paste a link.`);
+  }
+  const body = new FormData();
+  body.append('file', file);
+  body.append('upload_preset', preset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/auto/upload`, { method: 'POST', body });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.secure_url) {
+    throw new Error(json?.error?.message ?? 'Upload failed. Try again, or paste a link.');
+  }
+  return { url: json.secure_url as string, type: json.resource_type === 'video' ? 'video' : 'image' };
+}
+
+// Guess image-vs-video from a pasted link (uploads already know). Cloudinary video
+// links contain /video/upload/; otherwise go by the file extension.
+export function guessMediaType(url: string): 'image' | 'video' {
+  return /\/video\/upload\/|\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ? 'video' : 'image';
+}
+
 // True when Cloudinary upload is configured (controls the Upload button UI).
 export function uploadConfigured(): boolean {
   return Boolean(

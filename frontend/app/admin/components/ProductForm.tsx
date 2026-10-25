@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { adminApi } from '@/lib/api';
 import { offerLabel } from '@/lib/offers';
-import type { Product, ProductInput } from '@/lib/types';
+import type { MediaItem, Product, ProductInput } from '@/lib/types';
 import { ImageField } from './ImageField';
+import { VariantMediaEditor } from './VariantMediaEditor';
 
 // Row shapes while editing (strings so inputs stay controlled); converted to the
 // real ProductInput (paise, numbers) on submit.
@@ -18,10 +19,11 @@ type VariantRow = {
   compareAt: string; // rupees
   stock: string;
   lowStock: string;
+  media: MediaItem[]; // this variant's photos/videos, in display order
 };
 type SpecRow = { key: string; value: string };
 
-const blankVariant = (): VariantRow => ({ sku: '', size: '', color: '', price: '', compareAt: '', stock: '', lowStock: '3' });
+const blankVariant = (): VariantRow => ({ sku: '', size: '', color: '', price: '', compareAt: '', stock: '', lowStock: '3', media: [] });
 
 const toRupees = (paise: number) => (paise ? String(paise / 100) : '');
 
@@ -46,6 +48,7 @@ function fromProduct(p: Product): State {
       compareAt: toRupees(v.compareAt),
       stock: String(v.stock),
       lowStock: String(v.lowStock),
+      media: [...(v.media ?? [])].sort((a, b) => a.position - b.position),
     })),
   };
 }
@@ -149,6 +152,7 @@ export function ProductForm({ product }: { product?: Product }) {
         compareAt: rupeesToPaise(v.compareAt),
         stock: Math.round(Number(v.stock || 0)),
         lowStock: Math.round(Number(v.lowStock || 0)),
+        media: v.media.map((m, position) => ({ url: m.url.trim(), type: m.type, position })),
       })),
     };
   }
@@ -246,13 +250,18 @@ export function ProductForm({ product }: { product?: Product }) {
       </button>
 
       <h2 className="admin-h2">Variants</h2>
-      <p className="muted">At least one. Price in ₹. “Was” is the crossed-out compare-at price (0 = none).</p>
+      <p className="muted">
+        At least one. Price in ₹. “Was” is the crossed-out compare-at price (0 = none). Open “Photos &amp; videos”
+        under a row to set what customers see when they pick that option — an option with none shows “No Image
+        Available”.
+      </p>
       <div className="admin-variants">
         <div className="admin-variant-head">
           <span>SKU</span><span>Size</span><span>Colour</span><span>Price ₹</span><span>Was ₹</span><span>Stock</span><span>Low at</span><span />
         </div>
         {s.variants.map((v, i) => (
-          <div className="admin-variant-row" key={i}>
+          <div className="admin-variant" key={i}>
+          <div className="admin-variant-row">
             <input required placeholder="SKU" value={v.sku} onChange={(e) => setVariant(i, { sku: e.target.value })} />
             <input required placeholder="Size" value={v.size} onChange={(e) => setVariant(i, { size: e.target.value })} />
             <input required placeholder="Colour" value={v.color} onChange={(e) => setVariant(i, { color: e.target.value })} />
@@ -268,6 +277,13 @@ export function ProductForm({ product }: { product?: Product }) {
             >
               ✕
             </button>
+          </div>
+          <details className="admin-variant-media">
+            <summary>
+              Photos &amp; videos for {v.size || v.color ? `${v.size} ${v.color}`.trim() : 'this option'} ({v.media.length})
+            </summary>
+            <VariantMediaEditor media={v.media} onChange={(media) => setVariant(i, { media })} />
+          </details>
           </div>
         ))}
       </div>

@@ -2372,3 +2372,75 @@ h3 {
   margin: 0;
   font-size: 0.85rem;
 }
+
+/* ---- Admin: per-variant photos & videos --------------------------------- */
+.admin-variant {
+  margin-bottom: 12px;
+}
+.admin-variant-media {
+  min-width: 720px;
+  margin: 2px 0 0;
+  padding: 8px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+.admin-variant-media > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.admin-vmedia {
+  margin-top: 10px;
+}
+.admin-vmedia-row {
+  display: grid;
+  grid-template-columns: 24px 44px 1fr 96px auto auto auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.admin-vmedia-pos {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted, #777);
+  text-align: center;
+}
+.admin-vmedia-thumb {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f3f3f3;
+}
+.admin-vmedia-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.admin-vmedia-url,
+.admin-vmedia-row select,
+.admin-vmedia-add input {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  width: 100%;
+}
+.admin-vmedia-add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.admin-img-upload.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.admin-vmedia-add .btn-secondary {
+  white-space: nowrap;
+}
