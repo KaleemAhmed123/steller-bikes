@@ -55,6 +55,7 @@ export interface VariantInput {
   compareAt: number; // paise, 0 = none
   stock: number;
   lowStock: number;
+  media: MediaItem[];
 }
 
 export interface ProductInput {
