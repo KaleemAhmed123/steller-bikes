@@ -6,6 +6,7 @@ import { InventoryMovementModel } from '../models/inventoryMovement.js';
 import { loadVariantMap } from './variants.js';
 import { computeCartView } from './cartView.js';
 import { computeTotals, type Totals } from './pricing.js';
+import { deliveryFor, loadDeliveryRules } from './delivery.js';
 import { logger } from './log.js';
 import { sendOrderConfirmation } from './email.js';
 import { isDuplicateKeyError } from './mongo.js';
@@ -54,7 +55,7 @@ type OrderItem = {
 // price or stock. Throws EMPTY (nothing to buy) or CHANGED (an item vanished or
 // ran low). Returns the server-computed totals + the snapshotted order items.
 // Shared by every checkout path so the money/stock truth is computed one way.
-async function loadCheckoutView(owner: string): Promise<{ totals: Totals; orderItems: OrderItem[] }> {
+async function loadCheckoutView(owner: string, pin: string): Promise<{ totals: Totals; orderItems: OrderItem[] }> {
   const cart = await CartModel.findOne({ owner });
   const rawItems = (cart?.items ?? []).map((i) => ({
     variantId: String(i.variantId),
@@ -68,7 +69,9 @@ async function loadCheckoutView(owner: string): Promise<{ totals: Totals; orderI
     throw new CheckoutError('CHANGED', 'Some items changed or ran low on stock. Please review your cart.');
   }
 
-  const totals = computeTotals(view.subtotal);
+  // Delivery fee comes from the pincode against OUR rules, never from the browser.
+  const { fee } = deliveryFor(pin, await loadDeliveryRules());
+  const totals = computeTotals(view.subtotal, fee);
   const orderItems: OrderItem[] = view.items.map((l) => ({
     variantId: new mongoose.Types.ObjectId(l.variantId),
     name: l.name!,
@@ -79,12 +82,12 @@ async function loadCheckoutView(owner: string): Promise<{ totals: Totals; orderI
   return { totals, orderItems };
 }
 
-// The live, server-authoritative total (paise) for this owner's cart — used to
-// tell Razorpay how much to charge BEFORE payment. Validates the cart the same
+// The live, server-authoritative total (paise) for this owner's cart delivered to `pin`
+// — used to tell Razorpay how much to charge BEFORE payment. Validates the cart the same
 // way checkout does (EMPTY / CHANGED), so you can't start a payment for a stale
 // or empty cart.
-export async function computeCartTotal(owner: string): Promise<number> {
-  const { totals } = await loadCheckoutView(owner);
+export async function computeCartTotal(owner: string, pin: string): Promise<number> {
+  const { totals } = await loadCheckoutView(owner, pin);
   return totals.total;
 }
 
@@ -242,7 +245,7 @@ export async function placeOrder(input: CheckoutInput): Promise<string> {
   const already = await OrderModel.findOne({ owner: input.owner, idempotencyKey: input.idempotencyKey }).lean();
   if (already) return String(already._id);
 
-  const { totals, orderItems } = await loadCheckoutView(input.owner);
+  const { totals, orderItems } = await loadCheckoutView(input.owner, input.address.pin);
   try {
     const orderId = await runOrderTransaction({ ...input, method: 'cod', paymentStatus: 'unpaid', totals, orderItems });
     notifyOrder(input.email, orderId, orderItems, totals, 'cod');
@@ -283,7 +286,7 @@ export async function finalizePaidOrder(
   let totals: Totals;
   let orderItems: OrderItem[];
   try {
-    ({ totals, orderItems } = await loadCheckoutView(owner));
+    ({ totals, orderItems } = await loadCheckoutView(owner, input.address.pin));
   } catch (err) {
     if (err instanceof CheckoutError) {
       log.warn('paid but cart unusable at verify → refund', { code: err.code, idempotencyKey, paidAmount });
