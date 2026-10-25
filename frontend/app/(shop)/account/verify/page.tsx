@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { accountApi } from '@/lib/api';
 import { useAccount } from '../../components/AccountProvider';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 function VerifyInner() {
   const token = useSearchParams().get('token') ?? '';
@@ -61,7 +62,7 @@ function VerifyInner() {
 export default function VerifyPage() {
   return (
     <div className="auth-page">
-      <Suspense fallback={<div className="auth-card">Loading…</div>}>
+      <Suspense fallback={<div className="auth-card"><PageSkeleton rows={2} /></div>}>
         <VerifyInner />
       </Suspense>
     </div>

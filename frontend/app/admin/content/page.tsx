@@ -6,6 +6,7 @@ import { offerLabel } from '@/lib/offers';
 import type { HeroContent, OfferSection, Retailer } from '@/lib/types';
 import { ImageField } from '../components/ImageField';
 import { VideoField } from '../components/VideoField';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 // "Site content" (owner-only): the storefront copy that used to need a developer —
 // the text over the hero video, the homepage offer rail, and the Authorized
@@ -71,7 +72,7 @@ export default function AdminContent() {
   }
 
   if (error && !c) return <div className="notice error">{error}</div>;
-  if (!c) return <p className="muted">Loading…</p>;
+  if (!c) return <PageSkeleton />;
 
   const setHero = (key: keyof HeroContent, value: string) => setC({ ...c, hero: { ...c.hero, [key]: value } });
   const setOffer = (patch: Partial<OfferSection>) => setC({ ...c, offerSection: { ...c.offerSection, ...patch } });

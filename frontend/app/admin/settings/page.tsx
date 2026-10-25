@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminApi, EMPTY_SETTINGS as EMPTY } from '@/lib/api';
 import type { StoreSettings } from '@/lib/types';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 // Only the shop-info (string) fields are editable on this tab.
 type ShopKey = { [K in keyof StoreSettings]-?: StoreSettings[K] extends string ? K : never }[keyof StoreSettings];
@@ -80,7 +81,7 @@ export default function AdminSettings() {
   }
 
   if (error && !s) return <div className="notice error">{error}</div>;
-  if (!s) return <p className="muted">Loading…</p>;
+  if (!s) return <PageSkeleton />;
 
   const set = (key: ShopKey, value: string) => setS((cur) => ({ ...(cur ?? EMPTY), [key]: value }));
 

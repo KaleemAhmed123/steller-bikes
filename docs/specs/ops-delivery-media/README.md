@@ -1,6 +1,6 @@
 # Ops, delivery & product media — advance-payment links, Kanpur fee, variant media
 
-Branch: `frontend/UI-Revamp` · Status: **IN PROGRESS** · Created 2026-10-26
+Branch: `frontend/UI-Revamp` · Status: **BUILT (A–F) — see Updates log** · Created 2026-10-26
 Append-only: new changes go in the Updates log at the bottom.
 
 ## 1. Task
@@ -49,12 +49,26 @@ manage order payments, product media and the homepage video without a developer.
 
 ## 5. Checklist
 - [x] Admin seeded
-- [ ] A: video no-loop · About · overflow
-- [ ] B: media model · gallery · admin editor · add-product clarity
-- [ ] C: payment status · COD→paid · payment link
-- [ ] D: pincode autofill · Kanpur ₹299 · messages
-- [ ] E: hero video upload
-- [ ] F: shimmer + branded loader
+- [x] A: video no-loop · About · overflow
+- [x] B: media model · gallery · admin editor · add-product clarity
+- [x] C: payment status · COD→paid · payment link (needs Razorpay keys to go live)
+- [x] D: pincode autofill · Kanpur ₹299 · messages
+- [x] E: hero video upload
+- [x] F: shimmer + branded loader
 
 ## Updates log
 - 2026-10-26 — spec created; admin seeded; Cloudinary vars documented.
+- 2026-10-26 — built A–F in atomic commits (see `git log` on `frontend/UI-Revamp`). Notes worth keeping:
+  - **Variant media:** no fallback to product photos (owner decision), so existing products need
+    `npm run backfill:variant-media` once; the seed does it for demo data.
+  - **Delivery:** 'inside Kanpur' = pincode LIST (default 208001–208027, editable), never a web lookup; India
+    Post is only for city/state autofill and uses the most common district (208001 mixes Kanpur Nagar and
+    Dehat). Fee is per order, priced server-side; online payment short by the fee becomes `refund_required`.
+  - **Advance links:** separate from `paymentStatus`; one open link per order; webhook + 'Check with
+    Razorpay' + customer sync all funnel through one guarded write. Dormant until Razorpay keys exist —
+    the real Razorpay API has NOT been exercised (no keys); only faked-API tests and UI checks ran.
+  - **Guests:** a guest finds their order (and its payment link) only from the same browser or after
+    signing in, so the agent can also copy the link and WhatsApp it. Open question: add a phone+order-id
+    lookup if this proves to be a problem.
+  - **Loaders:** brand loader is the shop `loading.tsx` (180 ms delay so fast loads never flash it); admin and
+    in-page 'Loading…' text became shimmer skeletons; image boxes shimmer until the photo arrives.

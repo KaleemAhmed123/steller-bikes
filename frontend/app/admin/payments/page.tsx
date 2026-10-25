@@ -8,6 +8,7 @@ import { useInfiniteList } from '@/lib/useInfiniteList';
 import { LoadMore } from '@/components/LoadMore';
 import { Notes } from '../components/Notes';
 import { StatusDot } from '../components/StatusDot';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 const STATUSES = ['', 'unpaid', 'pending', 'paid', 'failed', 'refund_required', 'refunded'];
 const METHODS = ['', 'cod', 'razorpay'];
@@ -194,7 +195,7 @@ function PaymentModal({ id, onClose, onChanged }: { id: string; onClose: () => v
 
         {error && <div className="notice error">{error}</div>}
         {!o ? (
-          <p className="muted">Loading…</p>
+          <PageSkeleton />
         ) : (
           <>
             <dl className="pay-detail">

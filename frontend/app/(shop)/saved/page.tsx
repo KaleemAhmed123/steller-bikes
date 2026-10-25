@@ -6,6 +6,7 @@ import { getProducts } from '@/lib/api';
 import { toCard, type CardProduct } from '@/lib/catalogue';
 import { useWishlist } from '../components/WishlistProvider';
 import { ProductCard } from '../components/ProductCard';
+import { PageSkeleton } from '@/components/PageSkeleton';
 
 // The wishlist page. Client-side: the saved slugs live in localStorage (no
 // backend), so we load the catalogue once and keep the ones that are saved.
@@ -37,7 +38,7 @@ export default function SavedPage() {
       </header>
 
       {error && <div className="notice error">{error}</div>}
-      {loading && !error && <div className="cart-status">Loading…</div>}
+      {loading && !error && <PageSkeleton rows={2} />}
 
       {!loading && !error && saved.length > 0 && (
         <div className="rc-grid">

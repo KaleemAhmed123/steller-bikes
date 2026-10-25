@@ -2139,3 +2139,39 @@ main {
     animation-delay: 0s !important;
   }
 }
+
+/* ---- Image boxes shimmer while the picture loads --------------------------
+   The photo covers the box once it arrives, so this only shows during loading. The
+   "No Image Available" box is a final state, not a loading one, so it stays still. */
+.rc-card-media,
+.rc-zoom,
+.rc-gallery-thumb {
+  background: linear-gradient(100deg, #ece9e0 30%, #f7f5ef 50%, #ece9e0 70%);
+  background-size: 200% 100%;
+  animation: rc-shimmer 1.4s ease-in-out infinite;
+}
+.rc-zoom--video {
+  animation: none;
+  background: #000;
+}
+.rc-card--dark .rc-card-media {
+  animation: none;
+}
+@keyframes rc-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-card-media,
+  .rc-zoom,
+  .rc-gallery-thumb {
+    animation: none;
+  }
+}
+.page-skeleton {
+  padding: 8px 0 24px;
+}
