@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-// The looping background video. Phones get the portrait file, everything else the
+// The background video. It plays ONCE and rests on its last frame (no `loop`). Phones get the portrait file, everything else the
 // landscape one. The <source media="…"> list picks the right one straight from the
 // server-rendered HTML (fast, no JS needed) — but browsers differ on honouring
 // `media` for <video> (one picked the portrait file on a desktop and zoomed it in),
@@ -31,7 +31,7 @@ export function HeroBackdropVideo() {
         video.load();
       }
       if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) video.pause();
-      else void video.play().catch(() => undefined); // autoplay can be blocked; the first frame still shows
+      else if (!video.ended) void video.play().catch(() => undefined); // autoplay can be blocked; the first frame still shows
     };
 
     if (video.currentSrc) correct();
@@ -44,7 +44,7 @@ export function HeroBackdropVideo() {
   }, []);
 
   return (
-    <video ref={ref} className="rc-hero-video" autoPlay muted loop playsInline preload="metadata" aria-hidden="true">
+    <video ref={ref} className="rc-hero-video" autoPlay muted playsInline preload="metadata" aria-hidden="true">
       <source src={SRC.phone} media={PHONE} type="video/mp4" />
       <source src={SRC.wide} type="video/mp4" />
     </video>
