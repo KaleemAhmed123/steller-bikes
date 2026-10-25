@@ -200,6 +200,22 @@ export interface Payment {
   paidAt?: string;
 }
 
+// An advance-payment request an agent raised on an order (e.g. the delivery charge).
+// The customer pays it from their order page; `shortUrl` is Razorpay's hosted page.
+export interface AdvancePayment {
+  _id: string;
+  amount: number; // paise
+  note: string;
+  status: 'created' | 'paid' | 'cancelled' | 'expired'; // created = open, awaiting payment
+  razorpayLinkId: string;
+  shortUrl: string;
+  paymentId?: string;
+  method?: string;
+  paidAt?: string;
+  createdBy?: string; // staff email — admin view only, never sent to customers
+  createdAt: string;
+}
+
 export interface Order {
   _id: string;
   email: string;
@@ -215,6 +231,7 @@ export interface Order {
   fulfillmentStatus: string;
   tracking: string;
   payment?: Payment;
+  advancePayments?: AdvancePayment[];
   createdAt: string;
 }
 
@@ -301,4 +318,5 @@ export interface InventoryData {
 export interface OrderDetail {
   order: Order;
   nextStates: string[];
+  advanceEnabled: boolean; // Razorpay keys are set, so payment links can be raised
 }
