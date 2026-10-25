@@ -121,6 +121,8 @@ export interface HeroContent {
   promoTitle: string;
   promoSubtitle: string;
   promoHref: string;
+  videoDesktop: string; // '' = the video bundled with the site
+  videoMobile: string;
 }
 
 // The homepage offer rail — switched on/off and re-pointed from the admin.

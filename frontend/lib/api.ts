@@ -96,6 +96,8 @@ export const EMPTY_SETTINGS: StoreSettings = {
     promoTitle: '',
     promoSubtitle: '',
     promoHref: '',
+    videoDesktop: '',
+    videoMobile: '',
   },
   offerSection: { enabled: false, title: '', subtitle: '', offerTypes: [] },
   retailers: [],

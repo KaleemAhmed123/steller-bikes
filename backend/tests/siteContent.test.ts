@@ -30,6 +30,18 @@ test('links must be a site path or https — never javascript:/http:/data:', () 
   assert.ok(!ok({ ctaHref: 'http://insecure.example' }));
 });
 
+test('hero videos: empty (use the bundled one), a /path or https are fine; anything else is refused', () => {
+  const ok = (hero: object) => schema.safeParse({ hero: { ...HERO_DEFAULTS, ...hero } }).success;
+  assert.equal(HERO_DEFAULTS.videoDesktop, '');
+  assert.equal(HERO_DEFAULTS.videoMobile, '');
+  assert.ok(ok({ videoDesktop: '', videoMobile: '' }));
+  assert.ok(ok({ videoDesktop: 'https://res.cloudinary.com/demo/video/upload/hero.mp4' }));
+  assert.ok(ok({ videoMobile: '/hero_section_mobile_view_video_compressed.mp4' }));
+  assert.ok(!ok({ videoDesktop: 'javascript:alert(1)' }));
+  assert.ok(!ok({ videoMobile: 'http://insecure.example/v.mp4' }));
+  assert.ok(!ok({ videoDesktop: 'data:video/mp4;base64,AAAA' }));
+});
+
 test('retailers need a name and a logo; max 24; href must be https', () => {
   const r = (x: object) => schema.safeParse({ retailers: [x] }).success;
   assert.ok(r({ name: 'Hero', logo: '/logos/hero.png', href: '' }));

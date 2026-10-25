@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { safeVideoSrc } from '@/lib/img';
 
 // The background video. It plays ONCE and rests on its last frame (no `loop`). Phones get the portrait file, everything else the
 // landscape one. The <source media="…"> list picks the right one straight from the
@@ -11,13 +12,23 @@ import { useEffect, useRef } from 'react';
 // Muted + playsInline let it autoplay on phones; CSS object-fit scales it.
 // Visitors who ask for reduced motion get a still frame instead of a moving one.
 const PHONE = '(max-width: 767px)';
-const SRC = {
+const BUNDLED = {
   phone: '/hero_section_mobile_view_video_compressed.mp4',
   wide: '/hero_section_desktop_view_video_compressed.mp4',
 };
 
-export function HeroBackdropVideo() {
+// The owner can upload their own hero video(s) in Admin -> Site content. Neither set: the
+// bundled pair. Only one set: use it for both screens (so phones never get a stale old video).
+export function heroSources(desktop?: string, mobile?: string): { phone: string; wide: string } {
+  const d = safeVideoSrc(desktop);
+  const m = safeVideoSrc(mobile);
+  if (!d && !m) return BUNDLED;
+  return { wide: d ?? m!, phone: m ?? d! };
+}
+
+export function HeroBackdropVideo({ desktop, mobile }: { desktop?: string; mobile?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const { phone: phoneSrc, wide: wideSrc } = heroSources(desktop, mobile);
 
   useEffect(() => {
     const video = ref.current;
@@ -25,7 +36,7 @@ export function HeroBackdropVideo() {
     const phone = window.matchMedia(PHONE);
 
     const correct = () => {
-      const wanted = phone.matches ? SRC.phone : SRC.wide;
+      const wanted = phone.matches ? phoneSrc : wideSrc;
       if (video.currentSrc && !video.currentSrc.endsWith(wanted)) {
         video.src = wanted; // overrides the <source> list
         video.load();
@@ -41,12 +52,12 @@ export function HeroBackdropVideo() {
       video.removeEventListener('loadstart', correct);
       phone.removeEventListener('change', correct);
     };
-  }, []);
+  }, [phoneSrc, wideSrc]);
 
   return (
-    <video ref={ref} className="rc-hero-video" autoPlay muted playsInline preload="metadata" aria-hidden="true">
-      <source src={SRC.phone} media={PHONE} type="video/mp4" />
-      <source src={SRC.wide} type="video/mp4" />
+    <video key={`${phoneSrc}|${wideSrc}`} ref={ref} className="rc-hero-video" autoPlay muted playsInline preload="metadata" aria-hidden="true">
+      <source src={phoneSrc} media={PHONE} />
+      <source src={wideSrc} />
     </video>
   );
 }

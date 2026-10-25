@@ -35,6 +35,16 @@ const linkOrEmpty = z
     message: 'A link must start with / (a page on this site) or https://',
   });
 
+// A video for the hero: '' = use the one bundled with the site, else a /path or https link
+// (Cloudinary after an admin upload). Never javascript:/http:/data:.
+const videoLinkOrEmpty = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === '' || v.startsWith('/') || v.startsWith('https://'), {
+    message: 'A video link must start with / or https://',
+  });
+
 const heroSchema = z.object({
   statValue: z.string().trim().max(40),
   statLabel: z.string().trim().max(60),
@@ -44,6 +54,8 @@ const heroSchema = z.object({
   promoTitle: z.string().trim().max(60),
   promoSubtitle: z.string().trim().max(60),
   promoHref: linkOrEmpty, // '' = the Stellar Originals text is NOT clickable
+  videoDesktop: videoLinkOrEmpty, // wide-screen hero video; '' = bundled default
+  videoMobile: videoLinkOrEmpty, // phone (portrait) hero video; '' = bundled default
 });
 
 const offerSectionSchema = z.object({
@@ -92,6 +104,8 @@ export const HERO_DEFAULTS: Hero = {
   promoTitle: 'STELLAR ORIGINALS',
   promoSubtitle: 'Coming Soon',
   promoHref: '',
+  videoDesktop: '',
+  videoMobile: '',
 };
 
 export const OFFER_SECTION_DEFAULTS: OfferSection = {
