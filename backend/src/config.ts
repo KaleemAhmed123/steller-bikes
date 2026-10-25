@@ -35,6 +35,10 @@ const schema = z
   // The key id is public (the browser needs it); the secret must stay server-side.
   RAZORPAY_KEY_ID: z.string().default(''),
   RAZORPAY_KEY_SECRET: z.string().default(''),
+  // Signs the webhooks Razorpay sends us (Dashboard > Settings > Webhooks). Optional:
+  // without it the webhook endpoint refuses every call, and the admin "Check with
+  // Razorpay" button is the only way an advance payment gets confirmed.
+  RAZORPAY_WEBHOOK_SECRET: z.string().default(''),
   // Real email via Resend. Optional: no key → emails print to the console (dev
   // mock), so local setup needs nothing. MAIL_FROM is the verified sender, e.g.
   // "Stellar Bikes <orders@yourdomain.com>".

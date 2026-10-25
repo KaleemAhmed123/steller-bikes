@@ -40,6 +40,26 @@ const paymentSchema = new Schema(
   { _id: false },
 );
 
+// An advance-payment request raised by an agent (usually the Delhivery delivery charge,
+// agreed on a call). Backed by a Razorpay Payment Link the customer pays from their
+// order page. Kept apart from `paymentStatus`, which is about the order total.
+// Statuses: created (open, awaiting payment) -> paid | cancelled | expired (all final).
+const advancePaymentSchema = new Schema(
+  {
+    amount: { type: Number, required: true, min: 100 }, // paise
+    note: { type: String, default: '' }, // shown to the customer, e.g. "Delivery to Lucknow"
+    status: { type: String, enum: ['created', 'paid', 'cancelled', 'expired'], default: 'created' },
+    razorpayLinkId: { type: String, required: true }, // 'plink_…'
+    shortUrl: { type: String, required: true }, // the page the customer pays on
+    paymentId: { type: String }, // 'pay_…' once paid
+    method: { type: String }, // 'upi' | 'card' | …
+    paidAt: { type: Date },
+    createdBy: { type: String, default: '' }, // staff email
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: true },
+);
+
 const orderSchema = new Schema(
   {
     owner: { type: String, required: true },
@@ -59,6 +79,7 @@ const orderSchema = new Schema(
       default: 'unpaid',
     },
     payment: { type: paymentSchema, required: false },
+    advancePayments: { type: [advancePaymentSchema], default: [] },
     fulfillmentStatus: {
       type: String,
       enum: ['confirmed', 'processing', 'packed', 'shipped', 'delivered', 'delivery_failed', 'cancelled'],
@@ -84,6 +105,7 @@ orderSchema.index({ owner: 1, createdAt: -1 }); // customer/guest order history
 orderSchema.index({ createdAt: -1 }); // admin tables + dashboard "recent"
 orderSchema.index({ fulfillmentStatus: 1, createdAt: -1 }); // order-queue filter
 orderSchema.index({ paymentStatus: 1, createdAt: -1 }); // payments-tab filter
+orderSchema.index({ 'advancePayments.razorpayLinkId': 1 }, { sparse: true }); // webhook lookup
 
 export type Order = InferSchemaType<typeof orderSchema>;
 export const OrderModel = model('Order', orderSchema);
