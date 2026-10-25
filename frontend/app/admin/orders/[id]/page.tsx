@@ -4,13 +4,20 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { adminApi, money } from '@/lib/api';
-import type { OrderDetail } from '@/lib/types';
+import type { OrderDetail, PaymentDetail } from '@/lib/types';
 import { Notes } from '../../components/Notes';
 import { StatusDot } from '../../components/StatusDot';
 
 // Friendly label for a status option in the change dropdown.
 function statusLabel(s: string): string {
   if (s === 'cancelled') return 'Cancel order (restock)';
+  return `Mark ${s.replace('_', ' ')}`;
+}
+
+// Label for a payment-status option (same moves as the Payments tab).
+function paymentLabel(s: string): string {
+  if (s === 'paid') return 'Mark paid (cash received)';
+  if (s === 'refunded') return 'Mark refunded';
   return `Mark ${s.replace('_', ' ')}`;
 }
 
@@ -21,6 +28,12 @@ export default function AdminOrderDetail() {
   const [busy, setBusy] = useState(false);
   const [tracking, setTracking] = useState('');
   const [target, setTarget] = useState(''); // chosen next status in the dropdown
+  // Payment actions are owner-only (payments.manage): for a manager this stays null
+  // and the card is simply not shown — the server is the real gate, not this check.
+  const [pay, setPay] = useState<PaymentDetail | null>(null);
+  const [payTarget, setPayTarget] = useState('');
+  const [payBusy, setPayBusy] = useState(false);
+  const [payError, setPayError] = useState('');
 
   const load = useCallback(() => {
     adminApi
@@ -31,7 +44,27 @@ export default function AdminOrderDetail() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    adminApi.payments
+      .get(id)
+      .then(setPay)
+      .catch(() => setPay(null));
+  }, [load, id]);
+
+  async function applyPayment() {
+    if (!payTarget) return;
+    setPayBusy(true);
+    setPayError('');
+    try {
+      const fresh = await adminApi.payments.setStatus(id, payTarget);
+      setPay(fresh);
+      setPayTarget('');
+      load(); // the summary line above shows the payment status too
+    } catch (e) {
+      setPayError(e instanceof Error ? e.message : 'Could not update the payment.');
+    } finally {
+      setPayBusy(false);
+    }
+  }
 
   async function applyStatus() {
     if (!target) return;
@@ -102,6 +135,43 @@ export default function AdminOrderDetail() {
           {o.tracking && <p className="muted">Tracking: {o.tracking}</p>}
         </div>
       </div>
+
+      {pay && (
+        <div className="admin-card" style={{ marginTop: 16 }}>
+          <h2 className="admin-h2">
+            Payment{' '}
+            <span className="status-pill">
+              <StatusDot status={pay.order.paymentStatus} />
+              {pay.order.paymentStatus.replace('_', ' ')}
+            </span>
+          </h2>
+          <p className="muted">
+            {pay.order.method === 'cod' ? 'Cash on delivery' : 'Paid online'} · {money(pay.order.total)}
+            {pay.order.payment?.paymentId && <> · {pay.order.payment.paymentId}</>}
+          </p>
+          {payError && <div className="notice error">{payError}</div>}
+          {pay.nextStatuses.length === 0 ? (
+            <p className="muted">No manual payment action is available for this order.</p>
+          ) : (
+            <div className="status-change">
+              <label className="field">
+                <span>Change payment to</span>
+                <select value={payTarget} onChange={(e) => setPayTarget(e.target.value)}>
+                  <option value="">Choose…</option>
+                  {pay.nextStatuses.map((st) => (
+                    <option key={st} value={st}>
+                      {paymentLabel(st)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button type="button" className="btn-primary" disabled={payBusy || !payTarget} onClick={applyPayment}>
+                {payBusy ? 'Updating…' : 'Update payment'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="admin-card" style={{ marginTop: 16 }}>
         <h2 className="admin-h2">
