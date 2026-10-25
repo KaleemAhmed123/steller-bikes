@@ -1,4 +1,4 @@
-# Raju Cycles — Playbook
+# Stellar Bikes — Playbook
 
 The single home for every command, env value, and run step. Update this in the **same** change
 whenever something operational changes.
@@ -50,8 +50,8 @@ Backend `.env` keys: `MONGODB_URI` (required), `PORT` (default 3001), `FRONTEND_
   receipts). Blank key → emails print to the server console (dev mock); nothing breaks. Setup: make a
   free account at [resend.com](https://resend.com) → **API Keys** → create one (`re_…`) → paste as
   `RESEND_API_KEY`. Set `MAIL_FROM` to an address on a **domain you verified** in Resend (Domains →
-  add → add the DNS records), e.g. `Raju Cycles <orders@yourdomain.com>`. For a quick test before you
-  own a domain, `Raju Cycles <onboarding@resend.dev>` works but only delivers to your own Resend
+  add → add the DNS records), e.g. `Stellar Bikes <orders@yourdomain.com>`. For a quick test before you
+  own a domain, `Stellar Bikes <onboarding@resend.dev>` works but only delivers to your own Resend
   account's email. A send failure never breaks a request — it's logged (`[mail]`) and skipped.
 
 Frontend `.env.local` keys (all optional in dev):
@@ -64,6 +64,9 @@ Frontend `.env.local` keys (all optional in dev):
   paste an image URL or `/path`. Setup: make a free Cloudinary account → Settings → Upload → add an
   **unsigned** upload preset → put the cloud name + preset name here. (Unsigned = the browser uploads
   directly; safe to expose. Tighten later with a signed preset + size/type limits if needed.)
+  This **also powers the retailer-logo Upload button** (Admin → Site content). **TODO (owner):** create
+  the Cloudinary account and add these two values to `frontend/.env.local` (and Vercel). Until then the
+  Upload button says "not set up" and pasting a logo link / `/path` works.
 
 ### 1c. Seed the sample cycles
 
@@ -71,6 +74,24 @@ Frontend `.env.local` keys (all optional in dev):
 cd backend && npm run seed      # inserts ~25 clearly-sample cycles (Mountain/City/Road/Kids/Accessories, some discounted) into MongoDB
                                 # also sets the `featured` flag on 6 curated cycles → re-run after upgrading to populate it
 ```
+
+After seeding, five sample cycles carry the offer type `diwali` (and the master list has it). If the
+store has never saved Site content, the seed also adds six **fake** "Sample Brand" retailer logos and
+switches the Diwali offer rail on — replace/remove them in Admin → Site content. Seeding never
+overwrites retailers or offer-rail settings you have already saved.
+
+### 1c-2. Admin-editable homepage (new)
+- **Admin → Site content** (owner only): the text over the hero video (60,000+ / TRUSTED CUSTOMERS /
+  tagline / button / Stellar Originals title, subtitle, optional link), the **Offer rail** (on/off, title,
+  subtitle, which offer types) and the **Authorized retailers** logo grid (name, logo link or Upload,
+  optional https link). Defaults (the Canva text) live in `backend/src/lib/siteContent.ts`.
+- **Admin → Platform → Offer types** (owner): add `Diwali`, `New Year`… (stored as `diwali`, `new-year`).
+  Tag products in the product form. A type still on products can't be deleted.
+- **Next sale season:** add the offer type → tag products → Site content → set title/subtitle, tick the
+  offer type, tick **Show the offer rail** → Save. No code push. After the sale, untick it.
+- Shop filter: `/shop?offerType=diwali,new-year` (any-of; synced to the URL).
+- Hero videos: `frontend/public/hero_section_{desktop,mobile}_view_video_compressed.mp4`. To change a
+  video, replace the file (keep the names) and redeploy.
 
 ### 1d. Create your admin login + (optional) demo orders
 
@@ -189,7 +210,7 @@ Next later phases (unchanged): payments (Razorpay), returns, coupons, real email
 > Open the project at `C:\Users\hp\Desktop\raju-cycles-v2` first.
 
 ```
-This is the Raju Cycles rebuild — an online store + owner admin for a cycle shop in Kanpur, UP.
+This is the Stellar Bikes rebuild — an online store + owner admin for a cycle shop in Kanpur, UP.
 Stack: Next.js App Router (frontend, Vercel) + Node/Express (backend API, Render) + MongoDB (Atlas),
 all TypeScript. Next.js is the frontend ONLY — it never touches the DB; Express is the authority on
 price/stock. We rebuilt from a v1 Cloudflare prototype (at C:\Users\hp\Desktop\raju-cycles, audited
