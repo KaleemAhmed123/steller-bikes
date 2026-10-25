@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { getProduct, getProducts } from '@/lib/api';
+import { getProduct, getProducts, getSettings } from '@/lib/api';
 import { toCard } from '@/lib/catalogue';
 import { AddToCart } from '../../components/AddToCart';
 import { ProductGallery } from '../../components/ProductGallery';
@@ -9,6 +9,8 @@ import { VariantSelection } from '../../components/VariantSelection';
 import { WishlistButton } from '../../components/WishlistButton';
 import { ProductCard } from '../../components/ProductCard';
 import { OfferTags } from '../../components/OfferTags';
+import { DeliveryInfo } from '../../components/DeliveryInfo';
+import { PincodeCheck } from '../../components/PincodeCheck';
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -27,6 +29,7 @@ export default async function ProductPage({ params }: Params) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  const { kanpurDeliveryFee } = await getSettings();
   const specs = Object.entries(product.specs ?? {});
   // Start on the first option that's in stock (same rule the buy panel used before).
   const initialVariant = product.variants.find((v) => v.stock > 0) ?? product.variants[0];
@@ -81,6 +84,10 @@ export default async function ProductPage({ params }: Params) {
               lowStock: v.lowStock,
             }))}
           />
+
+          {/* Delivery promise, visible before Add to cart so checkout holds no surprises. */}
+          <DeliveryInfo fee={kanpurDeliveryFee} variant="compact" />
+          <PincodeCheck />
         </div>
       </article>
       </VariantSelection>

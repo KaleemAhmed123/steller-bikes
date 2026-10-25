@@ -77,7 +77,7 @@ export default function AdminSettings() {
           <textarea
             rows={2}
             value={s.deliveryPolicy}
-            placeholder="e.g. Free local delivery in Kanpur; cash on delivery."
+            placeholder="e.g. Flat Fitted Delivery in Kanpur; elsewhere charged by Delhivery distance."
             onChange={(e) => set('deliveryPolicy', e.target.value)}
           />
         </label>

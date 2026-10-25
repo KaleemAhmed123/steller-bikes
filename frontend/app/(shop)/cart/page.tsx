@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '../components/CartProvider';
 import { useToast } from '../components/ToastProvider';
+import { DeliveryInfo } from '../components/DeliveryInfo';
+import { useKanpurFee } from '../components/useKanpurFee';
 import { money } from '@/lib/api';
 import { safeSrc, imgError } from '@/lib/img';
 
@@ -11,6 +13,7 @@ import { safeSrc, imgError } from '@/lib/img';
 export default function CartPage() {
   const { cart, loading, update, remove } = useCart();
   const { show } = useToast();
+  const kanpurFee = useKanpurFee();
   // Variant ids with a request in flight — locks that line's buttons so rapid
   // clicks can't race (out-of-order responses used to leave the wrong quantity).
   const [pending, setPending] = useState<Set<string>>(new Set());
@@ -139,7 +142,8 @@ export default function CartPage() {
           <span>Subtotal</span>
           <span>{money(cart?.subtotal ?? 0)}</span>
         </div>
-        <p className="muted">Free delivery · payment options at checkout</p>
+        <p className="muted">Delivery charges are added at checkout, based on your pincode.</p>
+        <DeliveryInfo fee={kanpurFee} />
         <Link href="/checkout" className="btn-primary btn-block">
           Proceed to checkout
         </Link>
