@@ -7,6 +7,7 @@ import { adminApi, money } from '@/lib/api';
 import type { OrderDetail, PaymentDetail } from '@/lib/types';
 import { Notes } from '../../components/Notes';
 import { StatusDot } from '../../components/StatusDot';
+import { AdvancePaymentCard } from '../../components/AdvancePaymentCard';
 
 // Friendly label for a status option in the change dropdown.
 function statusLabel(s: string): string {
@@ -172,6 +173,8 @@ export default function AdminOrderDetail() {
           )}
         </div>
       )}
+
+      <AdvancePaymentCard detail={data} onChange={setData} />
 
       <div className="admin-card" style={{ marginTop: 16 }}>
         <h2 className="admin-h2">

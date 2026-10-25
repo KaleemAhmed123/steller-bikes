@@ -212,6 +212,12 @@ export async function getOrder(id: string): Promise<Order> {
   return json.data as Order;
 }
 
+// The customer came back from paying an advance link: ask the server to check with
+// Razorpay and return the up-to-date order. Nothing about the payment comes from here.
+export function syncAdvancePayments(orderId: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/advance-payments/sync`, { method: 'POST' });
+}
+
 // One page of this browser's order history (logged-in customer). 1-based page.
 export function getOrdersPage(page = 1): Promise<Page<Order>> {
   return apiFetchPage<Order>(`/api/orders?page=${page}&limit=20`);
@@ -269,6 +275,18 @@ export const adminApi = {
       method: 'POST',
       body: JSON.stringify({ status, tracking }),
     }),
+  // Advance-payment links on an order. Every call returns the refreshed order detail.
+  advance: {
+    create: (orderId: string, amountPaise: number, note: string) =>
+      apiFetch<OrderDetail>(`/api/admin/orders/${orderId}/advance-payments`, {
+        method: 'POST',
+        body: JSON.stringify({ amount: amountPaise, note }),
+      }),
+    refresh: (orderId: string, advId: string) =>
+      apiFetch<OrderDetail>(`/api/admin/orders/${orderId}/advance-payments/${advId}/refresh`, { method: 'POST' }),
+    cancel: (orderId: string, advId: string) =>
+      apiFetch<OrderDetail>(`/api/admin/orders/${orderId}/advance-payments/${advId}/cancel`, { method: 'POST' }),
+  },
   inventory: () => apiFetch<InventoryData>('/api/admin/inventory'),
   adjust: (variantId: string, delta: number, reason: string) =>
     apiFetch<InventoryData>('/api/admin/inventory/adjust', {
