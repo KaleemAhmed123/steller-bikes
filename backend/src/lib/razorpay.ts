@@ -107,3 +107,88 @@ export function verifyPaymentSignature(orderId: string, paymentId: string, signa
   const b = Buffer.from(signature);
   return a.length === b.length && timingSafeEqual(a, b);
 }
+
+// --- Payment Links (advance payments) ----------------------------------------
+// A Payment Link is a Razorpay-hosted page for ONE amount that we hand to a customer.
+// Unlike the checkout popup it doesn't need the customer's browser to stay open, and
+// Razorpay keeps its own record of every attempt — which is what makes "money left the
+// customer's account but we never heard" recoverable (the webhook / check button).
+
+export interface RazorpayLink {
+  id: string; // 'plink_…'
+  shortUrl: string;
+  status: string; // created | partially_paid | paid | cancelled | expired
+  amountPaid: number; // paise
+  paymentId?: string;
+  method?: string;
+}
+
+type RawLink = {
+  id?: string;
+  short_url?: string;
+  status?: string;
+  amount_paid?: number;
+  payments?: { payment_id?: string; method?: string; status?: string }[] | null;
+  error?: { description?: string };
+};
+
+function toLink(json: RawLink): RazorpayLink {
+  // The payments list only appears once something was paid; take the captured one.
+  const ok = json.payments?.find((p) => p.status === 'captured') ?? json.payments?.[0];
+  return {
+    id: json.id ?? '',
+    shortUrl: json.short_url ?? '',
+    status: json.status ?? '',
+    amountPaid: json.amount_paid ?? 0,
+    paymentId: ok?.payment_id,
+    method: ok?.method,
+  };
+}
+
+async function linkCall(path: string, init?: RequestInit): Promise<RazorpayLink> {
+  const res = await fetch(`https://api.razorpay.com/v1/payment_links${path}`, {
+    ...init,
+    headers: { Authorization: authHeader(), 'Content-Type': 'application/json' },
+  });
+  const json = (await res.json().catch(() => ({}))) as RawLink;
+  if (!res.ok || !json.id) throw new Error(json.error?.description ?? 'Razorpay could not complete that request.');
+  return toLink(json);
+}
+
+export function createPaymentLink(input: {
+  amountPaise: number;
+  description: string;
+  referenceId: string; // our order id — shows up in Razorpay's dashboard for reconciliation
+  customer: { name: string; email: string; contact: string };
+  callbackUrl: string; // where Razorpay sends the customer back after paying
+}): Promise<RazorpayLink> {
+  return linkCall('', {
+    method: 'POST',
+    body: JSON.stringify({
+      amount: input.amountPaise,
+      currency: 'INR',
+      accept_partial: false, // pay the full amount in one go
+      description: input.description,
+      reference_id: input.referenceId,
+      customer: input.customer,
+      notify: { sms: false, email: false }, // the agent already spoke to them; the link is on their order page
+      reminder_enable: false,
+      callback_url: input.callbackUrl,
+      callback_method: 'get',
+    }),
+  });
+}
+
+export const fetchPaymentLink = (id: string) => linkCall(`/${encodeURIComponent(id)}`);
+export const cancelPaymentLink = (id: string) => linkCall(`/${encodeURIComponent(id)}/cancel`, { method: 'POST' });
+
+// Razorpay signs each webhook body with HMAC-SHA256 using the webhook secret and
+// sends it in the X-Razorpay-Signature header. We must hash the EXACT raw bytes
+// (not re-serialised JSON) and compare in constant time.
+export function verifyWebhookSignature(rawBody: Buffer | string, signature: string, secret: string): boolean {
+  if (!secret || !signature) return false;
+  const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+  const a = Buffer.from(expected);
+  const b = Buffer.from(signature);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
