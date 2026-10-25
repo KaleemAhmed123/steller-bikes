@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 // The query params we forward to the API (filters + sort). Sort now runs
 // server-side so paging + infinite scroll stay globally correct.
-const FORWARD = ['category', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
+const FORWARD = ['category', 'offerType', 'q', 'minPrice', 'maxPrice', 'sort'] as const;
 
 // The catalogue. Server component: reads filters from the URL, fetches the FIRST
 // page from the API (so the first screen is server-rendered for SEO), then hands it
@@ -56,7 +56,7 @@ export default async function ShopPage({
 
       {!error && page && (
         <>
-          <FilterBar categories={page.categories} resultCount={page.pagination.total} />
+          <FilterBar categories={page.categories} offerTypes={page.offerTypes} resultCount={page.pagination.total} />
           <ProductGrid
             key={gridKey}
             initialProducts={page.products}

@@ -28,6 +28,7 @@ export interface Product {
   image: string; // primary / card thumbnail
   images?: string[]; // extra gallery shots (absent/empty = single image)
   featured?: boolean; // editorial "Staff picks" flag
+  offerTypes?: string[]; // offer keys, e.g. ['diwali'] (absent on old products = none)
   soldCount?: number; // units sold, derived from real orders (0 when none)
   specs: Record<string, string>;
   status: string;
@@ -56,6 +57,7 @@ export interface ProductInput {
   image: string;
   images: string[];
   featured: boolean;
+  offerTypes: string[];
   status: 'draft' | 'published' | 'archived';
   specs: Record<string, string>;
   variants: VariantInput[];
@@ -77,6 +79,43 @@ export interface StoreSettings {
   codEnabled: boolean;
   onlinePaymentEnabled: boolean;
   announcement: string;
+  // Admin-editable site content (Site content tab). Defaults are merged by the API.
+  hero: HeroContent;
+  offerSection: OfferSection;
+  retailers: Retailer[];
+}
+
+// The text laid over the hero video. A '' field hides its line; '' promoHref
+// means the Stellar Originals text is not clickable.
+export interface HeroContent {
+  statValue: string;
+  statLabel: string;
+  tagline: string;
+  ctaLabel: string;
+  ctaHref: string;
+  promoTitle: string;
+  promoSubtitle: string;
+  promoHref: string;
+}
+
+// The homepage offer rail — switched on/off and re-pointed from the admin.
+export interface OfferSection {
+  enabled: boolean;
+  title: string;
+  subtitle: string;
+  offerTypes: string[];
+}
+
+export interface Retailer {
+  name: string;
+  logo: string; // https:// link or /path
+  href: string; // '' = not clickable
+}
+
+// One row in the admin offer-type manager (count > 0 means delete is blocked).
+export interface AdminOfferType {
+  key: string;
+  count: number;
 }
 
 // One row in the admin category manager: a name and how many products use it

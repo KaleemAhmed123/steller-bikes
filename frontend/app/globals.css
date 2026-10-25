@@ -1,4 +1,4 @@
-/* Raju Cycles theme — ported from the v1 prototype (charcoal + lime), un-minified.
+/* Stellar Bikes theme — ported from the v1 prototype (charcoal + lime), un-minified.
    Classes are grouped by what uses them: base, header, shop, filters, detail, states. */
 
 :root {
@@ -19,8 +19,11 @@
   --radius: 14px;
   --radius-sm: 9px;
   --shadow: 0 1px 2px rgba(20, 23, 25, 0.04), 0 8px 24px rgba(20, 23, 25, 0.06);
-  --font-display: var(--font-display, 'Space Grotesk'), system-ui, sans-serif;
-  --font-body: var(--font-body, 'Inter'), system-ui, sans-serif;
+  /* Brand type: Montserrat for body + sub-headings, Krona One (Horizon look-alike)
+     for display headings. The next/font variables are set in app/layout.tsx. */
+  --font-body: var(--font-montserrat), system-ui, sans-serif;
+  --font-display: var(--font-montserrat), system-ui, sans-serif; /* sub-headings: Montserrat Bold */
+  --font-heading: var(--font-krona), var(--font-montserrat), system-ui, sans-serif;
 }
 
 * {

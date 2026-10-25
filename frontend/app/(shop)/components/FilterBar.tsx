@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, ArrowUpDown } from 'lucide-react';
+import { offerLabel } from '@/lib/offers';
 
 // Set a param when it has a value, otherwise drop it from the URL.
 function setOrDelete(params: URLSearchParams, key: string, value: string) {
@@ -11,9 +12,17 @@ function setOrDelete(params: URLSearchParams, key: string, value: string) {
 }
 
 // Interactive catalogue filters. Writes the chosen filters into the URL
-// (category / q / price / sort) so the server re-renders the matching products
+// (category / offerType / q / price / sort) so the server re-renders the matching products
 // and the result is shareable + bookmarkable. Prices typed in rupees → paise.
-export function FilterBar({ categories, resultCount }: { categories: string[]; resultCount: number }) {
+export function FilterBar({
+  categories,
+  offerTypes,
+  resultCount,
+}: {
+  categories: string[];
+  offerTypes: string[];
+  resultCount: number;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -25,8 +34,12 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
   const [max, setMax] = useState(toRupees(params.get('maxPrice')));
 
   const activeCategory = params.get('category') ?? '';
+  // Offer types live in the URL as a comma list (?offerType=diwali,new-year), so a
+  // refresh / shared link keeps them. A product matches if it has ANY chosen type.
+  const activeOffers = (params.get('offerType') ?? '').split(',').filter(Boolean);
+  const offerOptions = [...new Set([...activeOffers, ...offerTypes])]; // keep a selected chip visible
   const sort = params.get('sort') ?? 'newest';
-  const anyFilter = Boolean(activeCategory || q || min || max || (sort && sort !== 'newest'));
+  const anyFilter = Boolean(activeCategory || activeOffers.length || q || min || max || (sort && sort !== 'newest'));
 
   // Debounce text/price so typing isn't a request per keystroke.
   useEffect(() => {
@@ -44,6 +57,13 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
   function selectCategory(category: string) {
     const next = new URLSearchParams(params.toString());
     setOrDelete(next, 'category', category === activeCategory ? '' : category);
+    router.push(`${pathname}?${next.toString()}`);
+  }
+
+  function toggleOffer(key: string) {
+    const chosen = activeOffers.includes(key) ? activeOffers.filter((k) => k !== key) : [...activeOffers, key];
+    const next = new URLSearchParams(params.toString());
+    setOrDelete(next, 'offerType', chosen.join(','));
     router.push(`${pathname}?${next.toString()}`);
   }
 
@@ -81,6 +101,24 @@ export function FilterBar({ categories, resultCount }: { categories: string[]; r
           </button>
         ))}
       </div>
+
+      {/* Offers: only types that have published products; several can be on at once. */}
+      {offerOptions.length > 0 && (
+        <div className="rc-chips" role="group" aria-label="Filter by offer">
+          <span className="rc-chips-label">Offers</span>
+          {offerOptions.map((key) => (
+            <button
+              key={key}
+              type="button"
+              className={`rc-chip ${activeOffers.includes(key) ? 'is-active' : ''}`}
+              aria-pressed={activeOffers.includes(key)}
+              onClick={() => toggleOffer(key)}
+            >
+              {offerLabel(key)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="rc-filter-controls">
         <span className="rc-search">

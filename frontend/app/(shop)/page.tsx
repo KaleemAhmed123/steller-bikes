@@ -1,15 +1,16 @@
 import Link from 'next/link';
 import { loadHomeData, type HomeData } from '@/lib/catalogue';
 import { getSettings } from '@/lib/api';
-import type { StoreSettings } from '@/lib/types';
-import BikeHero from './components/hero/BikeHero';
-import Brand3D from './components/hero/Brand3D';
-import { CategoryExplorer, HomeCarousels, Showroom } from './components/home/HomeSections';
+import { HeroVideo } from './components/hero/HeroVideo';
+import { RetailerGrid } from './components/home/RetailerGrid';
+import { CategoryExplorer } from './components/home/HomeSections';
+import { OfferRail } from './components/home/OfferRail';
+import { OriginalsTeaser } from './components/home/OriginalsTeaser';
+import { Showroom } from './components/home/Showroom';
 
-// The homepage: a cinematic, 3D-forward experience. Two 3D moments (the hero
-// sequence + a brand turntable), then lean shopping entry points — category
-// tiles + a collections strip. The product rails live on their own dedicated
-// pages (/collections/* and /shop) so the homepage stays focused on the 3D.
+// The homepage, top to bottom: hero video → authorized retailers → shop by
+// category → seasonal offer rail → Stellar Originals → the showroom (visit · order · ride). All text, logos and the
+// offer rail's on/off + offer types come from the admin (Site content).
 export default async function HomePage() {
   let data: HomeData | null = null;
   try {
@@ -17,27 +18,27 @@ export default async function HomePage() {
   } catch {
     data = null;
   }
-  const settings: StoreSettings = await getSettings();
+  const settings = await getSettings();
 
   return (
     <>
-      <BikeHero />
+      <HeroVideo hero={settings.hero} />
 
-      {!data && (
+      <RetailerGrid retailers={settings.retailers} />
+
+      {data ? (
+        <CategoryExplorer tiles={data.tiles} />
+      ) : (
         <div className="container">
           <div className="notice error" style={{ marginTop: 40 }}>
-            Could not load the catalogue — is the API running? The hero above still works.{' '}
-            <Link href="/shop">Try the shop page</Link>.
+            Could not load the catalogue — is the API running? <Link href="/shop">Try the shop page</Link>.
           </div>
         </div>
       )}
 
-      {data && <CategoryExplorer tiles={data.tiles} />}
+      <OfferRail offer={settings.offerSection} />
 
-      <Brand3D />
-
-      {/* 3D stays the star (both moments above); the product carousels sit below. */}
-      {data && <HomeCarousels data={data} />}
+      <OriginalsTeaser hero={settings.hero} />
 
       <Showroom settings={settings} />
     </>

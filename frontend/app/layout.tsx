@@ -1,14 +1,13 @@
 import './globals.css';
 import './redesign.css';
 import type { Metadata } from 'next';
-import { Space_Grotesk, Inter, EB_Garamond } from 'next/font/google';
+import { Montserrat, Krona_One } from 'next/font/google';
 
-// Editorial type pairing (ElevenLabs direction): a light serif for display, clean
-// Inter for body. Space Grotesk is kept only for the cinematic 3D hero headline so
-// it stays bold, not thin-serif. next/font self-hosts them (no layout shift).
-const display = EB_Garamond({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-display' });
-const hero = Space_Grotesk({ subsets: ['latin'], weight: ['500', '700'], variable: '--font-hero' });
-const body = Inter({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-body' });
+// Brand type system (client PRD): Montserrat for body (400), sub-headings, buttons
+// and accents (700); Krona One — a free, wide, heavy look-alike for the paid
+// "Horizon" logo font — for display headings. next/font self-hosts both (no layout shift).
+const montserrat = Montserrat({ subsets: ['latin'], weight: ['400', '500', '600', '700', '800'], variable: '--font-montserrat' });
+const heading = Krona_One({ subsets: ['latin'], weight: '400', variable: '--font-krona' });
 
 export const metadata: Metadata = {
   title: 'Stellar Bikes — Quality Bicycles & Expert Service in Kanpur',
@@ -21,7 +20,7 @@ export const metadata: Metadata = {
 // app/admin/layout.tsx, so the two sections don't share a header.
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${hero.variable} ${body.variable}`}>
+    <html lang="en" className={`${montserrat.variable} ${heading.variable}`}>
       <body>{children}</body>
     </html>
   );

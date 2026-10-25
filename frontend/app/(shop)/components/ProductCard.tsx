@@ -9,6 +9,7 @@ import type { CardProduct } from '@/lib/catalogue';
 import { useCart } from './CartProvider';
 import { useToast } from './ToastProvider';
 import { WishlistButton } from './WishlistButton';
+import { OfferTags } from './OfferTags';
 
 // Best-effort colour-name → swatch colour. Preview only — selecting a real
 // colour happens on the detail page, never here (cards aren't config forms).
@@ -59,6 +60,8 @@ export function ProductCard({ card, tone = 'light' }: { card: CardProduct; tone?
         {soldOut && <span className="rc-card-soldout">Out of stock</span>}
         <WishlistButton slug={card.slug} name={card.name} />
       </div>
+
+      <OfferTags types={card.offerTypes} max={3} />
 
       <div className="rc-card-body">
         <span className="rc-card-cat">{card.category}</span>

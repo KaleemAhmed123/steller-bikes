@@ -1,5 +1,5 @@
 /* ============================================================================
-   Raju Cycles — storefront redesign layer.
+   Stellar Bikes — storefront redesign layer.
    Loaded AFTER globals.css, so rules here win on ties. Scope: the customer-
    facing homepage, catalogue, product detail, cards, nav + footer. The legacy
    cart/checkout/account/admin styles in globals.css are left intact; only a few
@@ -17,7 +17,7 @@
   --rc-canvas-soft: #fafafa; /* subtle alternating band */
   --rc-surface: #ffffff; /* cards */
   --rc-surface-strong: #f0efed; /* badges, plates */
-  --rc-body: #4e4e4e; /* running text */
+  --rc-body: var(--brand-text); /* running text */
   --rc-muted: #777169; /* sub-titles */
   --rc-hairline: #e7e5e4; /* 1px dividers / card outlines */
   --rc-hairline-strong: #d6d3d1;
@@ -28,9 +28,15 @@
   --rc-orb-lavender: #c8b8e0;
   --rc-orb-sky: #a8c8e8;
   --rc-orb-rose: #e8b8c4;
-  /* Hero accent — brand amber-gold (matches the logo) over a warm-dark hero. */
-  --rc-hero: #f2a52e;
-  --rc-hero-soft: #f8bf63;
+  /* Brand palette (client PRD). One definition each — everything else points here. */
+  --brand-yellow: #f4a522; /* Stellar Yellow: accents, buttons, eyebrows */
+  --brand-yellow-soft: #f8bf63; /* hover tint of the yellow */
+  --brand-orange: #ff9f00; /* Energetic Orange: card gradients */
+  --brand-text: #7f8c8d; /* faint black: body text */
+  --brand-shadow: rgba(127, 140, 141, 0.35); /* the same grey, for card shadows */
+  --brand-gradient: linear-gradient(135deg, var(--brand-orange), var(--brand-yellow));
+  --rc-hero: var(--brand-yellow);
+  --rc-hero-soft: var(--brand-yellow-soft);
   --rc-accent: var(--rc-ink); /* editorial accent = ink */
   --rc-maxw: 1200px;
   /* Override base tokens so legacy surfaces inherit the editorial canvas. */
@@ -61,7 +67,7 @@
   padding: 13px 26px;
   font-family: var(--font-body);
   font-size: 15px;
-  font-weight: 500; /* editorial: lighter than the old 700 */
+  font-weight: 700; /* brand: buttons are Montserrat Bold */
   letter-spacing: 0;
   cursor: pointer;
   transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
@@ -156,26 +162,6 @@
   border-bottom: 1px solid var(--rc-line);
   transition: background 0.25s ease, border-color 0.25s ease;
 }
-/* Over the dark hero: float the header on a dark scrim and turn links white.
-   The scrim uses a solid-alpha background-color (not a gradient-to-transparent)
-   so the white nav text has a genuinely dark backing and passes AA contrast —
-   the old gradient faded to 0, leaving "Cart" measured against the light page
-   body (1.09:1). A subtle gradient image on top keeps the floating feel. */
-body[data-over-hero] .rc-header {
-  background-color: rgba(10, 6, 2, 0.82);
-  background-image: linear-gradient(180deg, rgba(10, 6, 2, 0.35), rgba(10, 6, 2, 0));
-  backdrop-filter: blur(2px);
-  border-bottom-color: transparent;
-}
-body[data-over-hero] .rc-nav-link,
-body[data-over-hero] .cart-button {
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-body[data-over-hero] .rc-nav-link:hover,
-body[data-over-hero] .cart-button:hover {
-  color: rgba(255, 255, 255, 0.72);
-}
 .rc-header-inner {
   display: flex;
   align-items: center;
@@ -234,229 +220,221 @@ body[data-over-hero] .cart-button:hover {
 .rc-wordmark {
   display: inline-flex;
   align-items: center;
+  gap: 10px;
 }
 .rc-logo {
-  height: 34px;
+  height: 38px;
   width: auto;
   display: block;
 }
-.rc-wordmark.is-compact .rc-logo {
-  height: 26px;
-}
-
-/* ---- Hero -----------------------------------------------------------------*/
-.rc-hero {
-  position: relative;
-  height: 100vh;
-  min-height: 560px;
-  overflow: hidden;
-  background: #0a0805; /* warm-dark base behind the golden hero */
-  margin-top: calc(-1 * var(--rc-header-h)); /* fill behind the transparent header — no light gap */
-}
-.rc-hero-stage {
-  position: absolute;
-  inset: 0;
-}
-.rc-hero-backdrop {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(18, 12, 4, 0.92) 0%, rgba(18, 12, 4, 0.55) 34%, rgba(18, 12, 4, 0) 62%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(10, 6, 2, 0.6) 100%),
-    radial-gradient(130% 90% at 72% 32%, #3a2a12 0%, #1d1507 56%, #0a0805 100%);
-}
-/* Keep the lede readable even where the bike sits behind it. */
-.rc-hero-lede,
-.rc-hero-eyebrow {
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.6);
-}
-.rc-hero-title > span:first-child {
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-}
-.rc-hero-canvas {
-  position: absolute;
-  inset: 0;
-  color: rgba(255, 255, 255, 0.14); /* fallback silhouette colour */
-  pointer-events: none;
-}
-.rc-hero-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.rc-hero-fallback svg {
-  width: min(70%, 680px);
-  height: auto;
-}
-/* Loading poster — shown over the hero canvas until the 3D model is ready. */
-.rc-hero-loader {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
+.rc-wordmark-words {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-  padding-bottom: clamp(80px, 16vh, 150px);
-  pointer-events: none;
-  transition: opacity 0.6s ease, visibility 0.6s ease;
+  gap: 4px;
 }
-.rc-hero-loader[data-ready='true'] {
-  opacity: 0;
-  visibility: hidden;
+.rc-wordmark-tagline {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--brand-text);
 }
-.rc-hero-loader-art {
+.rc-wordmark-text {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--brand-yellow);
+}
+.rc-wordmark.is-compact .rc-logo {
+  height: 30px;
+}
+.rc-wordmark.is-compact .rc-wordmark-tagline {
+  font-size: 8px;
+}
+.rc-wordmark.is-compact .rc-wordmark-text {
+  font-size: 18px;
+}
+
+/* ---- Hero (looping video + editable overlay) ------------------------------*/
+.rc-hero {
+  position: relative;
+  overflow: hidden;
+  background: #0a0805; /* shows while the video loads */
+  color: #fff;
+  /* Phones: the portrait video (9:16), capped to the viewport so it never
+     out-grows the screen. Wider screens switch to the landscape one below. */
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: calc(100svh - var(--rc-header-h));
+  min-height: 480px;
+}
+.rc-hero-video {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(109, 163, 255, 0.12); /* dim blue silhouette */
-  animation: rc-hero-shimmer 1.8s ease-in-out infinite;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover; /* always fills the box edge to edge, cropping rather than leaving gaps */
+  object-position: 50% 40%; /* keep the baked-in headline in frame when cropping */
 }
-.rc-hero-loader-art svg {
-  width: min(58%, 560px);
-  height: auto;
-}
-.rc-hero-loader-spin {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid rgba(109, 163, 255, 0.25);
-  border-top-color: #6da3ff;
-  animation: rc-hero-spin 0.8s linear infinite;
-}
-.rc-hero-loader-label {
-  font-size: 13px;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.62);
-}
-@keyframes rc-hero-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes rc-hero-shimmer {
-  0%,
-  100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-.rc-hero-top {
+/* Soft bottom/top shade so the white + yellow text stays readable on any frame. */
+.rc-hero-scrim {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: clamp(116px, 17vh, 195px); /* eyebrow nudged down toward the headline */
-  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(0deg, rgba(10, 8, 5, 0.78) 0%, rgba(10, 8, 5, 0) 42%),
+    linear-gradient(180deg, rgba(10, 8, 5, 0.5) 0%, rgba(10, 8, 5, 0) 26%);
 }
-.rc-hero-eyebrow {
-  display: inline-block;
-  color: var(--rc-hero);
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  font-size: 12px;
-  font-weight: 750;
-}
-/* Crossfading headline beats stacked in one grid cell. */
-.rc-hero-beats {
+.rc-hero-overlay {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: clamp(215px, 35vh, 375px); /* headline raised a bit */
-  z-index: 3;
+  inset: 0;
   display: grid;
+  /* phone: stat top-left · promo bottom-left · tagline + button bottom-right */
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'stat stat'
+    '. .'
+    'promo cta';
+  gap: 12px;
+  padding: 20px 16px 24px;
 }
-.rc-hero-title {
-  grid-row: 1;
-  grid-column: 1;
+.rc-hero-left {
+  display: contents; /* phone: its children are placed on the grid directly */
+}
+.rc-hero-stat {
+  grid-area: stat;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+.rc-hero-stat-value {
+  font-weight: 800;
+  font-size: clamp(26px, 8vw, 40px);
+  line-height: 1.1;
+}
+.rc-hero-stat-label {
+  font-family: var(--font-heading);
+  color: var(--brand-yellow);
+  font-size: clamp(13px, 3.6vw, 18px);
+  line-height: 1.25;
+  max-width: 11ch;
+}
+.rc-hero-cta {
+  grid-area: cta;
+  align-self: end;
+  justify-self: end;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.rc-hero-tagline {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.92);
+}
+.rc-hero-btn {
+  padding: 9px 14px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.rc-hero-promo {
+  grid-area: promo;
   align-self: end;
   display: flex;
   flex-direction: column;
-  margin: 0;
-  font-family: var(--font-hero); /* cinematic grotesk; the rest of the site is serif */
-  color: #fff;
+  gap: 4px;
+  max-width: 16ch;
+}
+.rc-hero-promo-title {
+  font-family: var(--font-heading);
+  color: var(--brand-yellow);
+  font-size: clamp(14px, 4.2vw, 20px);
+  line-height: 1.2;
+}
+.rc-hero-promo-sub {
   font-weight: 700;
-  text-transform: uppercase;
-  line-height: 0.88;
-  letter-spacing: -0.03em;
-  font-size: clamp(52px, 10.5vw, 158px);
-  will-change: opacity, transform;
+  font-size: 13px;
 }
-.rc-hero-title:not(.is-beat):not(.is-first) {
-  display: none;
+.rc-hero-promo.is-link {
+  transition: transform 0.18s ease;
 }
-.rc-hero-title-accent {
-  color: transparent;
-  -webkit-text-stroke: 2px var(--rc-hero);
+.rc-hero-promo.is-link:hover {
+  transform: translateY(-2px);
 }
-.rc-hero-copy {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: clamp(36px, 8vh, 92px);
-  z-index: 3;
+
+/* Tablet and up: landscape video (16:9), stat + button stacked bottom-left,
+   Stellar Originals bottom-right — as in the desktop design. */
+@media (min-width: 768px) {
+  /* Desktop proportions from the Canva design (~1.9 : 1, a touch shorter than the
+     16:9 file so the text sits comfortably); capped to the viewport height on short
+     screens. The video fills the box on every screen size (object-fit: cover). */
+  .rc-hero {
+    aspect-ratio: 1.9 / 1;
+    max-height: calc(100svh - var(--rc-header-h));
+    min-height: 420px;
+  }
+  .rc-hero-overlay {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 1fr;
+    grid-template-areas: 'left promo';
+    align-items: end;
+    padding: clamp(24px, 4vw, 64px);
+  }
+  .rc-hero-left {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.6vw, 22px);
+    align-self: end;
+  }
+  .rc-hero-stat-value {
+    font-size: clamp(28px, 3.4vw, 56px);
+  }
+  .rc-hero-stat-label {
+    font-size: clamp(15px, 1.9vw, 28px);
+    max-width: none;
+  }
+  .rc-hero-cta {
+    align-self: start;
+    justify-self: start;
+    align-items: flex-start;
+    text-align: left;
+  }
+  .rc-hero-tagline {
+    font-size: clamp(15px, 1.6vw, 22px);
+  }
+  .rc-hero-btn {
+    padding: 12px 24px;
+    font-size: clamp(13px, 1.2vw, 16px);
+  }
+  .rc-hero-promo {
+    max-width: none;
+    text-align: right;
+    align-items: flex-end;
+  }
+  .rc-hero-promo-title {
+    font-size: clamp(20px, 3vw, 52px);
+    max-width: 9ch;
+  }
+  .rc-hero-promo-sub {
+    font-size: clamp(14px, 1.6vw, 22px);
+  }
 }
-.rc-hero-lede {
-  max-width: 430px;
-  color: #d8dadf;
-  font-size: 16.5px;
-  margin: 0 0 22px;
-}
-.rc-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-.rc-hero-scroll {
-  position: absolute;
-  bottom: 22px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  animation: rc-scrollnudge 2.4s ease-in-out infinite; /* whole cue bobs → reads as "scroll me" */
-}
-.rc-hero-scroll i {
-  width: 1px;
-  height: 34px;
-  background: linear-gradient(var(--rc-hero), transparent);
-  animation: rc-scrollpulse 1.8s ease-in-out infinite;
-}
-/* A down-chevron under the line so the invitation to scroll is unmistakable. */
-.rc-hero-scroll i::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  border-right: 1px solid var(--rc-hero);
-  border-bottom: 1px solid var(--rc-hero);
-  transform: translateX(-50%) rotate(45deg);
-}
-.rc-hero-scroll i {
-  position: relative;
-}
-@keyframes rc-scrollpulse {
-  0%, 100% { opacity: 0.3; transform: scaleY(0.6); }
-  50% { opacity: 1; transform: scaleY(1); }
-}
-@keyframes rc-scrollnudge {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(6px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-hero-promo.is-link {
+    transition: none;
+  }
 }
 
 /* ---- Sections -------------------------------------------------------------*/
@@ -561,11 +539,12 @@ body[data-over-hero] .cart-button:hover {
   background: var(--rc-accent, var(--rc-gold));
 }
 .rc-sec-title {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.05;
-  font-size: clamp(34px, 4.8vw, 60px);
+  font-family: var(--font-heading); /* Horizon look-alike */
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.15;
+  font-size: clamp(22px, 3.2vw, 38px);
+  text-transform: uppercase;
   margin: 0;
 }
 .rc-sec-blurb {
@@ -879,9 +858,9 @@ body[data-over-hero] .cart-button:hover {
   color: rgba(255, 255, 255, 0.55);
 }
 .rc-card-name {
-  font-family: var(--font-display); /* editorial serif product name */
-  font-size: 21px;
-  font-weight: 500;
+  font-family: var(--font-display); /* product name: Montserrat Bold */
+  font-size: 18px;
+  font-weight: 700;
   letter-spacing: 0;
   line-height: 1.15;
   margin: 0;
@@ -1027,8 +1006,8 @@ body[data-over-hero] .cart-button:hover {
 }
 .rc-cat-body h3 {
   font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 500;
+  font-size: 28px;
+  font-weight: 700;
   margin: 4px 0 6px;
   letter-spacing: -0.01em;
 }
@@ -1082,6 +1061,7 @@ body[data-over-hero] .cart-button:hover {
 }
 .rc-showroom .rc-sec-title {
   margin-bottom: 16px;
+  text-transform: none; /* a sentence, not a label */
 }
 .rc-showroom .rc-btn {
   margin-top: 24px;
@@ -1156,9 +1136,10 @@ body[data-over-hero] .cart-button:hover {
   margin-bottom: 26px;
 }
 .rc-shop-title {
-  font-family: var(--font-display);
-  font-size: clamp(40px, 6vw, 70px);
-  font-weight: 500;
+  font-family: var(--font-heading);
+  font-size: clamp(26px, 4.2vw, 46px);
+  text-transform: uppercase;
+  font-weight: 400;
   letter-spacing: -0.01em;
   line-height: 1.03;
   margin: 0 0 10px;
@@ -1349,8 +1330,8 @@ body[data-over-hero] .cart-button:hover {
 }
 .rc-detail-title {
   font-family: var(--font-display);
-  font-size: clamp(40px, 5.2vw, 68px);
-  font-weight: 500;
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.02;
   margin: 10px 0 16px;
@@ -1668,9 +1649,6 @@ body[data-over-hero] .cart-button:hover {
   .rc-logo {
     height: 28px;
   }
-  .rc-hero-title {
-    font-size: clamp(54px, 18vw, 96px);
-  }
   .rc-filter-controls {
     margin-left: 0;
     width: 100%;
@@ -1690,15 +1668,6 @@ body[data-over-hero] .cart-button:hover {
 
 /* ---- Reduced motion -------------------------------------------------------*/
 @media (prefers-reduced-motion: reduce) {
-  .rc-hero-scroll i {
-    animation: none;
-  }
-  .rc-hero-loader-art {
-    animation: none;
-  }
-  .rc-hero-loader-spin {
-    animation-duration: 2s; /* gentle, not a fast spinner */
-  }
   .rc-zoom img,
   .rc-card-media img,
   .rc-cat img,
@@ -1711,4 +1680,323 @@ body[data-over-hero] .cart-button:hover {
   .rc-btn:hover {
     transform: none;
   }
+}
+
+/* ============================================================================
+   UI revamp (video hero, brand tokens, offers, retailers, product page)
+   ============================================================================ */
+
+/* ---- Offer tags (card: capped row under the image · product page: all) ----*/
+.rc-offer-tags {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.rc-offer-tags.is-capped {
+  flex-wrap: nowrap; /* one line on cards: no wrapping, no jumping heights */
+  overflow: hidden;
+}
+.rc-offer-tag {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #8a5a00;
+  background: rgba(244, 165, 34, 0.14);
+  border: 1px solid rgba(244, 165, 34, 0.35);
+}
+a.rc-offer-tag:hover {
+  background: rgba(244, 165, 34, 0.26);
+}
+.rc-offer-tag--more {
+  letter-spacing: 0.1em;
+  cursor: help;
+}
+.rc-chips-label {
+  align-self: center;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand-text);
+  margin-right: 4px;
+}
+
+/* ---- Cards: brand shadow + orange gradient accents --------------------------*/
+.rc-card-media {
+  transition: box-shadow 0.25s ease;
+}
+.rc-card:hover .rc-card-media {
+  box-shadow: 0 10px 28px var(--brand-shadow);
+}
+.rc-chip-offer {
+  background: var(--brand-gradient);
+  color: #241704;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+/* ---- Authorized retailers -----------------------------------------------------*/
+.rc-retailers {
+  background: #000;
+  color: #fff;
+  padding: clamp(32px, 5vw, 56px) 0;
+}
+.rc-retailers-title {
+  font-family: var(--font-heading);
+  font-size: clamp(18px, 2.6vw, 28px);
+  font-weight: 400;
+  text-transform: uppercase;
+  margin: 0 0 24px;
+}
+.rc-retailers-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+.rc-retailer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 12px;
+}
+.rc-retailer img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+a.rc-retailer {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+a.rc-retailer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(244, 165, 34, 0.3);
+}
+
+/* ---- Offer rail + fireworks ----------------------------------------------------*/
+.rc-offer-rail {
+  position: relative;
+  overflow: hidden;
+}
+.rc-offer-rail .rc-sec-head {
+  position: relative;
+  z-index: 1;
+}
+.rc-fireworks {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: clamp(150px, 20vw, 240px); /* the heading band only — never over the cards */
+  overflow: hidden;
+  pointer-events: none; /* never blocks the cards */
+  z-index: 2;
+}
+.rc-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.rc-burst i {
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 8px 1px var(--c);
+  opacity: 0;
+  animation: rc-spark 3.8s ease-out infinite;
+  animation-delay: var(--delay);
+}
+@keyframes rc-spark {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateX(0) scale(0.4);
+  }
+  6% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 1;
+    transform: rotate(var(--a)) translateX(calc(var(--reach) * var(--d))) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: rotate(var(--a)) translateX(calc(var(--reach) * var(--d) * 1.12)) translateY(10px) scale(0.6);
+  }
+  62%,
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateX(calc(var(--reach) * var(--d) * 1.15)) translateY(18px) scale(0.2);
+  }
+}
+@media (max-width: 640px) {
+  .rc-burst {
+    transform: scale(0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-fireworks {
+    display: none;
+  }
+}
+
+/* ---- Stellar Originals (coming soon) ---------------------------------------------*/
+.rc-originals-wrap {
+  padding-top: 0;
+}
+.rc-originals {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: clamp(40px, 7vw, 88px) 20px;
+  border-radius: 20px;
+  color: #fff;
+  background:
+    radial-gradient(80% 120% at 50% 0%, rgba(255, 159, 0, 0.28) 0%, rgba(255, 159, 0, 0) 60%),
+    linear-gradient(160deg, #1c1917 0%, #0c0a09 100%);
+}
+.rc-originals.is-link {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.rc-originals.is-link:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px var(--brand-shadow);
+}
+.rc-originals-glow {
+  position: absolute;
+  left: 50%;
+  top: -40%;
+  width: 60%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(244, 165, 34, 0.35), transparent);
+  animation: rc-glow 5s ease-in-out infinite;
+}
+@keyframes rc-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.rc-originals-title {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: clamp(28px, 6vw, 64px);
+  line-height: 1.1;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rc-originals-pill {
+  position: relative;
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #241704;
+  background: var(--brand-yellow);
+}
+.rc-originals-line {
+  position: relative;
+  margin: 0;
+  max-width: 40ch;
+  color: rgba(255, 255, 255, 0.78);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rc-originals-glow {
+    animation: none;
+  }
+  .rc-originals.is-link {
+    transition: none;
+  }
+}
+
+/* ---- Product page: details band (description left, specs right) ------------------*/
+.rc-detail-media {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rc-detail-more {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-top: clamp(32px, 5vw, 64px);
+  padding-top: clamp(24px, 4vw, 40px);
+  border-top: 1px solid var(--rc-hairline);
+}
+.rc-detail-more-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+.rc-detail-more .rc-detail-desc {
+  max-width: none;
+  font-size: 16px;
+}
+.rc-detail-more .rc-detail-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 16px;
+}
+@media (min-width: 900px) {
+  .rc-detail-more:not(.is-single) {
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(32px, 6vw, 80px);
+  }
+}
+
+/* ---- Admin: Site content + offer checkboxes ----------------------------------------*/
+.admin-offers {
+  border: 0;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.admin-offers legend {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.admin-offers-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.admin-retailer {
+  border: 1px solid var(--rc-hairline, #e7e5e4);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+.admin-img-hint {
+  margin: 6px 0 0;
+  font-size: 12.5px;
 }
