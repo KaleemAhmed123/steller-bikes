@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { HeroContent } from '@/lib/types';
 import { HeroBackdropVideo } from './HeroBackdropVideo';
 
-// Homepage hero: the looping brand video with the owner-editable text laid over
+// Homepage hero: the brand video (plays once, rests on its last frame) with the owner-editable text laid over
 // it (Site content admin page). The big "35 YEARS OF MASTERY" is part of the video.
 // A server component — the only client piece is the <video> (reduced-motion pause).
 // Every text line is optional: an empty field simply isn't rendered.

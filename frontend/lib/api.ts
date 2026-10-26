@@ -456,7 +456,6 @@ export const accountApi = {
     apiFetch<SavedAddress[]>(`/api/account/addresses/${id}`, { method: 'DELETE' }),
 };
 
-// Format paise (integers) as Indian rupees, e.g. 2499900 -> "₹24,999.00".
 // City/state to autofill and the delivery fee for a pincode. Never throws: a failed
 // lookup just means the customer types city/state themselves.
 export async function getDelivery(pin: string, signal?: AbortSignal): Promise<DeliveryQuote | null> {
@@ -478,6 +477,7 @@ export function moneyShort(paise: number): string {
   }).format(paise / 100);
 }
 
+// Format paise (integers) as Indian rupees, e.g. 2499900 -> "₹24,999.00".
 export function money(paise: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
