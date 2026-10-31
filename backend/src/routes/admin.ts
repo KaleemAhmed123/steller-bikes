@@ -10,6 +10,7 @@ import { transitionOrder, TransitionError } from '../lib/fulfillment.js';
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
 import { siteContentShape, toOfferKey, withSiteContent } from '../lib/siteContent.js';
+import { countdownEndsAtSchema, stripStyleSchema, withPromoStrip } from '../lib/promoStrip.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 import { parsePagination, pageMeta } from '../lib/pagination.js';
@@ -303,17 +304,23 @@ const settingsSchema = z.object({
   codEnabled: z.boolean(),
   onlinePaymentEnabled: z.boolean(),
   announcement: z.string().trim().max(300),
+  announcementStyle: stripStyleSchema, // look of that banner (Promo strip tab)
+  countdownEndsAt: countdownEndsAtSchema, // when the countdown look ends
   // Site content tab (hero text, offer rail, retailers) — rules + defaults in lib/siteContent.ts.
   ...siteContentShape,
 });
 
+// What both settings routes return: the stored doc with every default merged in (so a
+// form is never blank) and the delivery rules as they are effectively in force.
+async function settingsView(doc: object | null) {
+  const rules = await loadDeliveryRules();
+  return { ...withPromoStrip(withSiteContent(doc)), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee };
+}
+
 // GET /api/admin/settings — current shop details (empty object if unset).
 adminRouter.get('/settings', requirePermission('settings.manage'), async (_req, res, next) => {
   try {
-    const doc = await SettingsModel.findOne().lean();
-    const rules = await loadDeliveryRules(); // effective values (defaults when never saved)
-    // defaults merged so the form is never blank
-    res.json({ data: { ...withSiteContent(doc), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee } });
+    res.json({ data: await settingsView(await SettingsModel.findOne().lean()) });
   } catch (err) {
     next(err);
   }
@@ -339,8 +346,7 @@ adminRouter.patch('/settings', requirePermission('settings.manage'), async (req,
       }
     }
     const doc = await SettingsModel.findOneAndUpdate({}, { $set: parsed.data }, { new: true, upsert: true }).lean();
-    const rules = await loadDeliveryRules();
-    res.json({ data: { ...withSiteContent(doc), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee } });
+    res.json({ data: await settingsView(doc) });
   } catch (err) {
     next(err);
   }

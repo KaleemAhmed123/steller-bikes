@@ -12,6 +12,7 @@ import {
   CreditCard,
   Settings,
   SlidersHorizontal,
+  Megaphone,
   LayoutTemplate,
   Menu,
   LogOut,
@@ -29,6 +30,7 @@ const NAV: { href: string; label: string; icon: LucideIcon; ownerOnly?: boolean 
   { href: '/admin/payments', label: 'Payments', icon: CreditCard, ownerOnly: true },
   { href: '/admin/settings', label: 'Settings', icon: Settings, ownerOnly: true },
   { href: '/admin/platform', label: 'Platform', icon: SlidersHorizontal, ownerOnly: true },
+  { href: '/admin/promo-strip', label: 'Promo strip', icon: Megaphone, ownerOnly: true },
   { href: '/admin/content', label: 'Site content', icon: LayoutTemplate, ownerOnly: true },
 ];
 

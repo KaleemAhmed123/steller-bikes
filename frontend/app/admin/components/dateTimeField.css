@@ -1,0 +1,45 @@
+/* Admin date + time picker: a compact trigger, a calendar dropdown on desktop,
+   a bottom sheet with big tap targets on phones. */
+.dtf { position: relative; }
+
+.dtf-trigger { display: inline-flex; align-items: center; gap: 10px; width: 100%; max-width: 340px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--foreground); font: inherit; font-size: 0.92rem; text-align: left; cursor: pointer; }
+.dtf-trigger:hover, .dtf-trigger[aria-expanded='true'] { border-color: var(--accent); }
+.dtf-trigger svg { flex-shrink: 0; color: var(--accent); }
+
+.dtf-backdrop { position: fixed; inset: 0; z-index: 90; }
+.dtf-pop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 91; width: 312px; max-width: calc(100vw - 32px); padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 40px rgba(20, 23, 25, 0.18); }
+
+.dtf-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.dtf-nav { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--foreground); cursor: pointer; }
+.dtf-nav:hover { background: var(--background); }
+
+.dtf-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.dtf-weekday { padding: 4px 0; text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--muted-foreground); text-transform: uppercase; }
+.dtf-day { aspect-ratio: 1; border: 0; border-radius: 50%; background: transparent; color: var(--foreground); font: inherit; font-size: 0.88rem; cursor: pointer; }
+.dtf-day:hover { background: var(--background); }
+.dtf-out { color: var(--muted-foreground); opacity: 0.55; }
+.dtf-today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.dtf-day[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); font-weight: 700; opacity: 1; }
+.dtf-trigger:focus-visible, .dtf-nav:focus-visible, .dtf-day:focus-visible, .dtf-time select:focus-visible, .dtf-ampm button:focus-visible { outline: 2px solid var(--foreground); outline-offset: 2px; }
+
+.dtf-time { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.dtf-time select { padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--foreground); font: inherit; font-size: 0.95rem; }
+.dtf-ampm { display: flex; margin-left: auto; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.dtf-ampm button { padding: 8px 12px; border: 0; background: var(--surface); color: var(--foreground); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+.dtf-ampm button[aria-pressed='true'] { background: var(--accent); color: var(--accent-ink); }
+
+.dtf-foot { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+.dtf-foot .muted { margin-right: auto; font-size: 0.78rem; }
+.dtf-done { padding: 8px 18px; }
+
+/* Phones: a bottom sheet over a dimmed page; bigger days and controls for fingers. */
+@media (max-width: 560px) {
+  .dtf-backdrop { background: rgba(0, 0, 0, 0.45); }
+  .dtf-pop { position: fixed; top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; border-width: 1px 0 0; }
+  .dtf-trigger { max-width: none; }
+  .dtf-nav { width: 44px; height: 44px; }
+  .dtf-day { font-size: 1rem; }
+  .dtf-time select { padding: 10px 12px; font-size: 1rem; }
+  .dtf-ampm button { padding: 10px 16px; }
+  .dtf-done { padding: 10px 24px; }
+}

@@ -7,9 +7,10 @@ import type { AdminCategory, AdminOfferType } from '@/lib/types';
 import { PageSkeleton } from '@/components/PageSkeleton';
 
 // The operational config for the shop (owner-only). Two parts share the one
-// settings document: payment toggles + storefront announcement, and the category
-// list, plus the offer types (Diwali, New Year…) products can be tagged with. Shop-facing identity (address/phone/hours) lives on the Settings tab.
-type Config = { codEnabled: boolean; onlinePaymentEnabled: boolean; announcement: string };
+// settings document: the payment toggles, and the category list, plus the offer types
+// (Diwali, New Year…) products can be tagged with. Shop-facing identity (address/phone/hours)
+// lives on the Settings tab; the storefront promo strip has its own tab.
+type Config = { codEnabled: boolean; onlinePaymentEnabled: boolean };
 
 export default function AdminPlatform() {
   const [cfg, setCfg] = useState<Config | null>(null);
@@ -30,7 +31,6 @@ export default function AdminPlatform() {
         setCfg({
           codEnabled: d.codEnabled ?? true,
           onlinePaymentEnabled: d.onlinePaymentEnabled ?? true,
-          announcement: d.announcement ?? '',
         }),
       )
       .catch((e: Error) => setError(e.message));
@@ -49,7 +49,6 @@ export default function AdminPlatform() {
       setCfg({
         codEnabled: saved.codEnabled,
         onlinePaymentEnabled: saved.onlinePaymentEnabled,
-        announcement: saved.announcement,
       });
       setMessage('Platform settings saved.');
     } catch (err) {
@@ -156,17 +155,6 @@ export default function AdminPlatform() {
         <p className="muted">
           Keep at least one on. Online payment also needs Razorpay keys set on the server (see the playbook).
         </p>
-
-        <h2 className="admin-h2">Storefront announcement</h2>
-        <label className="field">
-          <span>Banner text (leave blank to hide the banner)</span>
-          <input
-            value={cfg.announcement}
-            placeholder="e.g. Diwali sale — free local delivery this week!"
-            maxLength={300}
-            onChange={(e) => set('announcement', e.target.value)}
-          />
-        </label>
 
         {message && <div className="notice">{message}</div>}
         {error && <div className="notice error">{error}</div>}

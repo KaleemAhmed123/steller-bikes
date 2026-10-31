@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { SettingsModel } from '../models/settings.js';
 import { withSiteContent } from '../lib/siteContent.js';
+import { withPromoStrip } from '../lib/promoStrip.js';
 import { loadDeliveryRules } from '../lib/delivery.js';
 
 export const settingsRouter = Router();
@@ -31,7 +32,7 @@ settingsRouter.get('/', async (_req, res, next) => {
     // The storefront shows the Kanpur fee in its messages, so it gets the live number
     // (the pincode list stays server-side; the browser asks /api/delivery/:pin).
     const { kanpurFee } = await loadDeliveryRules();
-    res.json({ data: { ...withSiteContent(doc ? { ...EMPTY, ...doc } : EMPTY), kanpurDeliveryFee: kanpurFee } });
+    res.json({ data: { ...withPromoStrip(withSiteContent(doc ? { ...EMPTY, ...doc } : EMPTY)), kanpurDeliveryFee: kanpurFee } });
   } catch (err) {
     next(err);
   }

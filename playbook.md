@@ -98,6 +98,16 @@ overwrites retailers or offer-rail settings you have already saved.
 - Hero videos: `frontend/public/hero_section_{desktop,mobile}_view_video_compressed.mp4`. To change a
   video, replace the file (keep the names) and redeploy.
 
+### 1c-3. Promo strip (the animated bar above the menu)
+- **Admin → Promo strip** (owner only): pick one of 9 looks (Diwali Ride, Diwali Night, Christmas, New Year
+  Countdown, Holi, Eid, Tiranga, Wheelie Sale, Everyday), type the text, press **Apply to the shop**.
+  The shop shows it on the next page load. **Empty text = no strip.** (The text is the old `announcement`
+  setting; it moved here from the Platform tab.)
+- Looks live in `frontend/components/promo-strip/` (list in `strips.tsx`). Add a festival: write its scene,
+  add one row to `STRIPS`, add a `.ps-scene-<id>` block in `promoStrip.css`. No backend change needed.
+- The **New Year Countdown** look shows a *Countdown ends (India time)* calendar picker in that tab (tap it, pick a day, set the time, Done). Until the owner
+  sets it, it counts down to midnight on the next 1 January (IST). Use it for any sale end, e.g. "Diwali sale ends in".
+
 ### 1e. Advance-payment links (agent → customer) — needs Razorpay keys
 
 How it works: an agent calls the customer and agrees an amount (usually the Delhivery delivery

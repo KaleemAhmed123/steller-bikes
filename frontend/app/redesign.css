@@ -8,7 +8,7 @@
    ============================================================================ */
 
 :root {
-  --rc-header-h: 70px; /* sticky header height — the hero pulls up under it */
+  --rc-header-h: 57px; /* sticky header height — the hero pulls up under it */
   /* Editorial "ElevenLabs" system: off-white canvas, warm near-black ink, no
      saturated accent. Colour appears only as soft pastel orbs (atmosphere). */
   --rc-ink: #0c0a09; /* display + primary text, ink pills */
@@ -121,17 +121,6 @@
 }
 
 /* ---- Header / nav ---------------------------------------------------------*/
-/* Owner-set announcement strip (Platform tab). Sits above the sticky header. */
-.rc-announce {
-  background: var(--primary);
-  color: #fff;
-  text-align: center;
-  padding: 8px 16px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
 /* Skip-to-content link: off-screen until focused, then pinned top-left. First
    focusable element in the layout so keyboard users can jump past the header. */
 .skip-link {
@@ -167,8 +156,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding-top: 14px;
-  padding-bottom: 14px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 .rc-nav {
   display: flex;
@@ -223,14 +212,14 @@
   gap: 10px;
 }
 .rc-logo {
-  height: 38px;
+  height: 32px;
   width: auto;
   display: block;
 }
 .rc-wordmark-words {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 .rc-wordmark-tagline {
   font-family: var(--font-body);
@@ -243,7 +232,7 @@
 }
 .rc-wordmark-text {
   font-family: var(--font-heading);
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: 0.06em;
   line-height: 1;
   color: var(--brand-yellow);
@@ -1647,7 +1636,7 @@
     font-size: 13px;
   }
   .rc-logo {
-    height: 28px;
+    height: 26px;
   }
   .rc-filter-controls {
     margin-left: 0;

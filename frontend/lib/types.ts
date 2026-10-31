@@ -98,6 +98,10 @@ export interface StoreSettings {
   codEnabled: boolean;
   onlinePaymentEnabled: boolean;
   announcement: string;
+  // Which look the banner wears (key from components/promo-strip). The API always sends one.
+  announcementStyle: string;
+  // When the countdown look ends, as an ISO timestamp. The API always sends one.
+  countdownEndsAt: string;
   // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
   // Shown in the delivery messages — the server still prices every order itself.
   kanpurDeliveryFee: number;

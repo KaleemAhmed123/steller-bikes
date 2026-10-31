@@ -86,6 +86,8 @@ export const EMPTY_SETTINGS: StoreSettings = {
   codEnabled: true,
   onlinePaymentEnabled: true,
   announcement: '',
+  announcementStyle: '',
+  countdownEndsAt: '',
   kanpurDeliveryFee: 29900,
   hero: {
     statValue: '',

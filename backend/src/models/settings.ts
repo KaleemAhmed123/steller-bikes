@@ -21,6 +21,10 @@ const settingsSchema = new Schema(
     codEnabled: { type: Boolean, default: true }, // cash-on-delivery on/off
     onlinePaymentEnabled: { type: Boolean, default: true }, // Razorpay on/off (on top of env config)
     announcement: { type: String, default: '' }, // storefront banner line ('' = hidden)
+    // Which look the banner wears (Promo strip tab). No default here on purpose: it lives in
+    // lib/promoStrip.ts and is applied on read, so there is one copy.
+    announcementStyle: { type: String },
+    countdownEndsAt: { type: Date }, // end of the strip's countdown; the default (next 1 Jan) is in the same lib
     offerTypes: { type: [String], default: [] }, // master list of offer-type keys (Platform tab)
     // Delivery rules (Settings tab). No defaults here on purpose: they live in
     // lib/delivery.ts and are applied on read, so there is one copy of the numbers.
