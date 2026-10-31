@@ -24,6 +24,7 @@ status.
 
 | **Promo strip** — owner-only Admin tab to pick one of 9 animated, festival-ready looks for the bar above the navbar (Diwali, Christmas, New Year countdown, Holi, Eid, Tiranga, sale, everyday), edit its text and apply; one catalogue, one new setting (`announcementStyle`), text reuses `announcement` | [`promo-strip.md`](promo-strip.md) | Shipped | 2026-11-01 |
 | **Shop info** — owner-only sub-page under Platform (inner tabs: map link, contact name/phone, About images); clickable "Open in Maps" Location row, tap-to-call contact, and an About page that shows the client's text word for word with admin-managed pictures | [`shop-info.md`](shop-info.md) | Shipped | 2026-11-01 |
+| **Signed uploads** — photo/video uploads to Cloudinary now need a signature made by the backend (signed-in staff only); the Cloudinary secret lives only on the server; the public unsigned-preset keys are gone | [`signed-uploads.md`](signed-uploads.md) | Shipped | 2026-11-01 |
 
 ## What "status" means
 

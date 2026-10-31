@@ -1,10 +1,10 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { uploadConfigured } from '@/lib/api';
+import { useEffect, useRef, useState } from 'react';
 import { safeSrc, imgError } from '@/lib/img';
 import { PHOTO_TYPES, specText, uploadPhoto, type PhotoSpec } from '@/lib/photoUpload';
 import { useFileUpload } from './useFileUpload';
+import { useUploadsEnabled } from './useUploadsEnabled';
 import './photoField.css';
 
 // One photo the owner manages: a preview, Upload / Replace, Remove, and the size to use printed
@@ -24,10 +24,14 @@ export function PhotoField({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const { busy, error, warning, clearWarning, onFile } = useFileUpload((file) => uploadPhoto(file, spec.min), onChange);
-  const canUpload = uploadConfigured();
-  // With no upload available the link box starts open. It must stay the owner's to open or close: tying `open`
-  // to the value would collapse the box on the first typed character.
-  const [linkOpen, setLinkOpen] = useState(!canUpload && !value);
+  const uploads = useUploadsEnabled(); // null while the server is asked
+  const canUpload = uploads === true;
+  // With no upload available the link box opens by itself, once. After that it stays the owner's to open or
+  // close: tying `open` to the value would collapse the box on the first typed character.
+  const [linkOpen, setLinkOpen] = useState(false);
+  useEffect(() => {
+    if (uploads === false && !value) setLinkOpen(true);
+  }, [uploads]); // eslint-disable-line react-hooks/exhaustive-deps -- only react to the server's answer, not to typing
 
   return (
     <div className="pf">

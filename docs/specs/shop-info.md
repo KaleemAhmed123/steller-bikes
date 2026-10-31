@@ -97,3 +97,4 @@ those names is simply ignored.
   (`backend/tests/settingsRoutes.test.ts`, 7 tests): sign-in/role checks, defaults on both routes, saving, refusal of bad input, and
   partial saves leaving other tabs alone. Full backend suite: 148 passing. Left as they were by decision: the `announcement`
   setting names (renaming needs a data migration) and the other constants kept in step by comments.
+- 2026-11-01 — Photo uploads are now **signed** by the backend (see `signed-uploads.md`): the Upload buttons depend on the server's Cloudinary values, not on frontend keys.

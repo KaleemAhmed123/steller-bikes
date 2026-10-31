@@ -22,13 +22,18 @@ export async function uploadPhoto(file: File, min: PhotoSpec['min']): Promise<{ 
   if (!PHOTO_TYPES.includes(file.type)) throw new Error('Choose a JPG, PNG or WebP photo.');
   if (file.size > MAX_PHOTO_MB * 1024 * 1024) throw new Error(`That photo is over ${MAX_PHOTO_MB} MB. Choose a smaller one.`);
 
-  const size = await createImageBitmap(file)
-    .then((bitmap) => {
-      const s = { w: bitmap.width, h: bitmap.height };
-      bitmap.close();
-      return s;
-    })
-    .catch(() => null); // unreadable here: let the upload decide
+  // Reading the pixel size is a bonus (for the "may look blurry" note). If the browser can't, or the file is
+  // unreadable here, carry on and let the upload decide.
+  const size =
+    typeof createImageBitmap === 'function'
+      ? await createImageBitmap(file)
+          .then((bitmap) => {
+            const s = { w: bitmap.width, h: bitmap.height };
+            bitmap.close();
+            return s;
+          })
+          .catch(() => null)
+      : null;
   const url = await uploadImage(file);
   const small = size && (size.w < min.w || size.h < min.h);
   return { url, warning: small ? `This photo is ${size.w} × ${size.h} px, smaller than recommended, so it may look blurry.` : '' };

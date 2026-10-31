@@ -1,8 +1,9 @@
 'use client';
 
-import { uploadImage, uploadConfigured } from '@/lib/api';
+import { uploadImage } from '@/lib/api';
 import { safeSrc, imgError } from '@/lib/img';
 import { useFileUpload } from './useFileUpload';
+import { useUploadsEnabled } from './useUploadsEnabled';
 
 // A single image field: a link/path input plus (when Cloudinary is set up) an
 // Upload button, with a preview. Shared by the product form and the retailer logos.
@@ -16,6 +17,7 @@ export function ImageField({
   onChange: (v: string) => void;
   hint?: string;
 }) {
+  const uploadsEnabled = useUploadsEnabled();
   const { busy, error: err, onFile } = useFileUpload(async (file) => ({ url: await uploadImage(file) }), onChange);
 
   return (
@@ -27,7 +29,7 @@ export function ImageField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
-        {uploadConfigured() && (
+        {uploadsEnabled && (
           <label className="btn-secondary admin-img-upload">
             {busy ? 'Uploading…' : 'Upload'}
             <input type="file" accept="image/*" hidden onChange={onFile} disabled={busy} />

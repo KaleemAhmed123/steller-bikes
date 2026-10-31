@@ -118,6 +118,17 @@ export interface StoreSettings {
   retailers: Retailer[];
 }
 
+// One signed Cloudinary upload, as made by the server (POST /api/admin/uploads/sign). No secret in it.
+export interface UploadSignature {
+  cloudName: string;
+  apiKey: string; // public by design
+  timestamp: number;
+  allowedFormats: string;
+  resourceType: 'image' | 'auto'; // the address segment
+  signature: string;
+  maxVideoMb: number;
+}
+
 // The pictures on the About page: one per section, plus a free gallery. '' = no picture.
 export interface AboutImages {
   hero: string;

@@ -1,11 +1,12 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { EMPTY_SETTINGS, uploadConfigured } from '@/lib/api';
+import { EMPTY_SETTINGS } from '@/lib/api';
 import { PHOTO_TYPES, uploadPhoto, type PhotoSpec } from '@/lib/photoUpload';
 import type { AboutImages, StoreSettings } from '@/lib/types';
 import { PhotoField } from '../../components/PhotoField';
 import { SaveRow } from '../../components/SaveRow';
+import { useUploadsEnabled } from '../../components/useUploadsEnabled';
 import { useSave } from '../../components/useSave';
 
 // The sizes below match how app/(shop)/about crops each picture (object-fit: cover).
@@ -44,7 +45,8 @@ export function AboutImagesPanel({ settings, onSaved }: { settings: Partial<Stor
   const picker = useRef<HTMLInputElement>(null);
   const { busy, message, error, save } = useSave(onSaved);
   const dirty = snapshot(toPayload(draft)) !== snapshot(saved);
-  const canUpload = uploadConfigured();
+  const uploads = useUploadsEnabled(); // null while the server is asked
+  const canUpload = uploads === true;
   const galleryMax = settings.galleryMax ?? 0; // the server's limit, sent with the settings
 
   const setSlot = (key: SlotKey, value: string) => setDraft((d) => ({ ...d, [key]: value }));
@@ -78,11 +80,11 @@ export function AboutImagesPanel({ settings, onSaved }: { settings: Partial<Stor
         save({ aboutImages: toPayload(draft) });
       }}
     >
-      {!canUpload && (
+      {uploads === false && (
         <div className="notice">
-          Photo upload isn’t switched on yet. Add the two Cloudinary values to the website’s settings (see the playbook,
-          section 1b) and restart it, and the <b>Upload</b> buttons below start working. Until then you can paste an image
-          link under “Use an image link instead”.
+          Photo upload isn’t switched on yet. Add the three Cloudinary values to the server’s settings (see the playbook,
+          section 1b) and restart the server, and the <b>Upload</b> buttons below start working. Until then you can paste
+          an image link under “Use an image link instead”.
         </div>
       )}
 
