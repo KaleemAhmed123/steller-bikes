@@ -1,13 +1,11 @@
 /* Admin → Promo strip: the live preview and the grid of looks to choose from. */
 .promo-calendar-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .promo-calendar-row .dtf { width: 340px; max-width: 100%; }
-.promo-status { margin: 0; font-size: 0.85rem; color: var(--muted-foreground); }
-.promo-status-error { color: #b3261e; font-weight: 600; }
+.promo-calendar-row .save-row { margin-top: 0; }
 /* Phones: stack the calendar, the button and the status; the button spans the width for easy thumbs. */
 @media (max-width: 560px) {
   .promo-calendar-row { flex-direction: column; align-items: stretch; gap: 12px; }
   .promo-calendar-row .dtf { width: auto; }
-  .promo-calendar-row .btn-primary { width: 100%; padding: 14px; }
 }
 
 .promo-preview { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }

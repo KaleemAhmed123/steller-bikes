@@ -54,3 +54,8 @@ test('the countdown date must be a real ISO timestamp', () => {
   assert.ok(!parse('2026-13-45').success);
   assert.ok(!parse('').success);
 });
+
+test('a corrupt stored countdown date falls back to the default instead of breaking the endpoint', () => {
+  const now = new Date('2026-11-01T10:00:00Z');
+  assert.equal(withPromoStrip({ countdownEndsAt: 'garbage' }, now).countdownEndsAt, '2026-12-31T18:30:00.000Z');
+});

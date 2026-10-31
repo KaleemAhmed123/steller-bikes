@@ -44,8 +44,8 @@
 - `app/(shop)/components/home/Showroom.tsx` — link row + contact; `layout.tsx` footer contact; `lib/contact.ts` `telHref`.
 - `app/(shop)/about/` — `content.ts` (client text), `page.tsx` (layout), `about.css`.
 
-**Not changed (ponytail):** the Settings tab still has Phone / WhatsApp fields; the storefront no longer reads them.
-Remove or repurpose them when convenient.
+The old Settings-tab Phone / WhatsApp fields were removed (nothing read them any more); data already stored under
+those names is simply ignored.
 
 ## 5. Checklist
 - [x] Backend tests (18 across the three settings libs pass); `tsc` clean
@@ -83,4 +83,17 @@ Remove or repurpose them when convenient.
   city/state and the *Open in Maps* button sit at the right edge like every other row (it had shrunk to its content and
   crowded the label). Labels top-align on phones where a value wraps. The Payment row, the footer and the home-page
   blurb no longer say "cash on delivery" only: `lib/payment.ts` words them from the two Platform switches
-  ("Cash on delivery & online payment" when both are on); the site description names both too.
+  (the wording is owned by `paymentLabel`, currently "Pay Your Way · Online or at Delivery" when both are on); the site description names both too.
+- 2026-11-01 — **Review clean-up** (see `review-ui-feedbacks.md`). One shared `useSave` hook + `SaveRow` (and one status
+  style) now serve the Shop info tabs and the Promo strip page. The five About-picture slots come from one list per package
+  (`ABOUT_IMAGE_SLOTS` in the backend; `EMPTY_SETTINGS.aboutImages` + the panel's slot list in the frontend). Gallery rows have
+  stable client-side ids. A corrupt stored countdown date falls back to the default instead of failing the endpoint. The crank
+  point is shared between the bike drawing and the leg maths. `Showroom` takes `settings` as required. Removed: the Settings
+  Phone/WhatsApp fields, `.si-photo` CSS, an invalid `role="grid"`, unused exports. Added: 11 frontend tests (`npm test` in
+  `frontend/`) and one backend test. No behaviour change.
+- 2026-11-01 — **Second clean-up round** (review items B1-B8). Both image fields (`ImageField`, `PhotoField`) now share one
+  upload flow, `useFileUpload`, each keeping its own rules (so product and retailer uploads behave exactly as before). The gallery
+  limit is sent by the API as `galleryMax` instead of being typed in the admin. New route-level tests
+  (`backend/tests/settingsRoutes.test.ts`, 7 tests): sign-in/role checks, defaults on both routes, saving, refusal of bad input, and
+  partial saves leaving other tabs alone. Full backend suite: 148 passing. Left as they were by decision: the `announcement`
+  setting names (renaming needs a data migration) and the other constants kept in step by comments.

@@ -26,12 +26,12 @@ const imageLink = z
 
 const requiredImage = imageLink.refine((v) => v !== '', { message: 'Every gallery photo needs an image.' });
 
+type Slot = (typeof ABOUT_IMAGE_SLOTS)[number];
+// Every slot is built from the one list above, so adding a picture slot is a one-line change here.
+const slotShape = Object.fromEntries(ABOUT_IMAGE_SLOTS.map((slot) => [slot, imageLink])) as Record<Slot, typeof imageLink>;
+
 const aboutImagesSchema = z.object({
-  hero: imageLink,
-  story: imageLink,
-  matters: imageLink,
-  brand: imageLink,
-  guarantee: imageLink,
+  ...slotShape,
   gallery: z
     .array(z.object({ url: requiredImage, alt: z.string().trim().max(120) }))
     .max(GALLERY_MAX),
@@ -55,7 +55,10 @@ export const shopInfoShape = {
 
 export type AboutImages = z.infer<typeof aboutImagesSchema>;
 
-const EMPTY_ABOUT_IMAGES: AboutImages = { hero: '', story: '', matters: '', brand: '', guarantee: '', gallery: [] };
+const EMPTY_ABOUT_IMAGES: AboutImages = {
+  ...(Object.fromEntries(ABOUT_IMAGE_SLOTS.map((slot) => [slot, ''])) as Record<Slot, string>),
+  gallery: [],
+};
 
 // Stored value wins field by field (an admin-cleared '' map link stays cleared); anything
 // never stored falls back to its default.
@@ -67,5 +70,6 @@ export function withShopInfo<T extends object>(doc: T | null | undefined) {
     contactName: d.contactName || DEFAULT_CONTACT.contactName,
     contactPhone: d.contactPhone || DEFAULT_CONTACT.contactPhone,
     aboutImages: { ...EMPTY_ABOUT_IMAGES, ...(d.aboutImages ?? {}) },
+    galleryMax: GALLERY_MAX, // so the admin form never hard-codes the limit the server enforces
   };
 }

@@ -293,8 +293,6 @@ const settingsSchema = z.object({
   city: z.string().trim().max(80),
   state: z.string().trim().max(80),
   pin: z.string().trim().max(10),
-  phone: z.string().trim().max(30),
-  whatsapp: z.string().trim().max(30),
   hours: z.string().trim().max(200),
   deliveryPolicy: z.string().trim().max(500),
   email: z.string().trim().max(120),

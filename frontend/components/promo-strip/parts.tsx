@@ -9,10 +9,10 @@ export const Message = ({ text }: { text: string }) => <span className="ps-text"
 
 /* ---- the rider and what it leaves behind ---- */
 
-export type TrailKind = 'spark' | 'snow' | 'confetti' | 'puff' | 'star';
+type TrailKind = 'spark' | 'snow' | 'confetti' | 'puff' | 'star';
 
 // Particles shed from the back wheel; each drifts back, fades and repeats.
-export function Trail({ kind, colors = [''], seed = 3 }: { kind: TrailKind; colors?: string[]; seed?: number }) {
+export function Trail({ kind, colors, seed = 3 }: { kind: TrailKind; colors?: string[]; seed?: number }) {
   const rnd = seeded(seed);
   const count = kind === 'puff' ? 7 : 12;
   return (
@@ -25,7 +25,7 @@ export function Trail({ kind, colors = [''], seed = 3 }: { kind: TrailKind; colo
             '--y': Math.round(rnd.between(4, 34)),
             '--d': `${r1(rnd.between(1.1, 2))}s`,
             '--dl': `-${r1(rnd.between(0, 2))}s`,
-            '--c': colors[i % colors.length],
+            ...(colors && { '--c': colors[i % colors.length] }),
           })}
         />
       ))}

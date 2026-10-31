@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { uploadImage, uploadConfigured } from '@/lib/api';
 import { safeSrc, imgError } from '@/lib/img';
+import { useFileUpload } from './useFileUpload';
 
 // A single image field: a link/path input plus (when Cloudinary is set up) an
 // Upload button, with a preview. Shared by the product form and the retailer logos.
@@ -16,23 +16,7 @@ export function ImageField({
   onChange: (v: string) => void;
   hint?: string;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
-
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setBusy(true);
-    setErr('');
-    try {
-      onChange(await uploadImage(file));
-    } catch (ex) {
-      setErr(ex instanceof Error ? ex.message : 'Upload failed.');
-    } finally {
-      setBusy(false);
-      e.target.value = '';
-    }
-  }
+  const { busy, error: err, onFile } = useFileUpload(async (file) => ({ url: await uploadImage(file) }), onChange);
 
   return (
     <div className="admin-img">

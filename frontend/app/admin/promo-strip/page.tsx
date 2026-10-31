@@ -6,6 +6,8 @@ import { PageSkeleton } from '@/components/PageSkeleton';
 import { PromoStrip } from '@/components/promo-strip/PromoStrip';
 import { STRIPS, findStrip } from '@/components/promo-strip/strips';
 import { DateTimeField } from '../components/DateTimeField';
+import { SaveRow } from '../components/SaveRow';
+import { useSave } from '../components/useSave';
 import './promoPicker.css';
 
 // "Promo strip" (owner-only): pick a look for the bar above the shop's navbar, type
@@ -23,9 +25,18 @@ const TEXT_MAX = 120; // short text reads best on a strip; the server allows up 
 export default function AdminPromoStrip() {
   const [live, setLive] = useState<Draft | null>(null); // what the shop shows right now
   const [draft, setDraft] = useState<Draft | null>(null); // what the owner is editing
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const { busy, message, error, save } = useSave(
+    (saved) => {
+      const next = { text: saved.announcement, styleId: findStrip(saved.announcementStyle).id, endsAt: saved.countdownEndsAt };
+      setLive(next);
+      setDraft(next);
+    },
+    (saved) =>
+      saved.announcement
+        ? 'Applied. The shop shows the new strip on the next page load.'
+        : 'Applied. The text is empty, so the shop shows no strip.',
+  );
 
   useEffect(() => {
     adminApi.settings
@@ -35,44 +46,14 @@ export default function AdminPromoStrip() {
         setLive(loaded);
         setDraft(loaded);
       })
-      .catch((e: Error) => setError(e.message));
+      .catch((e: Error) => setLoadError(e.message));
   }, []);
 
-  async function apply(e: React.FormEvent) {
-    e.preventDefault();
-    if (!draft) return;
-    setBusy(true);
-    setError('');
-    setMessage('');
-    try {
-      // Only send the date when the owner changed it, so an untouched default is never frozen into the settings.
-      const saved = await adminApi.settings.update({
-        announcement: draft.text,
-        announcementStyle: draft.styleId,
-        ...(draft.endsAt !== live?.endsAt && { countdownEndsAt: draft.endsAt }),
-      });
-      const next = { text: saved.announcement, styleId: findStrip(saved.announcementStyle).id, endsAt: saved.countdownEndsAt };
-      setLive(next);
-      setDraft(next);
-      setMessage(
-        next.text
-          ? 'Applied. The shop shows the new strip on the next page load.'
-          : 'Applied. The text is empty, so the shop shows no strip.',
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not apply the strip.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (error && !draft) return <div className="notice error">{error}</div>;
+  if (loadError && !draft) return <div className="notice error">{loadError}</div>;
   if (!draft || !live) return <PageSkeleton />;
 
   const dirty = draft.text !== live.text || draft.styleId !== live.styleId || draft.endsAt !== live.endsAt;
   const hasCountdown = findStrip(draft.styleId).hasCountdown;
-  // One line beside the button: what went wrong, else what is still unsaved, else what just happened.
-  const status = error || (dirty ? 'Unsaved changes' : message);
   // Picking a look never throws away what was typed; an empty box just gets that look's sample line.
   const pick = (styleId: string) =>
     setDraft({ ...draft, styleId, text: draft.text.trim() ? draft.text : findStrip(styleId).sampleText });
@@ -85,7 +66,18 @@ export default function AdminPromoStrip() {
         to hide the strip.
       </p>
 
-      <form className="admin-form" onSubmit={apply}>
+      <form
+        className="admin-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          // Only send the date when the owner changed it, so an untouched default is never frozen into the settings.
+          save({
+            announcement: draft.text,
+            announcementStyle: draft.styleId,
+            ...(draft.endsAt !== live.endsAt && { countdownEndsAt: draft.endsAt }),
+          });
+        }}
+      >
         <label className="field">
           <span>Strip text</span>
           <input
@@ -103,12 +95,7 @@ export default function AdminPromoStrip() {
             {hasCountdown && (
               <DateTimeField labelId="countdown-label" value={draft.endsAt} onChange={(endsAt) => setDraft({ ...draft, endsAt })} />
             )}
-            <button type="submit" className="btn-primary" disabled={busy || !dirty}>
-              {busy ? 'Applying…' : 'Apply to the shop'}
-            </button>
-            <p className={`promo-status${error ? ' promo-status-error' : ''}`} role={error ? 'alert' : 'status'}>
-              {status}
-            </p>
+            <SaveRow busy={busy} dirty={dirty} message={message} error={error} label="Apply to the shop" busyLabel="Applying…" />
           </div>
         </div>
 

@@ -9,17 +9,7 @@
 .si-card .admin-h2 { margin-top: 0; }
 .si-hint { margin: 4px 0 12px; font-size: 0.82rem; }
 .si-test { display: inline-block; margin-bottom: 14px; }
-.si-photo { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--border); }
-.si-photo:first-of-type { border-top: 0; }
-.si-photo .link-btn { justify-self: start; }
 
-.si-save { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
-.si-status { margin: 0; font-size: 0.85rem; color: var(--muted-foreground); }
-.si-status-error { color: #b3261e; font-weight: 600; }
-@media (max-width: 560px) {
-  .si-save { flex-direction: column; align-items: stretch; }
-  .si-save .btn-primary { width: 100%; padding: 14px; }
-}
 
 /* About images: sections and gallery in responsive grids (one column on phones). */
 .si-slots, .si-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 22px 20px; }

@@ -91,7 +91,7 @@ export function DateTimeField({ labelId, value, onChange }: Props) {
               </button>
             </div>
 
-            <div className="dtf-grid" role="grid">
+            <div className="dtf-grid">
               {WEEKDAYS.map((w) => (
                 <span key={w} className="dtf-weekday" aria-hidden="true">{w.slice(0, 2)}</span>
               ))}

@@ -97,3 +97,5 @@
   belongs next to the inputs it commits) into one row with the countdown calendar: `[calendar] [Apply to the shop] status`.
   For looks with no countdown it sits right under the text field. A one-line status beside it reads *Unsaved changes* /
   *Applied…* / the error (replaces the banner boxes). On phones the row stacks and the button spans the width.
+- 2026-11-01 — Review clean-up: the Apply button/status now comes from the shared `SaveRow` + `useSave` (admin/components);
+  a corrupt stored countdown date falls back to the default; catalogue rows reformatted. No behaviour change.

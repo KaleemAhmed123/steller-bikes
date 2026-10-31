@@ -241,7 +241,10 @@ cd frontend && npm run dev       # http://localhost:3000
 Checks:
 
 ```bash
-cd backend  && npm run typecheck && npm test   # 26 tests; the DB-backed ones run on Atlas
+cd backend  && npm run typecheck && npm test   # 148 tests, hermetic (in-memory Mongo, no Atlas needed)
+#   If tests fail at start-up with "fassert() failure", the drive is full: each run leaves a throwaway
+#   Temp\mongo-mem-* folder behind. Delete them: Get-ChildItem $env:TEMP -Directory -Filter 'mongo-mem-*' | Remove-Item -Recurse -Force
+cd frontend && npm run typecheck && npm test   # pure helpers: calendar, India time, bike maths, text helpers
 cd frontend && npm run typecheck && npm run build
 ```
 

@@ -1,0 +1,8 @@
+/* SaveRow: the submit button plus its one-line status. On phones the button spans the width. */
+.save-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.save-status { margin: 0; font-size: 0.85rem; color: var(--muted-foreground); }
+.save-status-error { color: #b3261e; font-weight: 600; }
+@media (max-width: 560px) {
+  .save-row { flex-direction: column; align-items: stretch; }
+  .save-row .btn-primary { width: 100%; padding: 14px; }
+}

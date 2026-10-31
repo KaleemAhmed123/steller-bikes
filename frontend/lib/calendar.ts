@@ -4,7 +4,7 @@
 export const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-export interface CalendarDay {
+interface CalendarDay {
   year: number;
   month: number; // 0 = January
   day: number;

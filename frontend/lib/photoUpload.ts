@@ -2,7 +2,7 @@ import { uploadImage } from '@/lib/api';
 
 // Rules for photos the owner uploads (About page). The checks run in the browser BEFORE
 // anything is sent, so a wrong file gets a plain-English message instead of a failed upload.
-export const MAX_PHOTO_MB = 5;
+const MAX_PHOTO_MB = 5;
 export const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export interface PhotoSpec {

@@ -3,13 +3,13 @@ import { r1 } from './random';
 // The rider's legs: two bones from the hip to a pedal that circles the crank.
 // Pure geometry (no DOM), in the bike drawing's own units — see Bike.tsx.
 const HIP = { x: 25, y: 8 };
-const CRANK_CENTRE = { x: 30, y: 24 };
+export const CRANK_CENTRE = { x: 30, y: 24 }; // the drawing's crank, shared with Bike.tsx
 const CRANK_LENGTH = 5;
 const BONE = 12.8; // thigh and shin are the same length
 
 export const CADENCE_RAD_PER_MS = (2 * Math.PI * 1.5) / 1000; // 1.5 turns a second
 
-export interface Pose {
+interface Pose {
   legPath: string; // hip → knee → foot
   foot: { x: number; y: number };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, type ReactNode } from 'react';
-import { CADENCE_RAD_PER_MS, pedalPose } from './pedal';
+import { CADENCE_RAD_PER_MS, CRANK_CENTRE, pedalPose } from './pedal';
 
 // The pedalling cyclist. This is the only part of a strip that needs the browser (it
 // moves the legs every frame); everything a festival adds is passed in as a slot, so a
@@ -89,13 +89,13 @@ export function Bike({ scarf, behind, head, front, neon, chakra, wheelie, size =
         <g className="ps-frame">
           <path d="M13 24 L30 24 L25 9 L43 11 L30 24 M13 24 L25 9 M43 11 L51 24 M43 11 L45 6 L50 7 M21 7.5 H28" />
         </g>
-        <circle className="ps-ring" cx="30" cy="24" r="3.4" />
+        <circle className="ps-ring" cx={CRANK_CENTRE.x} cy={CRANK_CENTRE.y} r="3.4" />
 
         <g className="ps-rider-body">
           {[1, 0].map((k) => (
             <g key={k}>
               <path ref={(el) => { legs.current[k] = el; }} className={`ps-leg${k ? ' ps-leg-far' : ''}`} d={pose[k].legPath} />
-              <line ref={(el) => { cranks.current[k] = el; }} className="ps-crank" x1="30" y1="24" x2={pose[k].foot.x} y2={pose[k].foot.y} />
+              <line ref={(el) => { cranks.current[k] = el; }} className="ps-crank" x1={CRANK_CENTRE.x} y1={CRANK_CENTRE.y} x2={pose[k].foot.x} y2={pose[k].foot.y} />
               {k === 1 && (
                 <>
                   <path className="ps-torso" d="M25 8 L37 -3 M37 -3 L43 1 L46.5 6.5" />

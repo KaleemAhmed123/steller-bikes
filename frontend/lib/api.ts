@@ -78,8 +78,6 @@ export const EMPTY_SETTINGS: StoreSettings = {
   city: '',
   state: '',
   pin: '',
-  phone: '',
-  whatsapp: '',
   hours: '',
   deliveryPolicy: '',
   email: '',
@@ -92,6 +90,7 @@ export const EMPTY_SETTINGS: StoreSettings = {
   contactName: '',
   contactPhone: '',
   aboutImages: { hero: '', story: '', matters: '', brand: '', guarantee: '', gallery: [] },
+  galleryMax: 0,
   kanpurDeliveryFee: 29900,
   hero: {
     statValue: '',

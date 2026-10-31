@@ -89,8 +89,6 @@ export interface StoreSettings {
   city: string;
   state: string;
   pin: string;
-  phone: string;
-  whatsapp: string;
   hours: string;
   deliveryPolicy: string;
   email: string;
@@ -107,6 +105,7 @@ export interface StoreSettings {
   contactName: string;
   contactPhone: string;
   aboutImages: AboutImages;
+  galleryMax: number; // most photos the About gallery may hold (enforced by the server)
   // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
   // Shown in the delivery messages — the server still prices every order itself.
   kanpurDeliveryFee: number;

@@ -13,8 +13,6 @@ const EMPTY = {
   city: '',
   state: '',
   pin: '',
-  phone: '',
-  whatsapp: '',
   hours: '',
   deliveryPolicy: '',
   email: '',

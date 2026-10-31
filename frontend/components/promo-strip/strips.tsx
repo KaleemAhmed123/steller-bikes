@@ -11,7 +11,7 @@ import {
 // To add a festival: write its scene below, add a row to STRIPS, and give it a
 // `.ps-scene-<id>` block in promoStrip.css. Nothing else changes.
 
-export interface StripDef {
+interface StripDef {
   id: string; // stored in settings as `announcementStyle`; lowercase + hyphens
   name: string;
   description: string;
@@ -21,7 +21,7 @@ export interface StripDef {
 }
 
 // What every scene is given. Most use only the text; the countdown look also reads `endsAt`.
-export interface SceneProps {
+interface SceneProps {
   text: string;
   endsAt: string; // ISO timestamp
 }
@@ -133,18 +133,82 @@ const Everyday: Scene = ({ text }) => (
 );
 
 // Keep DEFAULT_STRIP_ID in step with DEFAULT_STRIP_STYLE in backend/src/lib/promoStrip.ts.
-export const DEFAULT_STRIP_ID = 'everyday';
+const DEFAULT_STRIP_ID = 'everyday';
 
 export const STRIPS: readonly StripDef[] = [
-  { id: 'diwali', name: 'Diwali Ride', description: 'String lights on top, a marigold garland below. A rider tows a star lantern, carries glowing diyas and sheds sparks.', sampleText: 'Diwali Dhamaka · up to 25% off on every cycle', Scene: Diwali },
-  { id: 'diwali-night', name: 'Diwali Night', description: 'Fireworks burst over a dark sky while a neon-outlined rider cruises by with diyas and a lantern.', sampleText: 'Light up your Diwali ride · free delivery in Kanpur', Scene: DiwaliNight },
-  { id: 'christmas', name: 'Christmas Ride', description: 'A candy-cane chain and falling snow. The rider wears a Santa hat and carries gifts on the rack.', sampleText: 'Merry Christmas · gift a cycle, free helmet on kids bikes', Scene: Christmas },
-  { id: 'new-year', name: 'New Year Countdown', description: 'Fireworks and a flip-clock counting down to the date you set (the next 1 January until you change it), with a party-hat rider trailing balloons and confetti.', sampleText: 'New Year sale starts in', hasCountdown: true, Scene: NewYear },
-  { id: 'holi', name: 'Holi Splash', description: 'Soft colour clouds drift behind the text and the bike leaves puffs of gulal in every colour.', sampleText: 'Holi Hai! Ride into the colours · free helmet with every cycle', Scene: Holi },
-  { id: 'eid', name: 'Eid Lantern Ride', description: 'A teal night with twinkling stars, a crescent and swinging lanterns. The rider tows a lantern and leaves stars behind.', sampleText: 'Eid Mubarak · festive prices on every cycle this week', Scene: Eid },
-  { id: 'tiranga', name: 'Tiranga Ride', description: 'For Republic Day and Independence Day: an Ashoka-chakra front wheel, a flag on the rack and a tricolour contrail.', sampleText: 'Happy Independence Day · ride free, save 15% on all cycles', Scene: Tiranga },
-  { id: 'wheelie-sale', name: 'Wheelie Sale', description: 'A gold race-jersey strip with speed chevrons. The rider pops a wheelie every few seconds. For any big sale.', sampleText: 'Mega sale · up to 40% off', Scene: WheelieSale },
-  { id: 'everyday', name: 'Everyday Ride', description: 'The no-festival default: a rider on a dashed lane line who rings the bell every few seconds.', sampleText: 'Free delivery in Kanpur on every cycle', Scene: Everyday },
+  {
+    id: 'diwali',
+    name: 'Diwali Ride',
+    description:
+      'String lights on top, a marigold garland below. A rider tows a star lantern, carries glowing diyas and sheds sparks.',
+    sampleText: 'Diwali Dhamaka · up to 25% off on every cycle',
+    Scene: Diwali,
+  },
+  {
+    id: 'diwali-night',
+    name: 'Diwali Night',
+    description:
+      'Fireworks burst over a dark sky while a neon-outlined rider cruises by with diyas and a lantern.',
+    sampleText: 'Light up your Diwali ride · free delivery in Kanpur',
+    Scene: DiwaliNight,
+  },
+  {
+    id: 'christmas',
+    name: 'Christmas Ride',
+    description:
+      'A candy-cane chain and falling snow. The rider wears a Santa hat and carries gifts on the rack.',
+    sampleText: 'Merry Christmas · gift a cycle, free helmet on kids bikes',
+    Scene: Christmas,
+  },
+  {
+    id: 'new-year',
+    name: 'New Year Countdown',
+    description:
+      'Fireworks and a flip-clock counting down to the date you set (the next 1 January until you change it), with a party-hat rider trailing balloons and confetti.',
+    sampleText: 'New Year sale starts in',
+    hasCountdown: true,
+    Scene: NewYear,
+  },
+  {
+    id: 'holi',
+    name: 'Holi Splash',
+    description:
+      'Soft colour clouds drift behind the text and the bike leaves puffs of gulal in every colour.',
+    sampleText: 'Holi Hai! Ride into the colours · free helmet with every cycle',
+    Scene: Holi,
+  },
+  {
+    id: 'eid',
+    name: 'Eid Lantern Ride',
+    description:
+      'A teal night with twinkling stars, a crescent and swinging lanterns. The rider tows a lantern and leaves stars behind.',
+    sampleText: 'Eid Mubarak · festive prices on every cycle this week',
+    Scene: Eid,
+  },
+  {
+    id: 'tiranga',
+    name: 'Tiranga Ride',
+    description:
+      'For Republic Day and Independence Day: an Ashoka-chakra front wheel, a flag on the rack and a tricolour contrail.',
+    sampleText: 'Happy Independence Day · ride free, save 15% on all cycles',
+    Scene: Tiranga,
+  },
+  {
+    id: 'wheelie-sale',
+    name: 'Wheelie Sale',
+    description:
+      'A gold race-jersey strip with speed chevrons. The rider pops a wheelie every few seconds. For any big sale.',
+    sampleText: 'Mega sale · up to 40% off',
+    Scene: WheelieSale,
+  },
+  {
+    id: 'everyday',
+    name: 'Everyday Ride',
+    description:
+      'The no-festival default: a rider on a dashed lane line who rings the bell every few seconds.',
+    sampleText: 'Free delivery in Kanpur on every cycle',
+    Scene: Everyday,
+  },
 ];
 
 // An unknown key (an old style that was removed, or '' before the API answers) wears the default.

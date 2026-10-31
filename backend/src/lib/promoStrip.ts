@@ -39,9 +39,11 @@ export function nextNewYear(now: Date = new Date()): Date {
 // always sent as an ISO string so the browser has one format to read.
 export function withPromoStrip<T extends object>(doc: T | null | undefined, now: Date = new Date()) {
   const stored = doc as { announcementStyle?: string | null; countdownEndsAt?: Date | string | null } | null | undefined;
+  const storedEnd = stored?.countdownEndsAt ? new Date(stored.countdownEndsAt) : null;
+  const validEnd = storedEnd && !Number.isNaN(storedEnd.getTime()) ? storedEnd : null; // a corrupt value falls back to the default
   return {
     ...(doc ?? {}),
     announcementStyle: stored?.announcementStyle || DEFAULT_STRIP_STYLE,
-    countdownEndsAt: new Date(stored?.countdownEndsAt ?? nextNewYear(now)).toISOString(),
+    countdownEndsAt: (validEnd ?? nextNewYear(now)).toISOString(),
   };
 }

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { uploadConfigured } from '@/lib/api';
 import { safeSrc, imgError } from '@/lib/img';
 import { PHOTO_TYPES, specText, uploadPhoto, type PhotoSpec } from '@/lib/photoUpload';
+import { useFileUpload } from './useFileUpload';
 import './photoField.css';
 
 // One photo the owner manages: a preview, Upload / Replace, Remove, and the size to use printed
@@ -22,28 +23,11 @@ export function PhotoField({
   label: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [warning, setWarning] = useState('');
+  const { busy, error, warning, clearWarning, onFile } = useFileUpload((file) => uploadPhoto(file, spec.min), onChange);
   const canUpload = uploadConfigured();
-
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // so choosing the same file again still fires
-    if (!file) return;
-    setBusy(true);
-    setError('');
-    setWarning('');
-    try {
-      const { url, warning: w } = await uploadPhoto(file, spec.min);
-      onChange(url);
-      setWarning(w);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed.');
-    } finally {
-      setBusy(false);
-    }
-  }
+  // With no upload available the link box starts open. It must stay the owner's to open or close: tying `open`
+  // to the value would collapse the box on the first typed character.
+  const [linkOpen, setLinkOpen] = useState(!canUpload && !value);
 
   return (
     <div className="pf">
@@ -69,7 +53,7 @@ export function PhotoField({
           {busy ? 'Uploading…' : value ? 'Replace photo' : 'Upload photo'}
         </button>
         {value && (
-          <button type="button" className="link-btn danger" aria-label={`Remove photo: ${label}`} onClick={() => { onChange(''); setWarning(''); }}>
+          <button type="button" className="link-btn danger" aria-label={`Remove photo: ${label}`} onClick={() => { onChange(''); clearWarning(); }}>
             Remove
           </button>
         )}
@@ -79,7 +63,7 @@ export function PhotoField({
       {warning && <p className="pf-warn" role="status">{warning}</p>}
       {error && <p className="pf-error" role="alert">{error}</p>}
 
-      <details className="pf-link" open={!canUpload && !value}>
+      <details className="pf-link" open={linkOpen} onToggle={(e) => setLinkOpen(e.currentTarget.open)}>
         <summary>Use an image link instead</summary>
         <input
           aria-label={`Image link: ${label}`}

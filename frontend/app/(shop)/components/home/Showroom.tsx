@@ -9,16 +9,14 @@ import { paymentLabel } from '@/lib/payment';
 // keeps its honest "coming soon" placeholder. No invented data.
 
 // Build the address line from whatever parts are filled (blank parts dropped).
-function addressLine(s?: StoreSettings): string {
-  if (!s) return '';
+function addressLine(s: StoreSettings): string {
   return [s.addressLine1, s.city, s.state, s.pin].filter(Boolean).join(', ');
 }
 
-export function Showroom({ settings }: { settings?: StoreSettings }) {
+export function Showroom({ settings }: { settings: StoreSettings }) {
   const address = addressLine(settings);
   const location = address || 'Kanpur, Uttar Pradesh';
-  const mapLink = settings?.mapLink ?? '';
-  const phone = settings?.contactPhone ?? '';
+  const { mapLink, contactPhone: phone } = settings;
 
   return (
     <section className="rc-section rc-section--dark" data-reveal>
@@ -58,23 +56,23 @@ export function Showroom({ settings }: { settings?: StoreSettings }) {
             )}
             <li>
               <span className="rc-fact-k">Payment</span>
-              <span className="rc-fact-v">{settings ? paymentLabel(settings) : 'Cash on delivery'}</span>
+              <span className="rc-fact-v">{paymentLabel(settings)}</span>
             </li>
             {phone && (
               <li>
                 <span className="rc-fact-k">Contact</span>
                 <span className="rc-fact-v">
-                  {settings?.contactName} · <a className="rc-tel" href={telHref(phone)}>{phone}</a>
+                  {settings.contactName} · <a className="rc-tel" href={telHref(phone)}>{phone}</a>
                 </span>
               </li>
             )}
-            {settings?.hours && (
+            {settings.hours && (
               <li>
                 <span className="rc-fact-k">Hours</span>
                 <span className="rc-fact-v">{settings.hours}</span>
               </li>
             )}
-            {settings?.deliveryPolicy && (
+            {settings.deliveryPolicy && (
               <li>
                 <span className="rc-fact-k">Delivery</span>
                 <span className="rc-fact-v">{settings.deliveryPolicy}</span>

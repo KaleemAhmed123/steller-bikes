@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import type { StoreSettings } from '@/lib/types';
-import { SaveRow } from './SaveRow';
-import { useSave } from './useSave';
+import { SaveRow } from '../../components/SaveRow';
+import { useSave } from '../../components/useSave';
 
 // The person and number customers are shown (footer, showroom, About page).
 export function ContactPanel({ settings, onSaved }: { settings: Partial<StoreSettings>; onSaved: (s: StoreSettings) => void }) {
