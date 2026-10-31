@@ -11,13 +11,16 @@ import { SavedNav } from './components/SavedNav';
 import { RevealOnScroll } from './components/RevealOnScroll';
 import { Wordmark } from './components/Wordmark';
 import { PromoStrip } from '@/components/promo-strip/PromoStrip';
+import { telHref } from '@/lib/contact';
+import { paymentLabel } from '@/lib/payment';
 
 // Storefront shell: sticky header + shared cart/account/wishlist state +
 // scroll-reveal + footer. Wraps every shop route.
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
   // Owner-set promo strip ('' text = hidden), set under Admin → Promo strip. getSettings never throws.
-  const { announcement, announcementStyle, countdownEndsAt, kanpurDeliveryFee } = await getSettings();
+  const settings = await getSettings();
+  const { announcement, announcementStyle, countdownEndsAt, kanpurDeliveryFee, contactName, contactPhone } = settings;
   return (
     <ToastProvider>
       <AccountProvider>
@@ -61,13 +64,17 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
               <div className="rc-footer-col">
                 <h2>Store</h2>
                 <span className="rc-contact"><MapPin aria-hidden strokeWidth={1.75} />Kanpur, Uttar Pradesh</span>
-                <span>Cash on delivery</span>
+                <span>{paymentLabel(settings)}</span>
                 <span>
                   Kanpur: flat {kanpurDeliveryFee > 0 ? moneyShort(kanpurDeliveryFee) : 'free'} Fitted Delivery
                 </span>
                 <span>Elsewhere: Delhivery — our agent calls to confirm your order</span>
-                <span>Saleem</span>
-                <a href="tel:+918090109621" className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />+91 80901 09621</a>
+                {contactPhone && (
+                  <>
+                    <span>{contactName}</span>
+                    <a href={telHref(contactPhone)} className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />{contactPhone}</a>
+                  </>
+                )}
                 <Link href="/account" className="rc-contact"><User aria-hidden strokeWidth={1.75} />Your account</Link>
                 <Link href="/about">About us</Link>
               </div>

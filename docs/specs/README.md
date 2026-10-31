@@ -23,6 +23,7 @@ status.
 | **Frontend Sprint 1 — P1 audit fixes** — the 6 release-blocking fixes from the production-readiness audit: mobile icon-only header, nav contrast, homepage h1 + heading order, remove hydration-mismatch script, skip link, shared error toast (+ cart stepper lock), and an ESLint 9 flat-config baseline with jsx-a11y. Verified: lint/typecheck/build clean, Lighthouse A11y 100 | [`frontend-sprint-1-p1-fixes.md`](frontend-sprint-1-p1-fixes.md) | Shipped | 2026-10-21 |
 
 | **Promo strip** — owner-only Admin tab to pick one of 9 animated, festival-ready looks for the bar above the navbar (Diwali, Christmas, New Year countdown, Holi, Eid, Tiranga, sale, everyday), edit its text and apply; one catalogue, one new setting (`announcementStyle`), text reuses `announcement` | [`promo-strip.md`](promo-strip.md) | Shipped | 2026-11-01 |
+| **Shop info** — owner-only sub-page under Platform (inner tabs: map link, contact name/phone, About images); clickable "Open in Maps" Location row, tap-to-call contact, and an About page that shows the client's text word for word with admin-managed pictures | [`shop-info.md`](shop-info.md) | Shipped | 2026-11-01 |
 
 ## What "status" means
 

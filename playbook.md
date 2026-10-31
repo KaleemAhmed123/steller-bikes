@@ -108,6 +108,17 @@ overwrites retailers or offer-rail settings you have already saved.
 - The **New Year Countdown** look shows a *Countdown ends (India time)* calendar picker in that tab (tap it, pick a day, set the time, Done). Until the owner
   sets it, it counts down to midnight on the next 1 January (IST). Use it for any sale end, e.g. "Diwali sale ends in".
 
+### 1c-4. Shop info (map link, contact, About page)
+- **Admin → Platform → Shop info** (owner only), three inner tabs, each with its own Save:
+  - **Location:** the link behind the shop's *Open in Maps* button. Use Google Maps → Share → Copy link so phones
+    open the Maps app. Empty = no button. **Test link** opens it.
+  - **Contact:** name + phone (defaults Saleem, +91-8931076870), shown in the footer and the home page Location section.
+  - **About images:** one picture per About-page section + a gallery. Each has **Upload photo** (needs the Cloudinary
+    values from 1b, else the button is disabled) and a link fallback. Sizes: hero 2100×800, sections 1200×900, gallery
+    1000×1000; JPG/PNG/WebP under 5 MB. The sizes are printed under each upload in the admin.
+- The About text is the client's, fixed in `frontend/app/(shop)/about/content.ts`. **Do not edit it** without the client.
+- Defaults live in `backend/src/lib/shopInfo.ts`.
+
 ### 1e. Advance-payment links (agent → customer) — needs Razorpay keys
 
 How it works: an agent calls the customer and agrees an amount (usually the Delhivery delivery

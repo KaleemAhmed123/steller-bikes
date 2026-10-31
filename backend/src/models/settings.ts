@@ -25,6 +25,18 @@ const settingsSchema = new Schema(
     // lib/promoStrip.ts and is applied on read, so there is one copy.
     announcementStyle: { type: String },
     countdownEndsAt: { type: Date }, // end of the strip's countdown; the default (next 1 Jan) is in the same lib
+    // Shop info tab. No defaults here on purpose: they live in lib/shopInfo.ts and are merged on read.
+    mapLink: String, // where "Open in Maps" goes ('' = no link)
+    contactName: String,
+    contactPhone: String,
+    aboutImages: {
+      hero: String,
+      story: String,
+      matters: String,
+      brand: String,
+      guarantee: String,
+      gallery: [{ _id: false, url: String, alt: String }],
+    },
     offerTypes: { type: [String], default: [] }, // master list of offer-type keys (Platform tab)
     // Delivery rules (Settings tab). No defaults here on purpose: they live in
     // lib/delivery.ts and are applied on read, so there is one copy of the numbers.

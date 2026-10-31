@@ -12,7 +12,7 @@ const heading = Krona_One({ subsets: ['latin'], weight: '400', variable: '--font
 export const metadata: Metadata = {
   title: 'Stellar Bikes — Quality Bicycles & Expert Service in Kanpur',
   description:
-    'Stellar Bikes is a trusted bicycle shop in Kanpur, Uttar Pradesh — quality cycles for every rider, honest prices, and dependable after-sales service. Order online with cash on delivery.',
+    'Stellar Bikes is a trusted bicycle shop in Kanpur, Uttar Pradesh — quality cycles for every rider, honest prices, and dependable after-sales service. Order online with cash on delivery or online payment.',
 };
 
 // Root layout: just the HTML shell + global styles + the font variables. The

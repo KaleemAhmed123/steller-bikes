@@ -9,8 +9,10 @@ import { requirePermission, type ActorStaff } from '../lib/auth.js';
 import { transitionOrder, TransitionError } from '../lib/fulfillment.js';
 import { adjustStock, InventoryError } from '../lib/inventory.js';
 import { productInputSchema, productUpdateSchema } from '../lib/productInput.js';
-import { siteContentShape, toOfferKey, withSiteContent } from '../lib/siteContent.js';
-import { countdownEndsAtSchema, stripStyleSchema, withPromoStrip } from '../lib/promoStrip.js';
+import { siteContentShape, toOfferKey } from '../lib/siteContent.js';
+import { countdownEndsAtSchema, stripStyleSchema } from '../lib/promoStrip.js';
+import { shopInfoShape } from '../lib/shopInfo.js';
+import { withStoreDefaults } from '../lib/storeDefaults.js';
 import { buildDashboard, rangeStart } from '../lib/dashboard.js';
 import { isDuplicateKeyError, escapeRegex } from '../lib/mongo.js';
 import { parsePagination, pageMeta } from '../lib/pagination.js';
@@ -308,13 +310,15 @@ const settingsSchema = z.object({
   countdownEndsAt: countdownEndsAtSchema, // when the countdown look ends
   // Site content tab (hero text, offer rail, retailers) — rules + defaults in lib/siteContent.ts.
   ...siteContentShape,
+  // Shop info tab (map link, contact, About images) — rules + defaults in lib/shopInfo.ts.
+  ...shopInfoShape,
 });
 
 // What both settings routes return: the stored doc with every default merged in (so a
 // form is never blank) and the delivery rules as they are effectively in force.
 async function settingsView(doc: object | null) {
   const rules = await loadDeliveryRules();
-  return { ...withPromoStrip(withSiteContent(doc)), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee };
+  return { ...withStoreDefaults(doc), kanpurPincodes: rules.kanpurPins, kanpurDeliveryFee: rules.kanpurFee };
 }
 
 // GET /api/admin/settings — current shop details (empty object if unset).

@@ -88,6 +88,10 @@ export const EMPTY_SETTINGS: StoreSettings = {
   announcement: '',
   announcementStyle: '',
   countdownEndsAt: '',
+  mapLink: '',
+  contactName: '',
+  contactPhone: '',
+  aboutImages: { hero: '', story: '', matters: '', brand: '', guarantee: '', gallery: [] },
   kanpurDeliveryFee: 29900,
   hero: {
     statValue: '',

@@ -102,6 +102,11 @@ export interface StoreSettings {
   announcementStyle: string;
   // When the countdown look ends, as an ISO timestamp. The API always sends one.
   countdownEndsAt: string;
+  // Shop info tab. The API always sends all of these (defaults merged).
+  mapLink: string; // '' = no link, the location row is plain text
+  contactName: string;
+  contactPhone: string;
+  aboutImages: AboutImages;
   // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
   // Shown in the delivery messages — the server still prices every order itself.
   kanpurDeliveryFee: number;
@@ -112,6 +117,16 @@ export interface StoreSettings {
   hero: HeroContent;
   offerSection: OfferSection;
   retailers: Retailer[];
+}
+
+// The pictures on the About page: one per section, plus a free gallery. '' = no picture.
+export interface AboutImages {
+  hero: string;
+  story: string;
+  matters: string;
+  brand: string;
+  guarantee: string;
+  gallery: { url: string; alt: string }[];
 }
 
 // The text laid over the hero video. A '' field hides its line; '' promoHref
