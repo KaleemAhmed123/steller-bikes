@@ -1,0 +1,25 @@
+/* Admin → Promo strip: the live preview and the grid of looks to choose from. */
+.promo-calendar-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.promo-calendar-row .dtf { width: 340px; max-width: 100%; }
+.promo-calendar-row .save-row { margin-top: 0; }
+/* Phones: stack the calendar, the button and the status; the button spans the width for easy thumbs. */
+@media (max-width: 560px) {
+  .promo-calendar-row { flex-direction: column; align-items: stretch; gap: 12px; }
+  .promo-calendar-row .dtf { width: auto; }
+}
+
+.promo-preview { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface); }
+.promo-preview-empty { padding: 28px 16px; text-align: center; color: var(--muted-foreground); background: #f4f1e8; font-size: 0.9rem; }
+.promo-preview-nav { padding: 14px 18px; font-family: var(--font-heading); letter-spacing: 0.04em; color: var(--foreground); }
+
+.promo-styles { border: 0; padding: 0; margin: 28px 0 0; min-width: 0; }
+.promo-styles legend { padding: 0; margin: 0 0 10px; font-size: 16px; font-weight: 700; }
+.promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+
+.promo-card { display: flex; flex-direction: column; gap: 4px; padding: 0 0 12px; overflow: hidden; cursor: pointer; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-sm); transition: border-color 0.15s; }
+.promo-card:hover { border-color: var(--accent); }
+.promo-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.promo-card:has(input:focus-visible) { outline: 2px solid var(--foreground); outline-offset: 2px; }
+.promo-card-name { padding: 8px 14px 0; font-weight: 700; }
+.promo-card.selected .promo-card-name::after { content: ' · selected'; font-weight: 500; color: var(--accent); }
+.promo-card-desc { padding: 0 14px; font-size: 0.82rem; line-height: 1.5; }

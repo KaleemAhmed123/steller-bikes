@@ -10,6 +10,7 @@ import type {
   Order,
   OrderDetail,
   PageMeta,
+  UploadSignature,
   PaymentDetail,
   Product,
   ProductInput,
@@ -78,14 +79,19 @@ export const EMPTY_SETTINGS: StoreSettings = {
   city: '',
   state: '',
   pin: '',
-  phone: '',
-  whatsapp: '',
   hours: '',
   deliveryPolicy: '',
   email: '',
   codEnabled: true,
   onlinePaymentEnabled: true,
   announcement: '',
+  announcementStyle: '',
+  countdownEndsAt: '',
+  mapLink: '',
+  contactName: '',
+  contactPhone: '',
+  aboutImages: { hero: '', story: '', matters: '', brand: '', guarantee: '', gallery: [] },
+  galleryMax: 0,
   kanpurDeliveryFee: 29900,
   hero: {
     statValue: '',
@@ -317,6 +323,12 @@ export const adminApi = {
     update: (body: Partial<StoreSettings>) =>
       apiFetch<StoreSettings>('/api/admin/settings', { method: 'PATCH', body: JSON.stringify(body) }),
   },
+  // Photo/video uploads: is it set up on the server, and a signature for one upload (owner + manager).
+  uploads: {
+    status: () => apiFetch<{ enabled: boolean }>('/api/admin/uploads'),
+    sign: (kind: 'image' | 'media') =>
+      apiFetch<UploadSignature>('/api/admin/uploads/sign', { method: 'POST', body: JSON.stringify({ kind }) }),
+  },
   // Categories — list is readable by managers (the product form's dropdown);
   // add/rename/delete are owner only (enforced server-side).
   categories: {
@@ -367,65 +379,44 @@ export const adminApi = {
   },
 };
 
-// Upload an image straight to Cloudinary (a free image host/CDN) with an
-// unsigned preset, and return its hosted URL to store on a product. No file
-// passes through our own server. Throws a clear error if Cloudinary isn't set
-// up — in that case the admin can still paste a URL/path by hand.
-export async function uploadImage(file: File): Promise<string> {
-  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-  if (!cloud || !preset) {
-    throw new Error('Image upload isn’t set up yet. Paste an image URL/path instead, or add Cloudinary keys.');
-  }
+// Uploads go straight from the browser to Cloudinary (a free image host/CDN); no file passes through our
+// server. Each one needs a short-lived SIGNATURE that our server makes for signed-in staff (it holds the
+// Cloudinary secret), and that also fixes the allowed file formats. See backend/src/lib/cloudinary.ts.
+async function uploadToCloudinary(file: File, kind: 'image' | 'media', check?: (sig: UploadSignature) => void) {
+  const sig = await adminApi.uploads.sign(kind); // refused with a plain message if the server isn't set up
+  check?.(sig);
   const body = new FormData();
   body.append('file', file);
-  body.append('upload_preset', preset);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, {
-    method: 'POST',
-    body,
-  });
+  body.append('api_key', sig.apiKey);
+  body.append('timestamp', String(sig.timestamp));
+  body.append('allowed_formats', sig.allowedFormats);
+  body.append('signature', sig.signature);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/${sig.resourceType}/upload`, { method: 'POST', body });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.secure_url) {
-    throw new Error(json?.error?.message ?? 'Upload failed. Try again, or paste a URL.');
-  }
-  return json.secure_url as string;
+  if (!res.ok || !json.secure_url) throw new Error(json?.error?.message ?? 'Upload failed. Try again, or paste a link.');
+  return { url: json.secure_url as string, resourceType: json.resource_type as string | undefined };
 }
 
-// Upload an image OR a video to Cloudinary ("auto" lets Cloudinary decide) and say
-// which one it was, so the caller can tag the media item. Videos are capped by
-// NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB (default 50) before anything is sent.
+// Upload a photo or logo and return its hosted link, to store on a product, the About page, and so on.
+export async function uploadImage(file: File): Promise<string> {
+  return (await uploadToCloudinary(file, 'image')).url;
+}
+
+// Upload an image OR a video ("auto" lets Cloudinary decide) and say which one it was, so the caller can tag
+// the media item. A video over the server's size cap (CLOUDINARY_MAX_VIDEO_MB) is refused before anything is sent.
 export async function uploadMedia(file: File): Promise<{ url: string; type: 'image' | 'video' }> {
-  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-  if (!cloud || !preset) {
-    throw new Error('Upload isn’t set up yet. Paste a link/path instead, or add the Cloudinary keys.');
-  }
-  const maxMb = Number(process.env.NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB) || 50;
-  if (file.type.startsWith('video/') && file.size > maxMb * 1024 * 1024) {
-    throw new Error(`That video is over ${maxMb} MB. Compress it, or paste a link.`);
-  }
-  const body = new FormData();
-  body.append('file', file);
-  body.append('upload_preset', preset);
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/auto/upload`, { method: 'POST', body });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.secure_url) {
-    throw new Error(json?.error?.message ?? 'Upload failed. Try again, or paste a link.');
-  }
-  return { url: json.secure_url as string, type: json.resource_type === 'video' ? 'video' : 'image' };
+  const { url, resourceType } = await uploadToCloudinary(file, 'media', (sig) => {
+    if (file.type.startsWith('video/') && file.size > sig.maxVideoMb * 1024 * 1024) {
+      throw new Error(`That video is over ${sig.maxVideoMb} MB. Compress it, or paste a link.`);
+    }
+  });
+  return { url, type: resourceType === 'video' ? 'video' : 'image' };
 }
 
 // Guess image-vs-video from a pasted link (uploads already know). Cloudinary video
 // links contain /video/upload/; otherwise go by the file extension.
 export function guessMediaType(url: string): 'image' | 'video' {
   return /\/video\/upload\/|\.(mp4|webm|mov|m4v)(\?|$)/i.test(url) ? 'video' : 'image';
-}
-
-// True when Cloudinary upload is configured (controls the Upload button UI).
-export function uploadConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME && process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-  );
 }
 
 // --- Customer accounts (browser-only, session-cookie) -----------------------

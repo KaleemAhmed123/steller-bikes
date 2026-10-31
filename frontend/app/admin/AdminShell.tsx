@@ -12,6 +12,7 @@ import {
   CreditCard,
   Settings,
   SlidersHorizontal,
+  Megaphone,
   LayoutTemplate,
   Menu,
   LogOut,
@@ -20,7 +21,8 @@ import {
 import { adminApi } from '@/lib/api';
 import type { StaffMe } from '@/lib/types';
 
-const NAV: { href: string; label: string; icon: LucideIcon; ownerOnly?: boolean }[] = [
+// `sub` items are drawn indented under the item above them (no icon).
+const NAV: { href: string; label: string; icon?: LucideIcon; ownerOnly?: boolean; sub?: boolean }[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/admin/products', label: 'Products', icon: Bike },
@@ -29,6 +31,8 @@ const NAV: { href: string; label: string; icon: LucideIcon; ownerOnly?: boolean 
   { href: '/admin/payments', label: 'Payments', icon: CreditCard, ownerOnly: true },
   { href: '/admin/settings', label: 'Settings', icon: Settings, ownerOnly: true },
   { href: '/admin/platform', label: 'Platform', icon: SlidersHorizontal, ownerOnly: true },
+  { href: '/admin/platform/shop-info', label: 'Shop info', ownerOnly: true, sub: true },
+  { href: '/admin/promo-strip', label: 'Promo strip', icon: Megaphone, ownerOnly: true },
   { href: '/admin/content', label: 'Site content', icon: LayoutTemplate, ownerOnly: true },
 ];
 
@@ -70,7 +74,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     router.replace('/admin/login');
   }
 
-  const isActive = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname.startsWith(href));
+  // Only the most specific match lights up, so /admin/platform/shop-info highlights
+  // "Shop info" and not "Platform" as well.
+  const matches = (href: string) => (href === '/admin' ? pathname === '/admin' : pathname === href || pathname.startsWith(`${href}/`));
+  const activeHref = NAV.filter((n) => matches(n.href)).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const isActive = (href: string) => href === activeHref;
 
   return (
     <div className="admin">
@@ -96,14 +104,15 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           Stellar Bikes <span>admin</span>
         </div>
         <nav className="admin-nav">
-          {NAV.filter((item) => !item.ownerOnly || me.role === 'owner').map(({ href, label, icon: Icon }) => (
+          {NAV.filter((item) => !item.ownerOnly || me.role === 'owner').map(({ href, label, icon: Icon, sub }) => (
             <Link
               key={href}
               href={href}
-              className={`admin-navlink ${isActive(href) ? 'active' : ''}`}
+              className={`admin-navlink ${sub ? 'admin-navsub' : ''} ${isActive(href) ? 'active' : ''}`}
+              aria-current={isActive(href) ? 'page' : undefined}
               onClick={() => setNavOpen(false)}
             >
-              <Icon aria-hidden strokeWidth={1.75} />
+              {Icon && <Icon aria-hidden strokeWidth={1.75} />}
               {label}
             </Link>
           ))}

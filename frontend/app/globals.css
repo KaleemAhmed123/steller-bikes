@@ -985,6 +985,14 @@ h3 {
   flex-shrink: 0;
 }
 
+/* A sub-page under the item above: indented, smaller, with a guide line down the left. */
+.admin-navsub {
+  margin-left: 20px;
+  padding: 7px 12px;
+  font-size: 13px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0 8px 8px 0;
+}
 .admin-navlink:hover {
   background: rgba(255, 255, 255, 0.07);
 }

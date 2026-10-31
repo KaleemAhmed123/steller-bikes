@@ -13,8 +13,6 @@ const FIELDS: [ShopKey, string, string][] = [
   ['city', 'City', 'Kanpur'],
   ['state', 'State', 'Uttar Pradesh'],
   ['pin', 'PIN code', '208001'],
-  ['phone', 'Phone', '+91 90000 00000'],
-  ['whatsapp', 'WhatsApp', '+91 90000 00000'],
   ['hours', 'Opening hours', 'Mon–Sat, 10am–8pm'],
   ['email', 'Email', 'hello@stellarbikes.in'],
 ];

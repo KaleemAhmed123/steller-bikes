@@ -10,13 +10,17 @@ import { WishlistProvider } from './components/WishlistProvider';
 import { SavedNav } from './components/SavedNav';
 import { RevealOnScroll } from './components/RevealOnScroll';
 import { Wordmark } from './components/Wordmark';
+import { PromoStrip } from '@/components/promo-strip/PromoStrip';
+import { telHref } from '@/lib/contact';
+import { paymentLabel } from '@/lib/payment';
 
 // Storefront shell: sticky header + shared cart/account/wishlist state +
 // scroll-reveal + footer. Wraps every shop route.
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const year = new Date().getFullYear();
-  // Owner-set storefront banner ('' = hidden). getSettings never throws.
-  const { announcement, kanpurDeliveryFee } = await getSettings();
+  // Owner-set promo strip ('' text = hidden), set under Admin → Promo strip. getSettings never throws.
+  const settings = await getSettings();
+  const { announcement, announcementStyle, countdownEndsAt, kanpurDeliveryFee, contactName, contactPhone } = settings;
   return (
     <ToastProvider>
       <AccountProvider>
@@ -24,7 +28,7 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
           <WishlistProvider>
           <a href="#main" className="skip-link">Skip to main content</a>
           <RevealOnScroll />
-          {announcement && <div className="rc-announce">{announcement}</div>}
+          {announcement && <PromoStrip styleId={announcementStyle} text={announcement} countdownEndsAt={countdownEndsAt} />}
           <header className="rc-header">
             <div className="rc-header-inner container">
               <Link href="/" className="rc-brand" aria-label="Stellar Bikes — home">
@@ -60,13 +64,17 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
               <div className="rc-footer-col">
                 <h2>Store</h2>
                 <span className="rc-contact"><MapPin aria-hidden strokeWidth={1.75} />Kanpur, Uttar Pradesh</span>
-                <span>Cash on delivery</span>
+                <span>{paymentLabel(settings)}</span>
                 <span>
                   Kanpur: flat {kanpurDeliveryFee > 0 ? moneyShort(kanpurDeliveryFee) : 'free'} Fitted Delivery
                 </span>
                 <span>Elsewhere: Delhivery — our agent calls to confirm your order</span>
-                <span>Saleem</span>
-                <a href="tel:+918090109621" className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />+91 80901 09621</a>
+                {contactPhone && (
+                  <>
+                    <span>{contactName}</span>
+                    <a href={telHref(contactPhone)} className="rc-contact"><Phone aria-hidden strokeWidth={1.75} />{contactPhone}</a>
+                  </>
+                )}
                 <Link href="/account" className="rc-contact"><User aria-hidden strokeWidth={1.75} />Your account</Link>
                 <Link href="/about">About us</Link>
               </div>

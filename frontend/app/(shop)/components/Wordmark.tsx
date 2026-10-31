@@ -1,19 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
-// Brand logo: the Stellar mark (image) + the word STELLAR (with a small tagline
-// under it) as real text, so the
-// name stays crisp, translatable by CSS and editable in code. Height is
-// CSS-controlled; `compact` scales it down for tight spots.
-export const BRAND_NAME = 'STELLAR';
-export const BRAND_TAGLINE = 'New Midland Cycle Store · Est. 1991';
-
-export function Wordmark({ compact = false }: { compact?: boolean }) {
+// The brand logo: ONE picture holding the mark, STELLAR and the tagline, exactly as the client supplied it
+// (white background removed, empty margin cropped). Height is set in CSS (.rc-logo); the width follows.
+// To change the logo, replace public/logos/stellar-logo.png keeping the same proportions (about 5.5 : 1).
+export function Wordmark() {
   return (
-    <span className={`rc-wordmark ${compact ? 'is-compact' : ''}`}>
-      <img className="rc-logo" src="/logos/LOGO.png" alt="" aria-hidden="true" />
-      <span className="rc-wordmark-words">
-        <span className="rc-wordmark-text">{BRAND_NAME}</span>
-        <span className="rc-wordmark-tagline">{BRAND_TAGLINE}</span>
-      </span>
-    </span>
+    <img
+      className="rc-logo"
+      src="/logos/stellar-logo.png"
+      width={900}
+      height={164}
+      alt="Stellar Bikes — New Midland Cycle Store, Est. 1991"
+    />
   );
 }

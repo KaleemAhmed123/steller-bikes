@@ -1,4 +1,8 @@
 import { Schema, model, InferSchemaType } from 'mongoose';
+import { ABOUT_IMAGE_SLOTS } from '../lib/shopInfo.js';
+
+// One String field per About-page picture slot, from the same list the validation uses.
+const aboutImageFields = Object.fromEntries(ABOUT_IMAGE_SLOTS.map((slot) => [slot, String])) as Record<(typeof ABOUT_IMAGE_SLOTS)[number], StringConstructor>;
 
 // Store settings — a single document for the whole shop. Two concerns share it:
 //   - shop-facing identity (address, phone, hours, delivery policy) — the Settings tab;
@@ -11,8 +15,6 @@ const settingsSchema = new Schema(
     city: { type: String, default: '' },
     state: { type: String, default: '' },
     pin: { type: String, default: '' },
-    phone: { type: String, default: '' },
-    whatsapp: { type: String, default: '' },
     hours: { type: String, default: '' },
     deliveryPolicy: { type: String, default: '' },
     email: { type: String, default: '' },
@@ -21,6 +23,18 @@ const settingsSchema = new Schema(
     codEnabled: { type: Boolean, default: true }, // cash-on-delivery on/off
     onlinePaymentEnabled: { type: Boolean, default: true }, // Razorpay on/off (on top of env config)
     announcement: { type: String, default: '' }, // storefront banner line ('' = hidden)
+    // Which look the banner wears (Promo strip tab). No default here on purpose: it lives in
+    // lib/promoStrip.ts and is applied on read, so there is one copy.
+    announcementStyle: { type: String },
+    countdownEndsAt: { type: Date }, // end of the strip's countdown; the default (next 1 Jan) is in the same lib
+    // Shop info tab. No defaults here on purpose: they live in lib/shopInfo.ts and are merged on read.
+    mapLink: String, // where "Open in Maps" goes ('' = no link)
+    contactName: String,
+    contactPhone: String,
+    aboutImages: {
+      ...aboutImageFields,
+      gallery: [{ _id: false, url: String, alt: String }],
+    },
     offerTypes: { type: [String], default: [] }, // master list of offer-type keys (Platform tab)
     // Delivery rules (Settings tab). No defaults here on purpose: they live in
     // lib/delivery.ts and are applied on read, so there is one copy of the numbers.

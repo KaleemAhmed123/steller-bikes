@@ -89,8 +89,6 @@ export interface StoreSettings {
   city: string;
   state: string;
   pin: string;
-  phone: string;
-  whatsapp: string;
   hours: string;
   deliveryPolicy: string;
   email: string;
@@ -98,6 +96,16 @@ export interface StoreSettings {
   codEnabled: boolean;
   onlinePaymentEnabled: boolean;
   announcement: string;
+  // Which look the banner wears (key from components/promo-strip). The API always sends one.
+  announcementStyle: string;
+  // When the countdown look ends, as an ISO timestamp. The API always sends one.
+  countdownEndsAt: string;
+  // Shop info tab. The API always sends all of these (defaults merged).
+  mapLink: string; // '' = no link, the location row is plain text
+  contactName: string;
+  contactPhone: string;
+  aboutImages: AboutImages;
+  galleryMax: number; // most photos the About gallery may hold (enforced by the server)
   // Flat "Fitted Delivery" fee inside Kanpur, in paise (owner-editable; default ₹299).
   // Shown in the delivery messages — the server still prices every order itself.
   kanpurDeliveryFee: number;
@@ -108,6 +116,27 @@ export interface StoreSettings {
   hero: HeroContent;
   offerSection: OfferSection;
   retailers: Retailer[];
+}
+
+// One signed Cloudinary upload, as made by the server (POST /api/admin/uploads/sign). No secret in it.
+export interface UploadSignature {
+  cloudName: string;
+  apiKey: string; // public by design
+  timestamp: number;
+  allowedFormats: string;
+  resourceType: 'image' | 'auto'; // the address segment
+  signature: string;
+  maxVideoMb: number;
+}
+
+// The pictures on the About page: one per section, plus a free gallery. '' = no picture.
+export interface AboutImages {
+  hero: string;
+  story: string;
+  matters: string;
+  brand: string;
+  guarantee: string;
+  gallery: { url: string; alt: string }[];
 }
 
 // The text laid over the hero video. A '' field hides its line; '' promoHref

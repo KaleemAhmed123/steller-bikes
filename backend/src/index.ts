@@ -15,6 +15,7 @@ import { authRouter } from './routes/auth.js';
 import { adminRouter } from './routes/admin.js';
 import { accountRouter } from './routes/account.js';
 import { notesRouter } from './routes/notes.js';
+import { uploadsRouter } from './routes/uploads.js';
 import { paymentsRouter } from './routes/payments.js';
 import { advanceAdminRouter } from './routes/advancePayments.js';
 import { webhooksRouter } from './routes/webhooks.js';
@@ -70,6 +71,7 @@ app.use('/api/account', guestCart, accountRouter);
 app.use('/api/auth', authRouter);
 // Specific admin sub-routers mount before the general admin mount so their paths resolve here.
 app.use('/api/admin/notes', requireAuth, notesRouter);
+app.use('/api/admin/uploads', requireAuth, uploadsRouter);
 app.use('/api/admin/payments', requireAuth, paymentsRouter);
 app.use('/api/admin/orders/:id/advance-payments', requireAuth, advanceAdminRouter);
 app.use('/api/admin', requireAuth, adminRouter);

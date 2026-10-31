@@ -1,0 +1,21 @@
+/* PhotoField: preview + Upload/Replace/Remove + size note. Mobile first: stacks, big tap targets. */
+.pf { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pf-preview { display: grid; place-items: center; width: 100%; overflow: hidden; border: 1px dashed var(--border); border-radius: var(--radius-sm); background: #f4f1e8; color: var(--muted-foreground); font-size: 0.85rem; }
+.pf-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pf-wide { aspect-ratio: 21 / 8; }
+.pf-standard { aspect-ratio: 4 / 3; max-width: 360px; }
+.pf-square { aspect-ratio: 1; max-width: 240px; }
+
+.pf-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.pf-actions .btn-secondary { min-height: 44px; }
+.pf-spec, .pf-warn, .pf-error { margin: 0; font-size: 0.82rem; line-height: 1.5; }
+.pf-warn { color: #8a5a00; }
+.pf-error { color: #b3261e; font-weight: 600; }
+.pf-link summary { cursor: pointer; font-size: 0.82rem; color: var(--muted-foreground); padding: 4px 0; }
+.pf-link input { width: 100%; margin-top: 6px; }
+
+@media (max-width: 560px) {
+  .pf-standard, .pf-square { max-width: none; }
+  .pf-actions .btn-secondary { flex: 1 1 100%; }
+  .pf-actions .link-btn { padding: 10px 0; }
+}

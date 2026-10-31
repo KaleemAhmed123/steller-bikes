@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { uploadConfigured, uploadMedia } from '@/lib/api';
+import { uploadMedia } from '@/lib/api';
+import { useUploadsEnabled } from './useUploadsEnabled';
 import { safeVideoSrc } from '@/lib/img';
 
-// One video slot: a preview, an Upload button (when Cloudinary is set up), a link box,
+// One video slot: a preview, an Upload button (when uploads are set up on the server), a link box,
 // and Remove. An empty value means "use the video that ships with the site".
 // Changes only take effect on the homepage after the page's Save button.
 export function VideoField({
@@ -18,6 +19,7 @@ export function VideoField({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const uploadsEnabled = useUploadsEnabled();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const playable = safeVideoSrc(value);
@@ -55,7 +57,7 @@ export function VideoField({
           value={value}
           onChange={(e) => onChange(e.target.value.trim())}
         />
-        {uploadConfigured() && (
+        {uploadsEnabled && (
           <label className="btn-secondary admin-img-upload">
             {busy ? 'Uploading…' : 'Upload video'}
             <input type="file" accept="video/*" hidden onChange={onFile} disabled={busy} />

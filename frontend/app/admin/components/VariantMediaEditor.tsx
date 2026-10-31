@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Film, Trash2 } from 'lucide-react';
-import { guessMediaType, uploadConfigured, uploadMedia } from '@/lib/api';
+import { guessMediaType, uploadMedia } from '@/lib/api';
+import { useUploadsEnabled } from './useUploadsEnabled';
 import { safeSrc, imgError } from '@/lib/img';
 import type { MediaItem } from '@/lib/types';
 
@@ -19,6 +20,7 @@ export function VariantMediaEditor({
   onChange: (next: MediaItem[]) => void;
 }) {
   const [link, setLink] = useState('');
+  const uploadsEnabled = useUploadsEnabled();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -132,7 +134,7 @@ export function VariantMediaEditor({
         <button type="button" className="btn-secondary" disabled={full || !link.trim()} onClick={addLink}>
           Add link
         </button>
-        {uploadConfigured() && (
+        {uploadsEnabled && (
           <label className={`btn-secondary admin-img-upload ${full ? 'is-disabled' : ''}`}>
             {busy ? 'Uploading…' : 'Upload'}
             <input type="file" accept="image/*,video/*" multiple hidden onChange={onFile} disabled={busy || full} />

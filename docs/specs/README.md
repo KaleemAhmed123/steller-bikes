@@ -22,6 +22,10 @@ status.
 | **Pre-launch hardening** — act on the production-readiness audit's Critical/High findings: PostCSS vuln fixed via `override` (prod deps clean), hermetic in-memory test DB (`mongodb-memory-server`), basic GitHub Actions CI, Razorpay per-order `payment_capture`; webhook (F-01) accepted as documented debt, Atlas lockdown left to owner | [`prelaunch-hardening.md`](prelaunch-hardening.md) · [`production-readiness-audit.md`](production-readiness-audit.md) | In progress | 2026-10-21 |
 | **Frontend Sprint 1 — P1 audit fixes** — the 6 release-blocking fixes from the production-readiness audit: mobile icon-only header, nav contrast, homepage h1 + heading order, remove hydration-mismatch script, skip link, shared error toast (+ cart stepper lock), and an ESLint 9 flat-config baseline with jsx-a11y. Verified: lint/typecheck/build clean, Lighthouse A11y 100 | [`frontend-sprint-1-p1-fixes.md`](frontend-sprint-1-p1-fixes.md) | Shipped | 2026-10-21 |
 
+| **Promo strip** — owner-only Admin tab to pick one of 9 animated, festival-ready looks for the bar above the navbar (Diwali, Christmas, New Year countdown, Holi, Eid, Tiranga, sale, everyday), edit its text and apply; one catalogue, one new setting (`announcementStyle`), text reuses `announcement` | [`promo-strip.md`](promo-strip.md) | Shipped | 2026-11-01 |
+| **Shop info** — owner-only sub-page under Platform (inner tabs: map link, contact name/phone, About images); clickable "Open in Maps" Location row, tap-to-call contact, and an About page that shows the client's text word for word with admin-managed pictures | [`shop-info.md`](shop-info.md) | Shipped | 2026-11-01 |
+| **Signed uploads** — photo/video uploads to Cloudinary now need a signature made by the backend (signed-in staff only); the Cloudinary secret lives only on the server; the public unsigned-preset keys are gone | [`signed-uploads.md`](signed-uploads.md) | Shipped | 2026-11-01 |
+
 ## What "status" means
 
 - **Planning** — spec being written, no code yet.

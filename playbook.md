@@ -61,17 +61,20 @@ Frontend `.env.local` keys (all optional in dev):
 - `NEXT_PUBLIC_RAZORPAY_KEY_ID` — the **same test key id** as the backend. Presence of this flag is
   what shows the "Pay online" option at checkout. (UI flag only; the real key the popup uses comes
   back from the server.)
-- `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` + `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` — to enable
-  **upload-from-computer** for product photos in the admin. Without them, the admin still works:
-  paste an image URL or `/path`. Setup: make a free Cloudinary account → Settings → Upload → add an
-  **unsigned** upload preset → put the cloud name + preset name here. (Unsigned = the browser uploads
-  directly; safe to expose. Tighten later with a signed preset + size/type limits if needed.)
-  This **also powers the retailer-logo Upload button** (Admin → Site content). **TODO (owner):** create
-  the Cloudinary account and add these two values to `frontend/.env.local` (and Vercel). Until then the
-  Upload button says "not set up" and pasting a logo link / `/path` works.
-  - `NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB` (default 50) — biggest video the admin may upload (variant
-    videos, hero video). Cloudinary's free plan allows up to 100 MB. The upload preset must allow
-    **images and videos** (don't restrict it to images).
+- **Photo/video uploads are configured on the BACKEND, not here** (they are *signed*, see below). There are no
+  `NEXT_PUBLIC_CLOUDINARY_*` keys any more.
+
+**Cloudinary uploads (backend `.env`, and Render's environment in production)**
+1. Free account at cloudinary.com (use the shop owner's own email; turn on two-step login).
+2. Dashboard → **Go to API Keys** → copy the **Cloud name**, **API Key** and **API Secret**.
+3. In `backend/.env` fill in `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   (`CLOUDINARY_MAX_VIDEO_MB` is optional, default 50), then **restart the backend**. In production add the same
+   four in Render and redeploy. **The API secret goes only in the backend, never in the frontend, never in git.**
+4. The admin's **Upload** buttons switch on by themselves (Shop info → About images shows a notice while they are off).
+How it works: the browser asks the backend for a short-lived signature (signed-in staff only), then uploads straight to
+Cloudinary with it. The signature fixes the allowed file types, so a visitor who finds the keys' names cannot upload.
+Cloudinary has no per-request size cap, so the 5 MB photo / video-MB limits are checked in the admin (and by your plan).
+Until the values are set, paste an image link in the admin instead; everything still works.
 
 ### 1c. Seed the sample cycles
 
@@ -97,6 +100,27 @@ overwrites retailers or offer-rail settings you have already saved.
 - Shop filter: `/shop?offerType=diwali,new-year` (any-of; synced to the URL).
 - Hero videos: `frontend/public/hero_section_{desktop,mobile}_view_video_compressed.mp4`. To change a
   video, replace the file (keep the names) and redeploy.
+
+### 1c-3. Promo strip (the animated bar above the menu)
+- **Admin → Promo strip** (owner only): pick one of 9 looks (Diwali Ride, Diwali Night, Christmas, New Year
+  Countdown, Holi, Eid, Tiranga, Wheelie Sale, Everyday), type the text, press **Apply to the shop**.
+  The shop shows it on the next page load. **Empty text = no strip.** (The text is the old `announcement`
+  setting; it moved here from the Platform tab.)
+- Looks live in `frontend/components/promo-strip/` (list in `strips.tsx`). Add a festival: write its scene,
+  add one row to `STRIPS`, add a `.ps-scene-<id>` block in `promoStrip.css`. No backend change needed.
+- The **New Year Countdown** look shows a *Countdown ends (India time)* calendar picker in that tab (tap it, pick a day, set the time, Done). Until the owner
+  sets it, it counts down to midnight on the next 1 January (IST). Use it for any sale end, e.g. "Diwali sale ends in".
+
+### 1c-4. Shop info (map link, contact, About page)
+- **Admin → Platform → Shop info** (owner only), three inner tabs, each with its own Save:
+  - **Location:** the link behind the shop's *Open in Maps* button. Use Google Maps → Share → Copy link so phones
+    open the Maps app. Empty = no button. **Test link** opens it.
+  - **Contact:** name + phone (defaults Saleem, +91-8931076870), shown in the footer and the home page Location section.
+  - **About images:** one picture per About-page section + a gallery. Each has **Upload photo** (needs the server's Cloudinary
+    values from 1b, else the button is disabled) and a link fallback. Sizes: hero 2100×800, sections 1200×900, gallery
+    1000×1000; JPG/PNG/WebP under 5 MB. The sizes are printed under each upload in the admin.
+- The About text is the client's, fixed in `frontend/app/(shop)/about/content.ts`. **Do not edit it** without the client.
+- Defaults live in `backend/src/lib/shopInfo.ts`.
 
 ### 1e. Advance-payment links (agent → customer) — needs Razorpay keys
 
@@ -130,7 +154,7 @@ has a **Payment** card (owner only) to mark COD cash received / refunds by hand.
 **Admin → Site content → Hero video.** Upload one video for wide screens and one for phones (or paste an
 `https://` link), press **Save**. **Remove** puts back the video that ships with the site. Set only one and
 it is used on both screens. The video plays once and stops on its last frame. Uploading needs the
-Cloudinary values from 1b (preset must allow videos; cap = `NEXT_PUBLIC_CLOUDINARY_MAX_VIDEO_MB`, default
+server's Cloudinary values from 1b (cap = `CLOUDINARY_MAX_VIDEO_MB` in the backend `.env`, default
 50 MB). Keep it small — a few MB — so the homepage stays fast on mobile data.
 
 ### 1g. Delivery charges (Kanpur flat fee) and pincode autofill
@@ -220,7 +244,10 @@ cd frontend && npm run dev       # http://localhost:3000
 Checks:
 
 ```bash
-cd backend  && npm run typecheck && npm test   # 26 tests; the DB-backed ones run on Atlas
+cd backend  && npm run typecheck && npm test   # 148 tests, hermetic (in-memory Mongo, no Atlas needed)
+#   Each test file makes a throwaway Temp\mongo-mem-* folder; a PASSING file now deletes its own (a failing one keeps it
+#   so you can inspect it). If tests fail at start-up with "fassert() failure" the drive is full of old ones. Delete them: Get-ChildItem $env:TEMP -Directory -Filter 'mongo-mem-*' | Remove-Item -Recurse -Force
+cd frontend && npm run typecheck && npm test   # pure helpers: calendar, India time, bike maths, text helpers
 cd frontend && npm run typecheck && npm run build
 ```
 
@@ -267,7 +294,7 @@ Still deferred: admin product-edit UI (to toggle `featured`), account-synced wis
 has **Products** (full create/edit/delete, variants, featured toggle, photo upload or paste, status)
 and **Settings** (shop address/phone/WhatsApp/hours/delivery). New permissions: `products.manage`
 (owner + manager), `settings.manage` (owner only — the Settings nav shows for owners). Photo upload
-uses Cloudinary (see frontend env above); paste-a-URL works without it. Backend typecheck + 37 tests
+uses Cloudinary (backend env, see 1b); paste-a-URL works without it. Backend typecheck + 37 tests
 green; live authenticated create→edit→delete E2E verified (variant ids stay stable across edits).
 **`next build` not yet run** (dev was live on :3000 — stop dev, then build).
 
