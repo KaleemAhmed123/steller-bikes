@@ -205,46 +205,12 @@
   font-weight: 650;
 }
 
-/* ---- Wordmark -------------------------------------------------------------*/
-.rc-wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
+/* ---- Logo (one picture: mark + STELLAR + tagline, from the client) ------------*/
 .rc-logo {
-  height: 32px;
+  height: 40px;
   width: auto;
+  max-width: 100%;
   display: block;
-}
-.rc-wordmark-words {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.rc-wordmark-tagline {
-  font-family: var(--font-body);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--brand-text);
-}
-.rc-wordmark-text {
-  font-family: var(--font-heading);
-  font-size: 20px;
-  letter-spacing: 0.06em;
-  line-height: 1;
-  color: var(--brand-yellow);
-}
-.rc-wordmark.is-compact .rc-logo {
-  height: 30px;
-}
-.rc-wordmark.is-compact .rc-wordmark-tagline {
-  font-size: 8px;
-}
-.rc-wordmark.is-compact .rc-wordmark-text {
-  font-size: 18px;
 }
 
 /* ---- Hero (looping video + editable overlay) ------------------------------*/
@@ -1687,7 +1653,7 @@
     font-size: 13px;
   }
   .rc-logo {
-    height: 26px;
+    height: 32px;
   }
   .rc-filter-controls {
     margin-left: 0;
@@ -2051,8 +2017,7 @@ a.rc-retailer:hover {
 main {
   overflow-x: clip;
 }
-.rc-brand,
-.rc-wordmark-words {
+.rc-brand {
   min-width: 0;
 }
 @media (max-width: 420px) {
@@ -2062,8 +2027,8 @@ main {
   .rc-nav {
     gap: 12px;
   }
-  .rc-wordmark-tagline {
-    display: none;
+  .rc-logo {
+    height: 28px; /* keeps the logo + 4 header icons inside a 320px screen */
   }
 }
 
